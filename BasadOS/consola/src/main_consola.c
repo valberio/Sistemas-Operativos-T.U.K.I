@@ -1,4 +1,5 @@
-#include "/"
+#include "/home/utnso/Desktop/tp-2023-1c-BasadOS/BasadOS/shared/client/client.h"
+#include "/home/utnso/Desktop/tp-2023-1c-BasadOS/BasadOS/shared/client/utils.c"
 
 int main(void)
 {
@@ -18,7 +19,7 @@ int main(void)
 
 	// Usando el logger creado previamente
 	// Escribi: "Hola! Soy un log"
-	log_info(logger, "Soy un Log");
+	log_info(logger, "Consola iniciada");
 
 
 	/* ---------------- ARCHIVOS DE CONFIGURACION ---------------- */

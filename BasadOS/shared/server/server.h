@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <commons/log.h>
+#include <commons/config.h>
+#include <commons/string.h>
 #include "utils.h"
 
 void iterator(char* value);

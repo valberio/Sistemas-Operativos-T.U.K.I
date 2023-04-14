@@ -1,0 +1,1 @@
+//KERNEL - Conectarse a la CPU, FileSystem, y Memoria

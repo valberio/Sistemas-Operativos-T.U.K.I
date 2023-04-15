@@ -1,5 +1,4 @@
-#include "/home/utnso/Desktop/tp-2023-1c-BasadOS/BasadOS/shared/client/client.h"
-#include "/home/utnso/Desktop/tp-2023-1c-BasadOS/BasadOS/shared/client/utils.c"
+#include "../../shared/client/client.h"
 
 int main(void)
 {

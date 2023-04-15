@@ -1,6 +1,5 @@
 //KERNEL - Conectarse a la CPU, FileSystem, y Memoria
-#include "/home/utnso/Desktop/tp-2023-1c-BasadOS/BasadOS/shared/server/utils.c"
-#include "/home/utnso/Desktop/tp-2023-1c-BasadOS/BasadOS/shared/server/server.c"
+#include "/home/utnso/Desktop/tp-2023-1c-BasadOS/BasadOS/shared/server/server.h"
 
 
 

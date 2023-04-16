@@ -1,1 +1,0 @@
-//MEMORIA - Conectarse a FileSystem, CPU y Kernel

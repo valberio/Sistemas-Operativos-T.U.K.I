@@ -57,7 +57,7 @@ int crear_conexion_al_server(t_log* logger, char* ip, char* puerto)
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
 
-    getaddrinfo("127.0.0.1", "4040", &hints, &server_info);
+    getaddrinfo(ip, puerto, &hints, &server_info);
 
     int socket_cliente = socket(server_info->ai_family,
                     server_info->ai_socktype,

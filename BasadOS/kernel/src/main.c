@@ -14,12 +14,12 @@ int main(void)
 	t_log * logger = iniciar_logger();
 	t_config* config = iniciar_config();
 	
-	ip = config_get_string_value(config, "IP");
-	puerto = config_get_string_value(config, "PUERTO");
+	//ip = config_get_string_value(config, "IP");
+	//puerto = config_get_string_value(config, "PUERTO");
+	ip = "127.0.0.1";
+	puerto = "4444";
+	printf("%s, %s", ip, puerto);
 	int cliente_kernel = crear_conexion_al_server(logger, ip, puerto);
-
-
-
 }
 
 t_log * iniciar_logger(void)
@@ -32,7 +32,7 @@ t_log * iniciar_logger(void)
 t_config* iniciar_config(void)
 {
 	t_config* nuevo_config;
-	nuevo_config = config_create("/home/utnso/SisOP/tp-2023-1c-BasadOS/BasadOS/kernel/configs/config_kernel.config");
+	nuevo_config = config_create("/home/utnso/tp-2023-1c-BasadOS/BasadOS/kernel/configs/config_kernel.config");
 	if(nuevo_config == NULL){
 		printf("No se pudo leer la config.\n");
 		exit(2);

@@ -8,7 +8,7 @@ int main(void)
 {
 	int conexion;
 	char* ip = "127.0.0.1";
-	char* puerto = "35821";
+	char* puerto = "35789";
 
 	t_log * logger = iniciar_logger();
 

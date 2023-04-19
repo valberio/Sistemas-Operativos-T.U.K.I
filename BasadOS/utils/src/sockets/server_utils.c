@@ -1,4 +1,4 @@
-#include"server_utils.h"
+/*#include"server_utils.h"
 
 t_log* logger;
 
@@ -94,4 +94,4 @@ t_list* recibir_paquete(int socket_cliente)
 	}
 	free(buffer);
 	return valores;
-}
+}*/

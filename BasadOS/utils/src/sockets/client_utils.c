@@ -1,4 +1,4 @@
-#include "client_utils.h"
+/*#include "client_utils.h"
 
 
 void* serializar_paquete(t_paquete* paquete, int bytes)
@@ -63,23 +63,16 @@ void enviar_mensaje(char* mensaje, int socket_cliente)
 	eliminar_paquete(paquete);
 }
 
+void liberar_conexion(int socket_cliente)
+{
+	close(socket_cliente);
+}
 
 void crear_buffer(t_paquete* paquete)
 {
 	paquete->buffer = malloc(sizeof(t_buffer));
 	paquete->buffer->size = 0;
 	paquete->buffer->stream = NULL;
-}
-
-t_paquete* crear_super_paquete(void)
-{
-
-	t_paquete* paquete = malloc(sizeof(paquete));
-
-	//descomentar despues de arreglar
-	//paquete->codigo_operacion = PAQUETE;
-	//crear_buffer(paquete);
-	return paquete;
 }
 
 t_paquete* crear_paquete(void)
@@ -117,7 +110,4 @@ void eliminar_paquete(t_paquete* paquete)
 	free(paquete);
 }
 
-void liberar_conexion(int socket_cliente)
-{
-	close(socket_cliente);
-}
+*/

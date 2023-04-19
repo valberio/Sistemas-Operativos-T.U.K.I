@@ -9,14 +9,11 @@ int main(void)
 {
 	int conexion;
 	char* ip = "127.0.0.1";
-	char* puerto = "4041";
+	char* puerto = "35823";
 
 	t_log * logger = iniciar_logger();
 
 	int cliente_kernel = crear_conexion_al_server(logger, ip, puerto);
-
-
-
 
 }
 
@@ -24,10 +21,6 @@ t_log * iniciar_logger(void)
 {
 	t_log * nuevo_logger;
 	nuevo_logger = log_create("log_kernel.log", "LOG_KERNEL", 1, LOG_LEVEL_INFO);
-	/*if((nuevo_logger = log_create("log_kernel.log", "LOG_KERNEL", 1, LOG_LEVEL_INFO)) == NULL){
-		printf("No se pudo crear el logger.\n");
-		exit(2);
-	}*/
 	return nuevo_logger;
 }
 

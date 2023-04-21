@@ -1,47 +1,44 @@
-/*#include"server_utils.h"
-
-t_log* logger;
-
-int iniciar_servidor(void)
+#include"server_utils.h"
+int iniciar_servidor(t_log* logger, char* ip, char* puerto)
 {
-	int socket_servidor;
+    int socket_servidor;
 
-	struct addrinfo hints, *servinfo;
+    struct addrinfo hints, *servinfo;
 
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_PASSIVE;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;
 
-	getaddrinfo(IP, PUERTO, &hints, &servinfo);
+    getaddrinfo(ip, puerto, &hints, &servinfo);
 
-	// Creamos el socket de escucha del servidor
-	socket_servidor = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
+    socket_servidor = socket(servinfo->ai_family,
+                         servinfo->ai_socktype,
+                         servinfo->ai_protocol);
 
-	// Asociamos el socket a un puerto
-	bind(socket_servidor, servinfo->ai_addr, servinfo->ai_addrlen);
-	listen(socket_servidor, SOMAXCONN);
+    if(bind(socket_servidor, servinfo->ai_addr, servinfo->ai_addrlen) == -1)
+    {
+        log_info(logger, "El server no se pudo bindear al puerto\n");
+    }
 
-	// Escuchamos las conexiones entrantes
+    listen(socket_servidor, SOMAXCONN);
 
-	freeaddrinfo(servinfo);
-	log_trace(logger, "Listo para escuchar a mi cliente");
-	printf("Fin funcion iniciar_servidor \n");
-	//esperar_cliente(socket_servidor);
-	return socket_servidor;
+    freeaddrinfo(servinfo);
+
+    log_info(logger, "Servidor listo para recibir un cliente");
+
+    return socket_servidor;
 }
 
-int esperar_cliente(int socket_servidor)
+
+
+int esperar_cliente(t_log* logger, int socket_servidor)
 {
-	// Quitar esta línea cuando hayamos terminado de implementar la funcion
-	//assert(!"no implementado!");
-
-	// Aceptamos un nuevo cliente
 	int socket_cliente = accept(socket_servidor, NULL, NULL);
-	log_info(logger, "Se conecto un cliente!");
-
+	log_info(logger, "Se conecto un cliente al servidor!");
 	return socket_cliente;
 }
+/*
 
 int recibir_operacion(int socket_cliente)
 {

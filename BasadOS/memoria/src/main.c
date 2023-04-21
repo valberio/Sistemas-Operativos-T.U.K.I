@@ -1,28 +1,17 @@
 #include "main.h"
-#include<stdio.h>
-#include<stdlib.h>
-#include<signal.h>
-#include<unistd.h>
-#include<sys/socket.h>
-#include<netdb.h>
-#include<string.h>
-#include<commons/log.h>
-
-#include "/home/utnso/tp-2023-1c-BasadOS/BasadOS/utils/src/sockets/socketUtils.c"
-
 
 int main(int argc, char* argv[]) {
 
-    t_log* logger = log_create("log_memoria.log", "Servidor", 1, LOG_LEVEL_DEBUG);
-
+    t_log* logger = iniciar_logger("log_memoria.log", "Servidor");
+    t_config* config = iniciar_config("configs/memoria.config");
 	//La memoria tiene en paralelo 3 conexiones: con kernel, cpu, y fileSystem
 
 	//Creo el server de la memoria en esta ip y puerto
-	char* ip = "127.0.0.1";
+	char* ip = config_get_string_value(config, "IP");
 
-	char* puerto_kernel = "4444";
-    char* puerto_cpu = "35789";
-    char* puerto_filesystem = "4445";
+	char* puerto_kernel = config_get_string_value(config, "PUERTO_KERNEL");
+    char* puerto_cpu = config_get_string_value(config, "PUERTO_CPU");
+    char* puerto_filesystem = config_get_string_value(config, "PUERTO_FILESYSTEM");
 
 	int servidor_memoria_kernel = iniciar_servidor(logger, ip, puerto_kernel);
     int servidor_memoria_cpu = iniciar_servidor(logger, ip, puerto_cpu);

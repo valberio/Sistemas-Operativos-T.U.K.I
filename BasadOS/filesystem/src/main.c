@@ -1,56 +1,28 @@
-#include "/home/utnso/tp-2023-1c-BasadOS/BasadOS/utils/src/sockets/socketUtils.c"
-#include<commons/string.h>
-#include<commons/config.h>
-
-t_log * iniciar_logger(void);
+#include <main.h>
 
 int main(void)
 {
-	int conexion;
-	char* ip = "127.0.0.1";
-	char* puerto_a_memoria = "4445";
+	t_log * logger = iniciar_logger("log_filesystem.log", "LOG_FILESYSTEM");
+	t_config* config = iniciar_config("configs/filesystem.config");
 
-	t_log * logger = iniciar_logger();
+	char* ip = config_get_string_value(config, "IP");
 
+	//Conecto filesystem como cliente a memoria
+	char* puerto_a_memoria = config_get_string_value(config, "PUERTO_MEMORIA");
 	int cliente_filesystem_a_memoria = crear_conexion_al_server(logger, ip, puerto_a_memoria);
+	if (cliente_filesystem_a_memoria)
+	{
+		log_info(logger, "Filesystem se conectó a memoria!");
+	}
+
 
 	//Conecto el filesystem como servidor del kernel
-	char* puerto_a_kernel = "37373";
+	char* puerto_a_kernel = config_get_string_value(config, "PUERTO_KERNEL");
 	int servidor_filesystem = iniciar_servidor(logger, ip, puerto_a_kernel);
 	int conexion_filesystem_kernel = esperar_cliente(logger, servidor_filesystem);
 
 	if (conexion_filesystem_kernel)
 	{
 		log_info(logger, "Filesystem recibió la conexión del kernel!");
-	}                                                                                                                                                                                                                            
-}
-
-t_log * iniciar_logger(void)
-{
-	t_log * nuevo_logger;
-	nuevo_logger = log_create("log_kernel.log", "LOG_KERNEL", 1, LOG_LEVEL_INFO);
-	return nuevo_logger;
-}
-
-t_config* iniciar_config(void)
-{
-	t_config* nuevo_config;
-	if((nuevo_config = config_create("configs/config_kernel.config")) == NULL){
-		printf("No se pudo leer la config.\n");
-		exit(2);
 	}
-	return nuevo_config;
 }
-/*
-void terminar_programa(int conexion, t_log* logger, t_config* config)
-{
-	 Y por ultimo, hay que liberar lo que utilizamos (conexion, log y config) 
-	  con las funciones de las commons y del TP mencionadas en el enunciado 
-	if(logger != NULL){
-		log_destroy(logger);
-	}
-	if(config != NULL){
-			config_destroy(config);
-		}
-	liberar_conexion(conexion);
-}*/

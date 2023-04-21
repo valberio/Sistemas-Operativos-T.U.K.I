@@ -1,36 +1,27 @@
 #include "main.h"
 
+//LOS PUERTOS SIGUEN LA SIGUIENTE ASIGNACION: puerto_servidor_cliente
+
 int main(void)
 {
 	char* ip;
-	char* puerto;
 	
-	t_log * logger = iniciar_logger();
-	t_config* config = iniciar_config();
+	t_log* logger = iniciar_logger("log_kernel.log", "LOG_KERNEL");
+	t_config* config = iniciar_config("configs/config_kernel.config");
 	
 	ip = config_get_string_value(config, "IP");
-	puerto = config_get_string_value(config, "PUERTO");
-	printf("%s, %s", ip, puerto);
-	int cliente_kernel = crear_conexion_al_server(logger, ip, puerto);
 	
+	char* puerto_memoria_kernel = config_get_string_value(config, "PUERTO_MEMORIA");
 
-	//Abro el server del kernel para recibir conexiones de la consola
-	char* puerto_consola = "10577"; // se tiene que ir al config
-	int server_consola = iniciar_servidor(logger, ip, puerto_consola);
-	
-	if (server_consola != -1)
-	{
-		log_info(logger, "El servidor del kernel se inició");
-	}
+	int cliente_kernel = crear_conexion_al_server(logger, ip, puerto_memoria_kernel);
 
-	int conexion_consola = esperar_cliente(logger, server_consola);
-	if (conexion_consola)
+	if (cliente_kernel)
 	{
-		log_info(logger, "El kernel recibió la conexión de consola");
+		log_info(logger, "El kernel envió su conexión a la memoria!");
 	}
 
 	//Conecto el kernel como cliente a la CPU
-	char* puerto_cpu_kernel =  "34343";
+	char* puerto_cpu_kernel = config_get_string_value(config, "PUERTO_CPU");
 	int cliente_cpu = crear_conexion_al_server(logger, ip, puerto_cpu_kernel);
 	if (cliente_cpu)
 	{
@@ -39,31 +30,29 @@ int main(void)
 
 
 	//Conecto el kernel como cliente del filesystem
-	char* puerto_filesystem = "37373";
-	int cliente_filesystem = crear_conexion_al_server(logger, ip, puerto_filesystem);
+	char* puerto_filesystem_kernel = config_get_string_value(config, "PUERTO_FILESYSTEM");;
+	int cliente_filesystem = crear_conexion_al_server(logger, ip, puerto_filesystem_kernel);
 	if (cliente_filesystem)
 	{
 		log_info(logger, "El kernel envió su conexión al filesystem!");
 	}
-}
 
-t_log * iniciar_logger(void)
-{
-	t_log * nuevo_logger;
-	nuevo_logger = log_create("log_kernel.log", "LOG_KERNEL", 1, LOG_LEVEL_INFO);
-	return nuevo_logger;
-}
+	//Abro el server del kernel para recibir conexiones de la consola
+	char* puerto_kernel_consola = config_get_string_value(config, "PUERTO_CONSOLA");
+	int server_consola = iniciar_servidor(logger, ip, puerto_kernel_consola);
+	
+	/*if (server_consola != -1)
+	{
+		log_info(logger, "El servidor del kernel se inició");
+	}*/
 
-t_config* iniciar_config(void)
-{
-	t_config* nuevo_config;
-	nuevo_config = config_create("../configs/config_kernel.config");
-	if(nuevo_config == NULL){
-		printf("No se pudo leer la config.\n");
-		exit(2);
+	int conexion_consola = esperar_cliente(logger, server_consola);
+	if (conexion_consola)
+	{
+		log_info(logger, "El kernel recibió la conexión de consola");
 	}
-	return nuevo_config;
 }
+
 /*
 void terminar_programa(int conexion, t_log* logger, t_config* config)
 {

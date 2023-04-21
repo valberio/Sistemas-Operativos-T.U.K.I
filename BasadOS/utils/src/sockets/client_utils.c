@@ -1,6 +1,37 @@
-/*#include "client_utils.h"
+#include "client_utils.h"
 
+int crear_conexion_al_server(t_log* logger, char* ip, char* puerto)
+{
+    struct addrinfo hints;
+    struct addrinfo *server_info;
 
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+
+    getaddrinfo(ip, puerto, &hints, &server_info);
+
+    int socket_cliente = socket(server_info->ai_family,
+                    server_info->ai_socktype,
+                    server_info->ai_protocol);
+
+    freeaddrinfo(server_info);
+
+    if(connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == -1)
+    {
+        log_info(logger, "El cliente no se pudo conectar al server");
+        return 0;
+    }
+    log_info(logger, "Cliente conectado al server");
+    return socket_cliente;
+}
+
+void liberar_conexion(int* socket_cliente) {
+    close(*socket_cliente);
+    *socket_cliente = -1;
+}
+/*
+definiciones de funciones de paquetes
 void* serializar_paquete(t_paquete* paquete, int bytes)
 {
 	void * magic = malloc(bytes);
@@ -63,10 +94,7 @@ void enviar_mensaje(char* mensaje, int socket_cliente)
 	eliminar_paquete(paquete);
 }
 
-void liberar_conexion(int socket_cliente)
-{
-	close(socket_cliente);
-}
+
 
 void crear_buffer(t_paquete* paquete)
 {

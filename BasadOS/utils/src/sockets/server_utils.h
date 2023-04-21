@@ -11,9 +11,6 @@
 #include<string.h>
 #include<assert.h>
 
-#define IP "127.0.0.1"
-#define PUERTO "4444"
-
 typedef enum
 {
 	MENSAJE,
@@ -22,12 +19,12 @@ typedef enum
 
 extern t_log* logger;
 
-void* recibir_buffer(int*, int);
+// void* recibir_buffer(int*, int);
 
-int iniciar_servidor(void);
-int esperar_cliente(int);
-t_list* recibir_paquete(int);
-void recibir_mensaje(int);
-int recibir_operacion(int);
+int iniciar_servidor(t_log* , char* , char* );
+int esperar_cliente(t_log* , int);
+// t_list* recibir_paquete(int);
+// void recibir_mensaje(int);
+// int recibir_operacion(int);
 
 #endif /* SERVER_UTILS_H_ */

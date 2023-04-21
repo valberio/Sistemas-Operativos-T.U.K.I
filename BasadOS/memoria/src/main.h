@@ -1,6 +1,8 @@
 #ifndef MEMORIA_H_
 #define MEMORIA_H_
 
-void iterator(char* value);
+#include<loggers/loggers_utils.h>
+#include<sockets/server_utils.h>
+
 
 #endif /* MEMORIA_H_ */

@@ -10,6 +10,7 @@
 
 #include "/home/utnso/tp-2023-1c-BasadOS/BasadOS/utils/src/sockets/socketUtils.c"
 
+
 int main(int argc, char* argv[]) {
 
     t_log* logger = log_create("log_memoria.log", "Servidor", 1, LOG_LEVEL_DEBUG);
@@ -29,6 +30,18 @@ int main(int argc, char* argv[]) {
 	//Guardo las conexiones con cada modulo en un socket distinto,
 	//cada módulo se conecta a través de un puerto diferente.
    
+   int conexion_filesystem = esperar_cliente(logger, servidor_memoria_filesystem);
+   if (conexion_filesystem)
+   {
+		log_info(logger, "Se conectó el fileSystem");
+   }
+
+    int conexion_cpu = esperar_cliente(logger, servidor_memoria_cpu);
+   if (conexion_cpu)
+   {
+		log_info(logger, "Se conectó la CPU");
+   }
+
    int conexion_kernel = esperar_cliente(logger, servidor_memoria_kernel);
    if (conexion_kernel)
    {
@@ -41,17 +54,9 @@ int main(int argc, char* argv[]) {
 		return 0;
    }
     
-   int conexion_filesystem = esperar_cliente(logger, servidor_memoria_filesystem);
-   if (conexion_filesystem)
-   {
-		log_info(logger, "Se conectó el fileSystem");
-   }
+
    
-   int conexion_cpu = esperar_cliente(logger, servidor_memoria_cpu);
-   if (conexion_cpu)
-   {
-		log_info(logger, "Se conectó la CPU");
-   }
+
 }
 
 /*void iterator(char* value) {

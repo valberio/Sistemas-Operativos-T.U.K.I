@@ -8,13 +8,21 @@ int main(void)
 {
 	int conexion;
 	char* ip = "127.0.0.1";
-	char* puerto = "4445";
+	char* puerto_a_memoria = "4445";
 
 	t_log * logger = iniciar_logger();
 
-	int cliente_filesystem = crear_conexion_al_server(logger, ip, puerto);
+	int cliente_filesystem_a_memoria = crear_conexion_al_server(logger, ip, puerto_a_memoria);
 
+	//Conecto el filesystem como servidor del kernel
+	char* puerto_a_kernel = "37373";
+	int servidor_filesystem = iniciar_servidor(logger, ip, puerto_a_kernel);
+	int conexion_filesystem_kernel = esperar_cliente(logger, servidor_filesystem);
 
+	if (conexion_filesystem_kernel)
+	{
+		log_info(logger, "Filesystem recibió la conexión del kernel!");
+	}                                                                                                                                                                                                                            
 }
 
 t_log * iniciar_logger(void)

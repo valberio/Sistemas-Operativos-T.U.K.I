@@ -1,10 +1,4 @@
-//#include "main.h"
-#include "/home/utnso/tp-2023-1c-BasadOS/BasadOS/utils/src/sockets/socketUtils.c"
-#include<commons/string.h>
-#include<commons/config.h>
-
-t_log * iniciar_logger(void);
-t_config* iniciar_config(void);
+#include "main.h"
 
 int main(void)
 {
@@ -14,12 +8,43 @@ int main(void)
 	t_log * logger = iniciar_logger();
 	t_config* config = iniciar_config();
 	
-	//ip = config_get_string_value(config, "IP");
-	//puerto = config_get_string_value(config, "PUERTO");
-	ip = "127.0.0.1";
-	puerto = "4444";
+	ip = config_get_string_value(config, "IP");
+	puerto = config_get_string_value(config, "PUERTO");
 	printf("%s, %s", ip, puerto);
 	int cliente_kernel = crear_conexion_al_server(logger, ip, puerto);
+	
+
+	//Abro el server del kernel para recibir conexiones de la consola
+	char* puerto_consola = "10577"; // se tiene que ir al config
+	int server_consola = iniciar_servidor(logger, ip, puerto_consola);
+	
+	if (server_consola != -1)
+	{
+		log_info(logger, "El servidor del kernel se inició");
+	}
+
+	int conexion_consola = esperar_cliente(logger, server_consola);
+	if (conexion_consola)
+	{
+		log_info(logger, "El kernel recibió la conexión de consola");
+	}
+
+	//Conecto el kernel como cliente a la CPU
+	char* puerto_cpu_kernel =  "34343";
+	int cliente_cpu = crear_conexion_al_server(logger, ip, puerto_cpu_kernel);
+	if (cliente_cpu)
+	{
+		log_info(logger, "El kernel envió su conexión a la CPU!");
+	}
+
+
+	//Conecto el kernel como cliente del filesystem
+	char* puerto_filesystem = "37373";
+	int cliente_filesystem = crear_conexion_al_server(logger, ip, puerto_filesystem);
+	if (cliente_filesystem)
+	{
+		log_info(logger, "El kernel envió su conexión al filesystem!");
+	}
 }
 
 t_log * iniciar_logger(void)
@@ -32,7 +57,7 @@ t_log * iniciar_logger(void)
 t_config* iniciar_config(void)
 {
 	t_config* nuevo_config;
-	nuevo_config = config_create("/home/utnso/tp-2023-1c-BasadOS/BasadOS/kernel/configs/config_kernel.config");
+	nuevo_config = config_create("../configs/config_kernel.config");
 	if(nuevo_config == NULL){
 		printf("No se pudo leer la config.\n");
 		exit(2);

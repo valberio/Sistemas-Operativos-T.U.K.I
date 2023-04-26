@@ -38,8 +38,6 @@ int esperar_cliente(t_log* logger, int socket_servidor)
 	log_info(logger, "Se conecto un cliente al servidor!");
 	return socket_cliente;
 }
-/*
-
 int recibir_operacion(int socket_cliente)
 {
 	int cod_op;
@@ -78,7 +76,7 @@ t_list* recibir_paquete(int socket_cliente)
 	void * buffer;
 	t_list* valores = list_create();
 	int tamanio;
-
+	// set "asdas"
 	buffer = recibir_buffer(&size, socket_cliente);
 	while(desplazamiento < size)
 	{
@@ -91,4 +89,4 @@ t_list* recibir_paquete(int socket_cliente)
 	}
 	free(buffer);
 	return valores;
-}*/
+}

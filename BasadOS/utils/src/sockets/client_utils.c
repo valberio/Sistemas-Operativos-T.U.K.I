@@ -30,8 +30,6 @@ void liberar_conexion(int* socket_cliente) {
     close(*socket_cliente);
     *socket_cliente = -1;
 }
-/*
-definiciones de funciones de paquetes
 void* serializar_paquete(t_paquete* paquete, int bytes)
 {
 	void * magic = malloc(bytes);
@@ -46,34 +44,6 @@ void* serializar_paquete(t_paquete* paquete, int bytes)
 
 	return magic;
 }
-
-int crear_conexion(char *ip, char* puerto)
-{
-	struct addrinfo hints;
-	struct addrinfo *server_info;
-
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_PASSIVE;
-
-	getaddrinfo(ip, puerto, &hints, &server_info);
-
-	// Ahora vamos a crear el socket.
-	int socket_cliente = 0;
-	socket_cliente = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol);
-	//------------------------------------
-	printf("crear_conexion: IP: %s - PUERTO: %s\n", ip, puerto);
-	// Ahora que tenemos el socket, vamos a conectarlo
-	if((connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen)) == -1){
-		printf("error\n");
-	}
-
-	freeaddrinfo(server_info);
-
-	return socket_cliente;
-}
-
 void enviar_mensaje(char* mensaje, int socket_cliente)
 {
 	t_paquete* paquete = malloc(sizeof(t_paquete));
@@ -103,7 +73,7 @@ void crear_buffer(t_paquete* paquete)
 	paquete->buffer->stream = NULL;
 }
 
-t_paquete* crear_paquete(void)
+t_paquete* crear_paquete()
 {
 	t_paquete* paquete = malloc(sizeof(t_paquete));
 	paquete->codigo_operacion = PAQUETE;
@@ -138,4 +108,3 @@ void eliminar_paquete(t_paquete* paquete)
 	free(paquete);
 }
 
-*/

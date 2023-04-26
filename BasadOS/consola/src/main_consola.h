@@ -4,4 +4,6 @@
 #include<sockets/client_utils.h>
 #include<loggers/loggers_utils.h>
 
+int levantar_conexion(char*,char*);
+
 #endif /* CONSOLA_H_ */

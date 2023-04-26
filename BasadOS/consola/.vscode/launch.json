@@ -10,7 +10,6 @@
       "request": "launch",
       "program": "${workspaceFolder}/bin/${workspaceFolderBasename}.out",
       "args": [
-        // TODO: Agregar los argumentos que se necesiten
       ],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
@@ -32,7 +31,8 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/bin/${workspaceFolderBasename}_tests.out",
-      "args": [],
+      "args": [ "configs/consola.config",
+      "prueba.txt"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],

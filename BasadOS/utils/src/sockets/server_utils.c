@@ -1,4 +1,5 @@
 #include"server_utils.h"
+
 int iniciar_servidor(t_log* logger, char* ip, char* puerto)
 {
     int socket_servidor;
@@ -65,7 +66,6 @@ void recibir_mensaje(int socket_cliente)
 {
 	int size;
 	char* buffer = recibir_buffer(&size, socket_cliente);
-	log_info(logger, "Me llego el mensaje %s", buffer);
 	free(buffer);
 }
 
@@ -76,7 +76,6 @@ t_list* recibir_paquete(int socket_cliente)
 	void * buffer;
 	t_list* valores = list_create();
 	int tamanio;
-	// set "asdas"
 	buffer = recibir_buffer(&size, socket_cliente);
 	while(desplazamiento < size)
 	{

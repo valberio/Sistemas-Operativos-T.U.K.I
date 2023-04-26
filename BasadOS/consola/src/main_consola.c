@@ -21,6 +21,8 @@ int main(int argc, char* argv[]) {
     crear_buffer(paquete);
     agregar_a_paquete(paquete,instruccion1,sizeof(instruccion1)+1);
     agregar_a_paquete(paquete,instruccion2,sizeof(instruccion1)+1);
+    enviar_paquete(paquete,conexion_con_kernel);
+    eliminar_paquete(paquete):
 }
 
 

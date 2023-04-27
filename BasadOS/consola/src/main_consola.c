@@ -14,8 +14,10 @@ int main(int argc, char* argv[]) {
         printf("holi");
         return EXIT_FAILURE;
     }
-    t_config* config = iniciar_config(argv[1]);
+    //t_config* config = iniciar_config(argv[1]);
     //FILE *pesudocodigo = fopen(argv[2],"r");
+    t_config* config = config_create("/home/utnso/tp-2023-1c-BasadOS/BasadOS/consola/configs/consola.config");
+
     t_paquete* paquete = crear_paquete();
     char* ip = config_get_string_value(config, "IP");
     char* puerto_kernel_consola = config_get_string_value(config, "PUERTO_KERNEL");
@@ -28,7 +30,7 @@ int main(int argc, char* argv[]) {
     agregar_a_paquete(paquete,instruccion1,sizeof(instruccion1)+1);
     agregar_a_paquete(paquete,instruccion2,sizeof(instruccion1)+1);
     enviar_paquete(paquete,conexion_con_kernel);
-    eliminar_paquete(paquete):
+    eliminar_paquete(paquete);
 }
 
 

@@ -19,8 +19,14 @@ int main(void)
 	char* ip;
 	
 	t_log* logger = iniciar_logger("log_kernel.log", "LOG_KERNEL");
-	t_config* config = iniciar_config("configs/config_kernel.config");
+	t_config* config = config_create("/home/utnso/tp-2023-1c-BasadOS/BasadOS/kernel/configs/config_kernel.config");
 	
+	if (config == NULL)
+	{
+		log_info(logger, "Error config");
+		EXIT_FAILURE;
+	}
+
 	ip = config_get_string_value(config, "IP");
 	
 	char* puerto_memoria_kernel = config_get_string_value(config, "PUERTO_MEMORIA");
@@ -32,13 +38,13 @@ int main(void)
 	// 	log_info(logger, "El kernel envió su conexión a la memoria!");
 	// }
 
-	// //Conecto el kernel como cliente a la CPU
-	// char* puerto_cpu_kernel = config_get_string_value(config, "PUERTO_CPU");
-	// //int cliente_cpu = crear_conexion_al_server(logger, ip, puerto_cpu_kernel);
-	// if (cliente_cpu)
-	// {
-	// 	log_info(logger, "El kernel envió su conexión a la CPU!");
-	// }
+	//Conecto el kernel como cliente a la CPU
+	 char* puerto_cpu_kernel = config_get_string_value(config, "PUERTO_CPU");
+	int cliente_cpu = crear_conexion_al_server(logger, ip, puerto_cpu_kernel);
+	 if (cliente_cpu)
+	 {
+	 	log_info(logger, "El kernel envió su conexión a la CPU!");
+	 }
 
 
 	// //Conecto el kernel como cliente del filesystem

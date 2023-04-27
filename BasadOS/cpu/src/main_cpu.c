@@ -1,5 +1,7 @@
 #include "main.h"
 
+
+
 /*------------------------------------------------------------------*/
 /*|						CHECKPOINT 2					   			*/
 /*------------------------------------------------------------------*/
@@ -7,11 +9,19 @@
 		Se conecta a Memoria y espera conexiones del Kernel: HECHO.
 		Ejecuta las instrucciones SET, YIELD y EXIT.				*/
 /*------------------------------------------------------------------*/
-int conectarse_a_memoria(t_log* logger);
+
+enum Instrucciones{
+	SET,
+	YIELD,
+	EXIT
+};
+
 
 int main(void)
 {
 	t_log * logger = iniciar_logger("log_cpu.log","LOG_CPU");
+	
+
 	//t_config* config = iniciar_config("configs/cpu.config");
 	
 	//CPU como cliente para memoria
@@ -25,6 +35,27 @@ int main(void)
 	{
 		log_info(logger, "CPU recibió al kernel");
 	}
+
+	//FETCH: Busco la instrucción siguiente que me mandó el kernel
+	char* instruccion_string = fetch();
+
+	//DECODE: Decodifico la instruccion. Paso el string a un array,
+	//determino qué instrucción del enum de instrucciones tengo que
+	//ejecutar.
+	enum Instrucciones instruccion = decode(instruccion_string);
+
+	switch(instruccion) {
+		case SET:
+			set(logger);
+			break;
+		case YIELD:
+			yield(logger);
+			break;
+		case EXIT:
+			exit(logger);
+			break;
+	}
+	return 0;
 }
 
 int conectarse_a_memoria(t_log* logger)
@@ -61,5 +92,7 @@ int conexion_a_kernel(t_log* logger)
 
 	int conexion_kernel = esperar_cliente(logger, server_para_kernel);
 
-
 }
+
+char* fetch(){return "SET";}
+

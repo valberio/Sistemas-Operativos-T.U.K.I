@@ -1,5 +1,15 @@
 #include "main.h"
 
+/*------------------------------------------------------------------*/
+/*						CHECKPOINT 2								*/
+/*------------------------------------------------------------------*/
+/*		Levanta el archivo de configuración: HECHO!
+		Espera las conexiones de CPU, Kernel y File System: HECHO!
+																	*/
+/*------------------------------------------------------------------*/
+
+
+
 int main(int argc, char* argv[]) {
 
     t_log* logger = iniciar_logger("log_memoria.log", "Servidor");

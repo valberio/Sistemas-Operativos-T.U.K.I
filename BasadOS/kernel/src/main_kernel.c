@@ -2,6 +2,18 @@
 
 //LOS PUERTOS SIGUEN LA SIGUIENTE ASIGNACION: puerto_servidor_cliente
 
+/*------------------------------------------------------------------*/
+/*						CHECKPOINT 2								*/
+/*------------------------------------------------------------------*/
+/*	Levanta el archivo de configuración: HECHO!
+	Se conecta a CPU, Memoria y File System: HECHO!
+	Espera conexiones de las consolas: wip, abría que implementar
+									   concurrencia
+	Recibe de las consolas las instrucciones y arma el PCB: calavera
+	Planificación de procesos con FIFO: calavera					*/
+/*------------------------------------------------------------------*/
+
+
 int main(void)
 {
 	char* ip;

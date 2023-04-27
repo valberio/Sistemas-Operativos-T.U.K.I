@@ -1,5 +1,16 @@
 #include <main.h>
 
+
+/*------------------------------------------------------------------*/
+/*						CHECKPOINT 2								*/
+/*------------------------------------------------------------------*/
+/*		Levanta el archivo de configuración: HECHO!
+		Se conecta a Memoria y espera la conexión de Kernel: HECHO!
+																	*/
+/*------------------------------------------------------------------*/					
+
+
+
 int main(void)
 {
 	t_log * logger = iniciar_logger("log_filesystem.log", "LOG_FILESYSTEM");

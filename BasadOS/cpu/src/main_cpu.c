@@ -1,5 +1,13 @@
 #include "main.h"
 
+/*------------------------------------------------------------------*/
+/*|						CHECKPOINT 2					   			*/
+/*------------------------------------------------------------------*/
+/*		Levanta el archivo de configuración: HECHO
+		Se conecta a Memoria y espera conexiones del Kernel: HECHO.
+		Ejecuta las instrucciones SET, YIELD y EXIT.				*/
+/*------------------------------------------------------------------*/
+
 int main(void)
 {
 	t_log * logger = iniciar_logger("log_cpu.log","LOG_CPU");

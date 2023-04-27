@@ -1,5 +1,11 @@
 #include "main_consola.h"
 
+/*                  CHECKPOINT 2                        */
+/*------------------------------------------------------*/
+/*  Levanta el archivo de configuración: HECHO! 
+    Levanta e interpreta el archivo de pseudocódigo: wip
+    Se conecta al Kernel y envía las instrucciones: wip */
+/*------------------------------------------------------*/  
 
 
 int main(int argc, char* argv[]) {

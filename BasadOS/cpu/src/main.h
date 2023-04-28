@@ -8,8 +8,9 @@
 #include "registros.h"
 
 char* fetch();
-enum Instrucciones decode(char* instruccion_string);
-char** separar_string(char* cadena);
+bool decode(char* instruccion_string);
+t_list* separar_string(char* cadena);
+void execute(t_log* logger, char** instrucciones);
 
 #endif /* CPU_H_ */
 

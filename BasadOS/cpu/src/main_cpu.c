@@ -10,21 +10,25 @@
 		Ejecuta las instrucciones SET, YIELD y EXIT.				*/
 /*------------------------------------------------------------------*/
 
+
+//Posibles mejoras:
+//	-Que en vez de un array de string que switcheo a sus enums
+//	 correspondientes, decode() me devuelva una lista de enums
+
+//Pasar TODO a strings y usar las funciones de strings de la cátedra
+
 enum Instrucciones{
 	SET,
 	YIELD,
 	EXIT
 };
 
+enum Instrucciones string_a_instruccion(char* instruccion);
 
 int main(void)
 {
 	t_log * logger = iniciar_logger("log_cpu.log","LOG_CPU");
 	
-	char* temp = "SET AX 15";
-
-	char** temp2;
-
 	//t_config* config = iniciar_config("configs/cpu.config");
 	
 	//CPU como cliente para memoria
@@ -39,25 +43,25 @@ int main(void)
 		log_info(logger, "CPU recibió al kernel");
 	}
 */
+
 	//FETCH: Busco la instrucción siguiente que me mandó el kernel
-	//char* instruccion_string = fetch();
+	char* instruccion_string = fetch();
 
 	//DECODE: Decodifico la instruccion. Paso el string a un array,
 	//determino qué instrucción del enum de instrucciones tengo que
 	//ejecutar.
-	enum Instrucciones instruccion = SET;
 
-	switch(instruccion) {
-		case SET:
-			set(logger);
-			break;
-		case YIELD:
-			yield(logger);
-			break;
-		case EXIT:
-			exit_instruccion(logger);
-			break;
+
+	char** instruccion_array = string_split(instruccion_string, " ");
+
+	execute(logger, instruccion_array);
+
+	/*if (string_a_instruccion("SET"))
+	{
+		log_info(logger, "p");
 	}
+	else {log_info(logger, "nope");}*/
+
 	return 0;
 }
 
@@ -94,38 +98,53 @@ int conexion_a_kernel(t_log* logger)
 	int server_para_kernel = iniciar_servidor(logger, ip, puerto_cpu_kernel);
 
 	int conexion_kernel = esperar_cliente(logger, server_para_kernel);
+	return conexion_kernel;
 
 }
 
 char* fetch(void)
 {
-	return "SET";
-}
-enum Instrucciones decode(char* instruccion_string)
-{
-	//En realidad quiero que decode me devuelva un array con la instruccion y los parametros
-
-	char* instrucciones[5];
-	char* separador = " ";
-	return SET;
-
+	return "SET AX AB";
 }
 
-char** separar_string(char* cadena)
+enum Instrucciones string_a_instruccion(char* instruccion)
 {
-	char* instrucciones[5];
-	char* separador = " ";
 
-	int i = 0;
-	char* instruccion = strtok(cadena, separador);
-
-	while(instruccion != NULL)
+	if (strcmp(instruccion, "SET") == 0)
 	{
-		instrucciones[i] = instruccion;
-		i++;
-		instruccion = strtok(NULL, separador);
+		return SET;
 	}
-	
-	return instrucciones;
+	if (strcmp(instruccion, "YIELD") == 0)
+	{
+		return true;
+	}
+	if (strcmp(instruccion, "EXIT") == 0)
+	{
+		return true;
+	}
+	return EXIT_FAILURE;
+}
+
+
+void execute(t_log* logger, char** instrucciones)
+{
+	//Switcheo sobre el primer elemento del array de instrucciones
+	enum Instrucciones instruccion = string_a_instruccion(instrucciones[0]);
+
+	switch(instruccion) {
+		case SET:
+			set(logger, instrucciones);
+			log_info(logger, AX);
+			break;
+		case YIELD:
+			yield(logger, instrucciones);
+			break;
+		case EXIT:
+			exit_instruccion(logger, instrucciones);
+			break;
+		default:
+			EXIT_FAILURE;
+	}
+
 }
 

@@ -8,7 +8,7 @@
 #include "registros.h"
 
 char* fetch();
-bool decode(char* instruccion_string);
+char** decode(char* instruccion_string);
 t_list* separar_string(char* cadena);
 void execute(t_log* logger, char** instrucciones);
 

@@ -23,6 +23,7 @@ enum Instrucciones{
 	EXIT
 };
 
+
 enum Instrucciones string_a_instruccion(char* instruccion);
 
 int main(void)
@@ -50,9 +51,7 @@ int main(void)
 	//DECODE: Decodifico la instruccion. Paso el string a un array,
 	//determino qué instrucción del enum de instrucciones tengo que
 	//ejecutar.
-
-
-	char** instruccion_array = string_split(instruccion_string, " ");
+	char** instruccion_array = decode(instruccion_string);
 
 	execute(logger, instruccion_array);
 
@@ -104,7 +103,12 @@ int conexion_a_kernel(t_log* logger)
 
 char* fetch(void)
 {
-	return "SET AX AB";
+	return "SET BX 1";
+}
+
+char** decode(char* instruccion)
+{
+	return string_split(instruccion, " ");
 }
 
 enum Instrucciones string_a_instruccion(char* instruccion)
@@ -116,14 +120,15 @@ enum Instrucciones string_a_instruccion(char* instruccion)
 	}
 	if (strcmp(instruccion, "YIELD") == 0)
 	{
-		return true;
+		return YIELD;
 	}
 	if (strcmp(instruccion, "EXIT") == 0)
 	{
-		return true;
+		return EXIT;
 	}
 	return EXIT_FAILURE;
 }
+
 
 
 void execute(t_log* logger, char** instrucciones)
@@ -134,7 +139,6 @@ void execute(t_log* logger, char** instrucciones)
 	switch(instruccion) {
 		case SET:
 			set(logger, instrucciones);
-			log_info(logger, AX);
 			break;
 		case YIELD:
 			yield(logger, instrucciones);

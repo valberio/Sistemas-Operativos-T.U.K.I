@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
     //FILE *pesudocodigo = fopen(argv[2],"r");
     t_config* config = config_create("/home/utnso/tp-2023-1c-BasadOS/BasadOS/consola/configs/consola.config");
 
-    t_paquete* paquete = crear_paquete();
+
     char* ip = config_get_string_value(config, "IP");
     char* puerto_kernel_consola = config_get_string_value(config, "PUERTO_KERNEL");
 
@@ -32,13 +32,36 @@ int main(int argc, char* argv[]) {
 
     char* instruccion1 = "SET";
     char* instruccion2 = "MOV";
-    crear_buffer(paquete);
-    agregar_a_paquete(paquete,instruccion1,sizeof(instruccion1)+1);
-    agregar_a_paquete(paquete,instruccion2,sizeof(instruccion1)+1);
+    
+    t_paquete* paquete = crear_paquete();
+    //crear_buffer(paquete);
+    agregar_a_paquete(paquete,instruccion1,strlen(instruccion1)+1);
+    agregar_a_paquete(paquete,instruccion2,strlen(instruccion1)+1);
     enviar_paquete(paquete,conexion_con_kernel);
     eliminar_paquete(paquete);
+    //void enviarMensaje(instruccion1, conexion_con_kernel);
 }
-
+/*void paquete(int conexion)
+{
+	// Ahora toca lo divertido!
+	t_paquete* paquete;
+	paquete = crear_paquete();
+	// Leemos y esta vez agregamos las lineas al paquete
+	while(1){
+			printf("Introduce data a enviar\n");
+			char* loQuePongas = readline(">");
+			if(loQuePongas[0] == '\0'){
+				break;
+				}
+			agregar_a_paquete(paquete, loQuePongas, strlen(loQuePongas) + 1);
+			free(loQuePongas);
+			}
+	enviar_paquete(paquete, conexion);
+	eliminar_paquete(paquete);
+	// ¡No te olvides de liberar las líneas y el paquete antes de regresar!
+	
+}
+*/
 
 
 int levantar_conexion(char* ip, char* puerto_kernel_consola) {

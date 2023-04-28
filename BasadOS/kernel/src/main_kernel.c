@@ -7,7 +7,7 @@
 /*------------------------------------------------------------------*/
 /*	Levanta el archivo de configuración: HECHO!
 	Se conecta a CPU, Memoria y File System: HECHO!
-	Espera conexiones de las consolas: wip, abría que implementar
+	Espera conexiones de las consolas: wip, habría que implementar
 									   concurrencia
 	Recibe de las consolas las instrucciones y arma el PCB: calavera
 	Planificación de procesos con FIFO: calavera					*/
@@ -70,9 +70,11 @@ int main(void)
 		log_info(logger, "El kernel recibió la conexión de consola");
 	}
 
+
 	t_list* valores = recibir_paquete(conexion_consola);
 	char* instruccion_recibida = list_get(valores, 0);
 	log_info(logger, instruccion_recibida);
+	//recibir_mensaje(conexion_consola);
 
 }
 

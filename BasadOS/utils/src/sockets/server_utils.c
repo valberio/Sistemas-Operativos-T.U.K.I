@@ -33,10 +33,9 @@ int iniciar_servidor(t_log* logger, char* ip, char* puerto)
 
 
 
-int esperar_cliente(t_log* logger, int socket_servidor)
+int esperar_cliente(int socket_servidor)
 {
 	int socket_cliente = accept(socket_servidor, NULL, NULL);
-	log_info(logger, "Se conecto un cliente al servidor!");
 	return socket_cliente;
 }
 int recibir_operacion(int socket_cliente)
@@ -74,7 +73,9 @@ t_list* recibir_paquete(int socket_cliente)
 	int size;
 	int desplazamiento = 0;
 	void * buffer;
+	printf("Comienza la funcion");
 	t_list* valores = list_create();
+	printf("Crea la lista");
 	int tamanio;
 	buffer = recibir_buffer(&size, socket_cliente);
 	while(desplazamiento < size)

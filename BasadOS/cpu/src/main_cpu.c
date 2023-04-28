@@ -13,7 +13,7 @@
 
 //Posibles mejoras:
 //	-Que en vez de un array de string que switcheo a sus enums
-//	 correspondientes, decode() me devuelva una lista de enums
+//	 correspondientes, decode() me devuelva una lista de enums -> descartado, no todas las instrucciones tienen los mismos enums como parametros
 
 //Pasar TODO a strings y usar las funciones de strings de la cátedra
 
@@ -103,7 +103,7 @@ int conexion_a_kernel(t_log* logger)
 
 char* fetch(void)
 {
-	return "SET BX 1";
+	return "SET AX UNO6";
 }
 
 char** decode(char* instruccion)

@@ -31,12 +31,12 @@ int main(int argc, char* argv[]) {
     int conexion_con_kernel = levantar_conexion(ip, puerto_kernel_consola);
 
     char* instruccion1 = "SET";
-    char* instruccion2 = "MOV";
+    // char* instruccion2 = "MOV";
     
     t_paquete* paquete = crear_paquete();
     //crear_buffer(paquete);
-    agregar_a_paquete(paquete,instruccion1,strlen(instruccion1)+1);
-    agregar_a_paquete(paquete,instruccion2,strlen(instruccion1)+1);
+    agregar_a_paquete(paquete, instruccion1, strlen(instruccion1)+1);
+    // agregar_a_paquete(paquete,instruccion2,strlen(instruccion1)+1);
     enviar_paquete(paquete,conexion_con_kernel);
     eliminar_paquete(paquete);
     //void enviarMensaje(instruccion1, conexion_con_kernel);

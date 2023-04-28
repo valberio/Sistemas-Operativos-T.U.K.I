@@ -21,6 +21,9 @@ int main(void)
 {
 	t_log * logger = iniciar_logger("log_cpu.log","LOG_CPU");
 	
+	char* temp = "SET AX 15";
+
+	char** temp2;
 
 	//t_config* config = iniciar_config("configs/cpu.config");
 	
@@ -29,20 +32,20 @@ int main(void)
 
 
 	//CPU como server del Kernel
-	int conexion_cpu_kernel = conexion_a_kernel(logger);
+	/*int conexion_cpu_kernel = conexion_a_kernel(logger);
 
 	if(conexion_cpu_kernel)
 	{
 		log_info(logger, "CPU recibió al kernel");
 	}
-
+*/
 	//FETCH: Busco la instrucción siguiente que me mandó el kernel
-	char* instruccion_string = fetch();
+	//char* instruccion_string = fetch();
 
 	//DECODE: Decodifico la instruccion. Paso el string a un array,
 	//determino qué instrucción del enum de instrucciones tengo que
 	//ejecutar.
-	enum Instrucciones instruccion = decode(instruccion_string);
+	enum Instrucciones instruccion = SET;
 
 	switch(instruccion) {
 		case SET:
@@ -52,7 +55,7 @@ int main(void)
 			yield(logger);
 			break;
 		case EXIT:
-			exit(logger);
+			exit_instruccion(logger);
 			break;
 	}
 	return 0;
@@ -94,5 +97,35 @@ int conexion_a_kernel(t_log* logger)
 
 }
 
-char* fetch(){return "SET";}
+char* fetch(void)
+{
+	return "SET";
+}
+enum Instrucciones decode(char* instruccion_string)
+{
+	//En realidad quiero que decode me devuelva un array con la instruccion y los parametros
+
+	char* instrucciones[5];
+	char* separador = " ";
+	return SET;
+
+}
+
+char** separar_string(char* cadena)
+{
+	char* instrucciones[5];
+	char* separador = " ";
+
+	int i = 0;
+	char* instruccion = strtok(cadena, separador);
+
+	while(instruccion != NULL)
+	{
+		instrucciones[i] = instruccion;
+		i++;
+		instruccion = strtok(NULL, separador);
+	}
+	
+	return instrucciones;
+}
 

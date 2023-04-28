@@ -12,7 +12,7 @@ void yield(t_log* logger)
     log_info(logger, "Entré en la ejecución de YIELD");
 }
 
-void exit(t_log* logger)
+void exit_instruccion(t_log* logger)
 {
     log_info(logger, "Entré en la ejecución de EXIT");
 }

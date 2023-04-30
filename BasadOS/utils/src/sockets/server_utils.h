@@ -10,7 +10,7 @@
 #include<commons/collections/list.h>
 #include<string.h>
 #include<assert.h>
-
+#include<sockets/client_utils.h>
 
 extern t_log* logger;
 
@@ -19,7 +19,7 @@ void* recibir_buffer(int*, int);
 int iniciar_servidor(t_log* , char* , char* );
 int esperar_cliente(int);
 t_list* recibir_paquete(int);
-void recibir_mensaje(int);
+char* recibir_mensaje(int);
 int recibir_operacion(int);
 void iterator(char*);
 

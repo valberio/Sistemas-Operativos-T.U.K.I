@@ -54,18 +54,26 @@ void* recibir_buffer(int* size, int socket_cliente)
 {
 	void * buffer;
 
-	recv(socket_cliente, size, sizeof(int), MSG_WAITALL);
+	recv(socket_cliente, size, sizeof(int), 0);
 	buffer = malloc(*size);
-	recv(socket_cliente, buffer, *size, MSG_WAITALL);
+	recv(socket_cliente, buffer, *size, 0);
 
 	return buffer;
 }
 
-void recibir_mensaje(int socket_cliente)
+char* recibir_mensaje(int socket_cliente)
 {
-	int size;
-	char* buffer = recibir_buffer(&size, socket_cliente);
-	free(buffer);
+	t_paquete* paquete = malloc(sizeof(t_paquete));
+	paquete->buffer = malloc(sizeof(t_buffer));
+	recv(socket_cliente, &(paquete->codigo_operacion), sizeof(int), 0);
+	recv(socket_cliente, &(paquete->buffer->size), sizeof(int), 0);
+	paquete->buffer->stream = malloc(paquete->buffer->size);
+	recv(socket_cliente, paquete->buffer->stream,paquete->buffer->size, 0);
+	char* datos = malloc(paquete->buffer->size);
+	memcpy(datos, paquete->buffer->stream,paquete->buffer->size);
+	eliminar_paquete(paquete);
+
+	return datos;
 }
 
 t_list* recibir_paquete(int socket_cliente)

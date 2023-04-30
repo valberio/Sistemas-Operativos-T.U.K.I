@@ -9,7 +9,7 @@
 	Se conecta a CPU, Memoria y File System: HECHO!
 	Espera conexiones de las consolas: wip, habría que implementar
 									   concurrencia
-	Recibe de las consolas las instrucciones y arma el PCB: calavera
+	Recibe de las consolas las instrucciones y arma el PCB: wip,falta el PCB
 	Planificación de procesos con FIFO: calavera					*/
 /*------------------------------------------------------------------*/
 
@@ -21,13 +21,8 @@ int main(void)
 	char* ip;
 	
 	t_log* logger = iniciar_logger("log_kernel.log", "LOG_KERNEL");
-	t_config* config = config_create("/home/utnso/tp-2023-1c-BasadOS/BasadOS/kernel/configs/config_kernel.config");
+	t_config* config = iniciar_config("configs/config_kernel.config");
 	
-	if (config == NULL)
-	{
-		log_info(logger, "Error config");
-		EXIT_FAILURE;
-	}
 
 	ip = config_get_string_value(config, "IP");
 	
@@ -60,28 +55,19 @@ int main(void)
 	//Abro el server del kernel para recibir conexiones de la consola
 	char* puerto_kernel_consola = config_get_string_value(config, "PUERTO_CONSOLA");
 	int server_consola = iniciar_servidor(logger, ip, puerto_kernel_consola);
-	
 	if (server_consola != -1)
 	{
 		log_info(logger, "El servidor del kernel se inició");
 	}
-
-	printf("dfgsdfsfd");
 	int conexion_consola = esperar_cliente(server_consola);
-	printf("AAAAAAAA");
 	if (conexion_consola)
-	{	printf("BBBBBBBBBBBBB");
-		// log_info(logger, "El kernel recibió la conexión de consola");
+	{	
+		log_info(logger, "El kernel recibió la conexión de consola");
+		char* codigo_recibido = recibir_mensaje(conexion_consola);
+		printf("\n%s\n",codigo_recibido);
+		liberar_conexion(conexion_consola);
 	}
-	t_list* valores = recibir_paquete(conexion_consola);
-	log_info(logger, "Me llegaron las siguientes instrucciones");
-	list_iterate(valores, (void*) iterator);
-	printf("DDDDDDDDDDD");
-	//char* instruccion_recibida = list_get(valores, 0);
-	//log_info(logger, instruccion_recibida);
-	//recibir_mensaje(conexion_consola);
-	//printf("Se recibe el mensaje");
-	//log_info(logger, "se recibio el mensaje");
+
 	return EXIT_SUCCESS;
 }
 

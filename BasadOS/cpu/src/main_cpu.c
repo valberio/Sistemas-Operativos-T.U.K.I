@@ -30,7 +30,7 @@ int main(void)
 {
 	t_log * logger = iniciar_logger("log_cpu.log","LOG_CPU");
 	
-	//t_config* config = iniciar_config("configs/cpu.config");
+	t_config* config = iniciar_config("../configs/cpu.config");
 	
 	//CPU como cliente para memoria
 	//int conexion_memoria_cpu = conectarse_a_memoria(logger);

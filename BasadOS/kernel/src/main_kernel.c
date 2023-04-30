@@ -21,7 +21,7 @@ int main(void)
 	char* ip;
 	
 	t_log* logger = iniciar_logger("log_kernel.log", "LOG_KERNEL");
-	t_config* config = iniciar_config("configs/config_kernel.config");
+	t_config* config = iniciar_config("../configs/config_kernel.config");
 	
 
 	ip = config_get_string_value(config, "IP");

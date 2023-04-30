@@ -14,7 +14,7 @@
 int main(void)
 {
 	t_log * logger = iniciar_logger("log_filesystem.log", "LOG_FILESYSTEM");
-	t_config* config = iniciar_config("configs/filesystem.config");
+	t_config* config = iniciar_config("../configs/filesystem.config");
 
 	char* ip = config_get_string_value(config, "IP");
 

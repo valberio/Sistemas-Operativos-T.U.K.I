@@ -13,7 +13,7 @@
 int main(int argc, char* argv[]) {
 
     t_log* logger = iniciar_logger("log_memoria.log", "Servidor");
-    t_config* config = iniciar_config("configs/memoria.config");
+    t_config* config = iniciar_config("../configs/memoria.config");
 	//La memoria tiene en paralelo 3 conexiones: con kernel, cpu, y fileSystem
 
 	//Creo el server de la memoria en esta ip y puerto
@@ -29,19 +29,19 @@ int main(int argc, char* argv[]) {
 	//Guardo las conexiones con cada modulo en un socket distinto,
 	//cada módulo se conecta a través de un puerto diferente.
    
-   int conexion_filesystem = esperar_cliente(logger, servidor_memoria_filesystem);
+   int conexion_filesystem = esperar_cliente(servidor_memoria_filesystem);
    if (conexion_filesystem)
    {
 		log_info(logger, "Se conectó el fileSystem");
    }
 
-    int conexion_cpu = esperar_cliente(logger, servidor_memoria_cpu);
+    int conexion_cpu = esperar_cliente(servidor_memoria_cpu);
    if (conexion_cpu)
    {
 		log_info(logger, "Se conectó la CPU");
    }
 
-   int conexion_kernel = esperar_cliente(logger, servidor_memoria_kernel);
+   int conexion_kernel = esperar_cliente(servidor_memoria_kernel);
    if (conexion_kernel)
    {
 		log_info(logger, "Se conecto el kernel");

@@ -9,9 +9,7 @@
 
 
 int main(int argc, char* argv[]) {
-    printf("%d", argc);
     if(argc < 3){
-        printf("holi");
         return EXIT_FAILURE;
     }
 

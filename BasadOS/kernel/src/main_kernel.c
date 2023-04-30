@@ -13,15 +13,14 @@
 	Planificación de procesos con FIFO: calavera					*/
 /*------------------------------------------------------------------*/
 
-
-
+int contador = 0;
 
 int main(void)
 {
 	char* ip;
 	
 	t_log* logger = iniciar_logger("log_kernel.log", "LOG_KERNEL");
-	t_config* config = iniciar_config("../configs/config_kernel.config");
+	t_config* config = iniciar_config("configs/config_kernel.config");
 	
 
 	ip = config_get_string_value(config, "IP");
@@ -64,9 +63,12 @@ int main(void)
 	{	
 		log_info(logger, "El kernel recibió la conexión de consola");
 		char* codigo_recibido = recibir_mensaje(conexion_consola);
-		printf("\n%s\n",codigo_recibido);
-		liberar_conexion(conexion_consola);
+		t_pcb * pcb = crear_pcb(codigo_recibido);
+		char * temp = list_get(pcb->contexto_de_ejecucion.lista_instrucciones, 0);
+		printf("\n%s", temp);
 	}
+	
+	
 
 	return EXIT_SUCCESS;
 }
@@ -88,3 +90,15 @@ void terminar_programa(int conexion, t_log* logger, t_config* config)
 		}
 	liberar_conexion(conexion);
 }*/
+
+t_pcb * crear_pcb( char* instrucciones)
+{
+	t_pcb * pcb = pcb_create();
+	pcb->contexto_de_ejecucion.program_counter = 0;
+	pcb->pid = contador;
+	pcb->contexto_de_ejecucion.lista_instrucciones = list_create();
+	contador++;
+	list_add(pcb->contexto_de_ejecucion.lista_instrucciones, instrucciones);
+	pcb->estimado_rafaga = 1;
+	return pcb;
+}

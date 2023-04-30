@@ -1,15 +1,6 @@
-#include "registros.h"
-#include <string.h>
-#include<loggers/loggers_utils.h>
-
+#include<instrucciones.h>
 
 //Agrego una r a los nombres para que no se pisen con los nombres de los registros reales
-enum Registros{
-    rAX,
-    rBX,
-    rCX,
-    rDX
-};
 
 enum Registros string_a_registro(char* registro);
 

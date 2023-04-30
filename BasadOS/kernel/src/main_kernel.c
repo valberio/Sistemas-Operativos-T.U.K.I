@@ -13,7 +13,6 @@
 	Planificación de procesos con FIFO: calavera					*/
 /*------------------------------------------------------------------*/
 
-int contador = 0;
 
 int main(void)
 {
@@ -65,11 +64,10 @@ int main(void)
 		char* codigo_recibido = recibir_mensaje(conexion_consola);
 		t_pcb * pcb = crear_pcb(codigo_recibido);
 		char * temp = list_get(pcb->contexto_de_ejecucion.lista_instrucciones, 0);
+		printf("\n%s", pcb->contexto_de_ejecucion.registros.AX);
 		printf("\n%s", temp);
 	}
 	
-	
-
 	return EXIT_SUCCESS;
 }
 
@@ -84,21 +82,10 @@ void terminar_programa(int conexion, t_log* logger, t_config* config)
 	  con las funciones de las commons y del TP mencionadas en el enunciado 
 	if(logger != NULL){
 		log_destroy(logger);
-	}
+	1}
 	if(config != NULL){
 			config_destroy(config);
 		}
 	liberar_conexion(conexion);
 }*/
 
-t_pcb * crear_pcb( char* instrucciones)
-{
-	t_pcb * pcb = pcb_create();
-	pcb->contexto_de_ejecucion.program_counter = 0;
-	pcb->pid = contador;
-	pcb->contexto_de_ejecucion.lista_instrucciones = list_create();
-	contador++;
-	list_add(pcb->contexto_de_ejecucion.lista_instrucciones, instrucciones);
-	pcb->estimado_rafaga = 1;
-	return pcb;
-}

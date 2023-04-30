@@ -55,6 +55,9 @@ char *leer_Pseudocodigo(char *archivo_path) {
     FILE *handler = fopen(archivo_path, "r");
 
     if (handler) {
+        // SET AX HOLA
+        // void* stream = SET AX HOLA
+        // char[3] = codigo_operacion
         // Se posiciona el puntero del archivo al final del archivo para obtener su tamaño
         fseek(handler, 0, SEEK_END);
         // Se obtiene el tamaño del archivo

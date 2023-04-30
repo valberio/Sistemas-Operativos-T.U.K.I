@@ -32,7 +32,7 @@
       "request": "launch",
       "program": "${workspaceFolder}/bin/${workspaceFolderBasename}_tests.out",
       "args": [ "configs/consola.config",
-      "prueba.txt"],
+      "pseudocodigo.txt"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],

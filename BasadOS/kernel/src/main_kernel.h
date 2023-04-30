@@ -10,5 +10,6 @@
 int conectarse_a_memoria(t_log* logger);
 int conexion_a_kernel(t_log* logger);
 t_pcb * crear_pcb( char* instrucciones);
+void terminar_programa(t_log* logger, t_config* config);
 
 #endif /* KERNEL_H_ */

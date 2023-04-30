@@ -30,6 +30,7 @@ void liberar_conexion(int* socket_cliente) {
     close(*socket_cliente);
     *socket_cliente = -1;
 }
+
 void* serializar_paquete(t_paquete* paquete, int bytes)
 {
 	void * magic = malloc(bytes);

@@ -13,8 +13,21 @@ t_pcb * crear_pcb( char* instrucciones)
 	pcb->contexto_de_ejecucion.lista_instrucciones = list_create();
 
 	contador++;
-	list_add(pcb->contexto_de_ejecucion.lista_instrucciones, instrucciones);
+	//cb->contexto_de_ejecucion.lista_instrucciones = agregar_instrucciones_a_pcb(instrucciones);
+	list_add_all(pcb->contexto_de_ejecucion.lista_instrucciones, agregar_instrucciones_a_pcb(instrucciones));
 	pcb->estimado_rafaga = 1;
 	
 	return pcb;
+}
+
+t_list* agregar_instrucciones_a_pcb(char* str)
+{
+	t_list* temp_list = list_create();
+	char* token = strtok(str, "\n");
+	while (token != NULL) {
+        //printf("%s\n", token);
+		list_add(temp_list, token);
+        token = strtok(NULL, "\n");
+    }
+	return temp_list;
 }

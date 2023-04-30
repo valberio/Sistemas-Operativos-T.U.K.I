@@ -67,6 +67,7 @@ int main(void)
 		printf("\n%s", pcb->contexto_de_ejecucion.registros.AX);
 		printf("\n%s", temp);
 	}
+	terminar_programa(logger, config);
 	return EXIT_SUCCESS;
 }
 
@@ -74,8 +75,8 @@ void iterator(char* value) {
 	printf("%s", value);
 	//log_info(logger,"%s", value);
 }
-/*
-void terminar_programa(int conexion, t_log* logger, t_config* config)
+
+void terminar_programa(t_log* logger, t_config* config)
 {
 	 Y por ultimo, hay que liberar lo que utilizamos (conexion, log y config) 
 	  con las funciones de las commons y del TP mencionadas en el enunciado 
@@ -83,29 +84,6 @@ void terminar_programa(int conexion, t_log* logger, t_config* config)
 		log_destroy(logger);
 	1}
 	if(config != NULL){
-			config_destroy(config);
-		}
-	liberar_conexion(conexion);
-}*/
-
-// int main() {
-//     char str[] = "Hello\nworld\nhow are you?";
-//     char *token;
-
-//     token = strtok(str, "\n");
-//     while (token != NULL) {
-//         printf("%s\n", token);
-//         token = strtok(NULL, "\n");
-//     }
-
-//     return 0;
-// }
-
-// In this example, the strtok function is used to split the str string at every occurrence of \n.
-// The first argument to strtok is the input string, and the second argument is a string containing
-// the delimiter characters (in this case, just \n). The function returns a pointer to the next token
-// in the string, or NULL if there are no more tokens.
-// The while loop in this example prints each token on a separate line until there are no more tokens left.
-// Note that the strtok function modifies the input string by replacing the delimiter characters with null terminators
-// (\0). If you need to preserve the original string, you should make a copy of it before using strtok.
-
+		config_destroy(config);
+	}
+}

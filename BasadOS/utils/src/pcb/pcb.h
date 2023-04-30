@@ -2,7 +2,9 @@
 #define PCB_H_
 
 #include<commons/collections/list.h>
-#include <stdlib.h>
+#include<stdio.h>
+#include<string.h>
+#include<stdlib.h>
 #include<sys/time.h>
 
 typedef struct{
@@ -32,12 +34,13 @@ typedef struct{
 typedef struct{
     int estado;
     int pid;
-    t_contexto_de_ejecucion contexto_de_ejecucion;   
+    t_contexto_de_ejecucion contexto_de_ejecucion;
     t_list *tabla_segmentos;
     t_list *tabla_archivos_abiertos;
     int estimado_rafaga;
 } t_pcb;
 
 t_pcb *pcb_create();
+t_list* agregar_instrucciones_a_pcb(char*);
 
 #endif /* PCB_H_ */

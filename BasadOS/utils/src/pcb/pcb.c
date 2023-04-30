@@ -31,3 +31,35 @@ t_list* agregar_instrucciones_a_pcb(char* str)
     }
 	return temp_list;
 }
+
+void liberar_pcb(t_pcb* pcb)
+{
+	// free(pcb->contexto_de_ejecucion.registros);
+	list_destroy_and_destroy_elements(pcb->contexto_de_ejecucion.lista_instrucciones, free);
+	list_destroy_and_destroy_elements(pcb->tabla_segmentos, free);
+	list_destroy_and_destroy_elements(pcb->tabla_archivos_abiertos, free);
+	liberar_registros(pcb->contexto_de_ejecucion.registros);
+	free(pcb->tabla_segmentos);
+	free(pcb->tabla_archivos_abiertos);
+	free(pcb);
+
+
+	//list_destroy_and_destroy_elements(pcb->contexto_de_ejecucion, free);
+}
+
+void liberar_registros(t_registros registros){
+	free(registros.AX);
+	free(registros.BX);
+	free(registros.CX);
+	free(registros.DX);
+
+	free(registros.EAX);
+	free(registros.EBX);
+	free(registros.ECX);
+	free(registros.EDX);
+
+	free(registros.RAX);
+	free(registros.RBX);
+	free(registros.RCX);
+	free(registros.RDX);
+}

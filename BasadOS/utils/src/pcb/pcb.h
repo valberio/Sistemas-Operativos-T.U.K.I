@@ -8,7 +8,6 @@
 #include<sys/time.h>
 
 typedef struct{
-
     char AX[4];
     char BX[4];
     char CX[4];
@@ -42,5 +41,7 @@ typedef struct{
 
 t_pcb *pcb_create();
 t_list* agregar_instrucciones_a_pcb(char*);
+void liberar_pcb(t_pcb* pcb);
+//void liberar_registros(t_registros registros);
 
 #endif /* PCB_H_ */

@@ -63,9 +63,11 @@ int main(void)
 		log_info(logger, "El kernel recibió la conexión de consola");
 		char* codigo_recibido = recibir_mensaje(conexion_consola);
 		t_pcb * pcb = crear_pcb(codigo_recibido);
-		char * temp = list_get(pcb->contexto_de_ejecucion.lista_instrucciones, 0);
-		printf("\n%s", pcb->contexto_de_ejecucion.registros.AX);
-		printf("\n%s", temp);
+		//char * temp = list_get(pcb->contexto_de_ejecucion.lista_instrucciones, 0);
+		//printf("\n%s", pcb->contexto_de_ejecucion.registros.AX);
+		//printf("\n%s", temp);
+		free(codigo_recibido);
+		liberar_pcb(pcb);
 	}
 	terminar_programa(logger, config);
 	return EXIT_SUCCESS;
@@ -78,11 +80,11 @@ void iterator(char* value) {
 
 void terminar_programa(t_log* logger, t_config* config)
 {
-	 Y por ultimo, hay que liberar lo que utilizamos (conexion, log y config) 
-	  con las funciones de las commons y del TP mencionadas en el enunciado 
+	 //Y por ultimo, hay que liberar lo que utilizamos (conexion, log y config) 
+	 // con las funciones de las commons y del TP mencionadas en el enunciado 
 	if(logger != NULL){
 		log_destroy(logger);
-	1}
+	}
 	if(config != NULL){
 		config_destroy(config);
 	}

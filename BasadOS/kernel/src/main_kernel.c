@@ -10,7 +10,7 @@
 	Espera conexiones de las consolas: wip, habría que implementar
 									   concurrencia
 	Recibe de las consolas las instrucciones y arma el PCB: wip,falta el PCB
-	Planificación de procesos con FIFO: calavera					*/
+	Planificación de procesos con FIFO: un poquito de avance					*/
 /*------------------------------------------------------------------*/
 
 

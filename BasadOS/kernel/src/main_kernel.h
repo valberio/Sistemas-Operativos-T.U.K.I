@@ -5,6 +5,7 @@
 #include<sockets/client_utils.h>
 #include<sockets/server_utils.h>
 #include<loggers/loggers_utils.h>
+#include"planificacion.h"
 
 
 int conectarse_a_memoria(t_log* logger);

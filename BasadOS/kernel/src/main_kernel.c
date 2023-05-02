@@ -63,10 +63,12 @@ int main(void)
 		log_info(logger, "El kernel recibió la conexión de consola");
 		char* codigo_recibido = recibir_mensaje(conexion_consola);
 		t_pcb * pcb = crear_pcb(codigo_recibido);
-		//char * temp = list_get(pcb->contexto_de_ejecucion.lista_instrucciones, 0);
-		//printf("\n%s", pcb->contexto_de_ejecucion.registros.AX);
-		//printf("\n%s", temp);
 		free(codigo_recibido);
+
+		char * temp = list_get(pcb->contexto_de_ejecucion.lista_instrucciones, 0);
+		printf("\n%s", temp);
+		free(temp);
+
 		liberar_pcb(pcb);
 	}
 	terminar_programa(logger, config);

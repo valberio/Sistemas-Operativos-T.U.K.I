@@ -32,16 +32,16 @@ int main(void)
 	// {
 	// 	log_info(logger, "El kernel envió su conexión a la memoria!");
 	// }
-
+*/
 	//Conecto el kernel como cliente a la CPU
-	 char* puerto_cpu_kernel = config_get_string_value(config, "PUERTO_CPU");
+	char* puerto_cpu_kernel = config_get_string_value(config, "PUERTO_CPU");
 	int cliente_cpu = crear_conexion_al_server(logger, ip, puerto_cpu_kernel);
 	 if (cliente_cpu)
 	 {
+		
 	 	log_info(logger, "El kernel envió su conexión a la CPU!");
 	 }
 
-*/
 	// //Conecto el kernel como cliente del filesystem
 	// char* puerto_filesystem_kernel = config_get_string_value(config, "PUERTO_FILESYSTEM");;
 	// //int cliente_filesystem = crear_conexion_al_server(logger, ip, puerto_filesystem_kernel);
@@ -63,13 +63,14 @@ int main(void)
 		log_info(logger, "El kernel recibió la conexión de consola");
 		char* codigo_recibido = recibir_mensaje(conexion_consola);
 		t_pcb * pcb = crear_pcb(codigo_recibido);
-		free(codigo_recibido);
 
 		char * temp = list_get(pcb->contexto_de_ejecucion.lista_instrucciones, 0);
 		printf("\n%s", temp);
-		free(temp);
-
-		liberar_pcb(pcb);
+		
+		enviar_contexto_de_ejecucion(&(pcb->contexto_de_ejecucion),cliente_cpu);
+		log_info(logger, "El kernel envio el contexto de ejecucion al CPU!");
+		//liberar_pcb(pcb);
+		
 	}
 	terminar_programa(logger, config);
 	return EXIT_SUCCESS;

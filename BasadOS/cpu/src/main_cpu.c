@@ -1,4 +1,4 @@
-#include "main.h"
+#include "main_cpu.h"
 
 
 
@@ -30,30 +30,31 @@ int main(void)
 {
 	t_log * logger = iniciar_logger("log_cpu.log","LOG_CPU");
 	
-	t_config* config = iniciar_config("../configs/cpu.config");
+	t_config* config = iniciar_config("configs/cpu.config");
 	
 	//CPU como cliente para memoria
 	//int conexion_memoria_cpu = conectarse_a_memoria(logger);
 
 
 	//CPU como server del Kernel
-	/*int conexion_cpu_kernel = conexion_a_kernel(logger);
+	int conexion_cpu_kernel = conexion_a_kernel(config,logger);
 
 	if(conexion_cpu_kernel)
 	{
 		log_info(logger, "CPU recibió al kernel");
+		t_contexto_de_ejecucion* contexto_de_ejecucion = recibir_contexto_de_ejecucion(conexion_cpu_kernel);
+		char* instruccion = list_get(contexto_de_ejecucion->lista_instrucciones,0);
+		printf("%s\n",instruccion);
 	}
-*/
-
 	//FETCH: Busco la instrucción siguiente que me mandó el kernel
-	char* instruccion_string = fetch();
+	//char* instruccion_string = fetch();
 
 	//DECODE: Decodifico la instruccion. Paso el string a un array,
 	//determino qué instrucción del enum de instrucciones tengo que
 	//ejecutar.
-	char** instruccion_array = decode(instruccion_string);
+	//char** instruccion_array = decode(instruccion_string);
 
-	execute(logger, instruccion_array);
+	//execute(logger, instruccion_array);
 
 	/*if (string_a_instruccion("SET"))
 	{
@@ -64,16 +65,8 @@ int main(void)
 	return 0;
 }
 
-int conectarse_a_memoria(t_log* logger)
+int conectarse_a_memoria(t_config* config, t_log* logger)
 {
-	t_config* config = config_create("/home/utnso/tp-2023-1c-BasadOS/BasadOS/cpu/configs/cpu.config");
-
-	if (config == NULL)
-	{
-		log_info(logger, "Error abriendo el config");
-		EXIT_FAILURE;
-	}
-
 	char* ip = config_get_string_value(config, "IP");
 	char* puerto_memoria_cpu = config_get_string_value(config, "PUERTO_MEMORIA");
 
@@ -88,19 +81,18 @@ int conectarse_a_memoria(t_log* logger)
 }
 
 
-int conexion_a_kernel(t_log* logger)
+int conexion_a_kernel(t_config* config,t_log* logger)
 {
-	t_config* config = config_create("/home/utnso/tp-2023-1c-BasadOS/BasadOS/cpu/configs/cpu.config");
 	char* puerto_cpu_kernel =  config_get_string_value(config, "PUERTO_KERNEL");
 	char* ip = config_get_string_value(config, "IP");
 
 	int server_para_kernel = iniciar_servidor(logger, ip, puerto_cpu_kernel);
 
-	int conexion_kernel = esperar_cliente(logger, server_para_kernel);
+	int conexion_kernel = esperar_cliente(server_para_kernel);
 	return conexion_kernel;
 
 }
-
+/*
 char* fetch(void)
 {
 	return "SET AX UNO6";
@@ -151,4 +143,4 @@ void execute(t_log* logger, char** instrucciones)
 	}
 
 }
-
+*/

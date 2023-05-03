@@ -2,8 +2,8 @@
 
 //Agrego una r a los nombres para que no se pisen con los nombres de los registros reales
 
-enum Registros string_a_registro(char* registro);
 
+/*
 void set(t_log* logger, char** instrucciones)
 {
     //Guardo en el registro de registros.c el valor
@@ -31,7 +31,7 @@ void set(t_log* logger, char** instrucciones)
             break;
         }    
 }
-
+*/
 void yield(t_log* logger)
 {
     log_info(logger, "Entré en la ejecución de YIELD");
@@ -42,7 +42,7 @@ void exit_instruccion(t_log* logger)
     log_info(logger, "Entré en la ejecución de EXIT");
 }
 
-
+/*
 enum Registros string_a_registro(char* registro)
 {
     if (strcmp(registro, "AX") == 0)
@@ -63,3 +63,4 @@ enum Registros string_a_registro(char* registro)
 	}
 	return EXIT_FAILURE;
 }
+*/

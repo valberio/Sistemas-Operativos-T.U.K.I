@@ -2,6 +2,7 @@
 
 
 
+
 /*------------------------------------------------------------------*/
 /*|						CHECKPOINT 2					   			*/
 /*------------------------------------------------------------------*/
@@ -9,13 +10,6 @@
 		Se conecta a Memoria y espera conexiones del Kernel: HECHO.
 		Ejecuta las instrucciones SET, YIELD y EXIT.				*/
 /*------------------------------------------------------------------*/
-
-
-//Posibles mejoras:
-//	-Que en vez de un array de string que switcheo a sus enums
-//	 correspondientes, decode() me devuelva una lista de enums -> descartado, no todas las instrucciones tienen los mismos enums como parametros
-
-//Pasar TODO a strings y usar las funciones de strings de la cátedra
 
 //Debatir: que condicion de corte le pongo al while?
 
@@ -30,41 +24,49 @@ enum Instrucciones string_a_instruccion(char* instruccion);
 
 int main(void)
 {
+
 	t_log * logger = iniciar_logger("log_cpu.log","LOG_CPU");
-	
 	t_config* config = iniciar_config("../configs/cpu.config");
 	
 	//CPU como cliente para memoria
 	//int conexion_memoria_cpu = conectarse_a_memoria(logger);
 
-
 	//CPU como server del Kernel
-	int conexion_cpu_kernel = conexion_a_kernel(config, logger);
+	//int conexion_cpu_kernel = conexion_a_kernel(config, logger);
+	int conexion_cpu_kernel = 1;
 
 	if(true)
 	{
 		log_info(logger, "CPU recibió al kernel");
-		t_contexto_de_ejecucion* contexto = recibir_contexto_de_ejecucion(conexion_cpu_kernel);
+		//t_contexto_de_ejecucion* contexto = recibir_contexto_de_ejecucion(conexion_cpu_kernel);
 
 
 		//Hardcodeo un contexto para ver que todo funcione
-		/*t_contexto_de_ejecucion* contexto = malloc(sizeof(t_contexto_de_ejecucion));
+		t_contexto_de_ejecucion* contexto = malloc(sizeof(t_contexto_de_ejecucion));
 		contexto->registros = malloc(sizeof(t_registros));
 		contexto->lista_instrucciones = list_create();
 		list_add(contexto->lista_instrucciones, "SET AX HOLA");
-		list_add(contexto->lista_instrucciones, "YIELD");*/
+		list_add(contexto->lista_instrucciones, "YIELD");
 
 		contexto->program_counter = 0;
 		int cant_instrucciones = list_size(contexto->lista_instrucciones);
 		log_info(logger, "Cantidad instrucciones: %i", cant_instrucciones);
-		while (contexto->program_counter < cant_instrucciones)
+
+		while (contexto->program_counter < cant_instrucciones) //Itero sobre todas las instrucciones, ejecutando
 		{
 			char * instruccion = fetch(contexto);
 			log_info(logger, "La instruccion a ejecutar es %s", instruccion);
 
 			char ** instruccion_array = decode(instruccion);
 
-			execute(logger, instruccion_array, &(contexto->registros));
+			int resultado = execute(logger, instruccion_array, &(contexto->registros));
+
+			if (resultado == 1)
+			{
+				devolver_contexto(contexto, conexion_cpu_kernel);
+				log_info(logger, "Devolvi el contexto a kernel");
+				break;
+			}
 			log_info(logger, "Program counter: %i", contexto->program_counter);
 			contexto->program_counter = contexto->program_counter + 1;
 			log_info(logger, "Program counter: %i", contexto->program_counter);
@@ -88,7 +90,6 @@ int conectarse_a_memoria(t_config* config, t_log* logger)
 	return conexion_memoria_cpu;
 }
 
-
 int conexion_a_kernel(t_config* config,t_log* logger)
 {
 	char* puerto_cpu_kernel =  config_get_string_value(config, "PUERTO_KERNEL");
@@ -101,20 +102,9 @@ int conexion_a_kernel(t_config* config,t_log* logger)
 
 }
 
-char * fetch(t_contexto_de_ejecucion * contexto)
-{
-	int program_counter = contexto->program_counter;
 
-	return list_get(contexto->lista_instrucciones, program_counter);
-}
 
-char** decode(char* instruccion)
-{
-	//Todavia no hay que hacer traducciones de memoria, asi que retorna
-	//el string de la instruccion en un array de chars, para facilitar
-	//el acceso a los datos en execute()
-	return string_split(instruccion, " ");
-}
+
 
 enum Instrucciones string_a_instruccion(char* instruccion)
 {
@@ -134,26 +124,18 @@ enum Instrucciones string_a_instruccion(char* instruccion)
 	return EXIT_FAILURE;
 }
 
-
-
-void execute(t_log* logger, char** instrucciones, t_registros * registros)
+void devolver_contexto(t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel)
 {
-	//Switcheo sobre el primer elemento del array de instrucciones
-	enum Instrucciones instruccion = string_a_instruccion(instrucciones[0]);
-
-	switch(instruccion) {
-		case SET:
-			set(logger, instrucciones, registros);
-			break;
-		case YIELD:
-			yield(logger);
-			break;
-		case EXIT:
-			exit_instruccion(logger);
-			break;
-		default:
-			EXIT_FAILURE;
-	}
-	
+	//TODO
+	//A saber: la CPU *siempre* le termina devolviendo el contexto de ejecucion al kernel,
+	//porque siempre las instrucciones terminan con EXIT.
 }
+
+//Si execute() devuelve un 1, es porque la instruccion pide que se devuelva el contexto
+//al kernel. 
+
+//DUDA: "Para las siguientes instrucciones se deberá devolver al módulo Kernel
+// el Contexto de Ejecución actualizado junto al motivo del desalojo"
+//Cuáles son los motivos de desalojo?
+
 

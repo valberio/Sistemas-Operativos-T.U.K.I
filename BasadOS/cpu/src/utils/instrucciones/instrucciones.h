@@ -11,14 +11,29 @@ void yield(t_log* logger);
 void exit_instruccion(t_log* logger);
 enum Registros string_a_registro(char* registro);
 
+
+enum Instrucciones{
+    SET,
+    YIELD,
+    EXIT
+};
+
 enum Registros{
     rAX,
     rBX,
     rCX,
     rDX,
+
+    rEAX,
+    rEBX,
+    rECX,
+    rEDX,
+
+    rRAX,
+    rRBX,
+    rRCX,
+    rRDX
 };
 
 
-
-// enum Registros string_a_registro(char* registro);
 #endif /* INSTRUCCIONES_H_ */

@@ -1,4 +1,4 @@
-#include<instrucciones.h>
+#include "instrucciones.h"
 
 //Agrego una r a los nombres para que no se pisen con los nombres de los registros reales
 
@@ -43,7 +43,8 @@ void exit_instruccion(t_log* logger)
 }
 
 
-enum Registros string_a_registro(char* registro)
+//Esta funcion deberia estar en la carpeta del pcb
+enum Registros string_a_registro(char* registro)       
 {
     if (strcmp(registro, "AX") == 0)
 	{
@@ -60,6 +61,42 @@ enum Registros string_a_registro(char* registro)
     if (strcmp(registro, "DX") == 0)
 	{
 		return rDX;
+	}
+
+    //Registros de 8 bits
+    if (strcmp(registro, "EAX") == 0)
+	{
+		return rEAX;
+	}
+    if (strcmp(registro, "EBX") == 0)
+	{
+		return rEBX;
+	}
+    if (strcmp(registro, "ECX") == 0)
+	{
+		return rECX;
+	}
+    if (strcmp(registro, "EDX") == 0)
+	{
+		return rEDX;
+	}
+
+    //Registros de 16 bits
+    if (strcmp(registro, "RAX") == 0)
+	{
+		return rRAX;
+	}
+    if (strcmp(registro, "REX") == 0)
+	{
+		return rREX;
+	}
+    if (strcmp(registro, "RCX") == 0)
+	{
+		return rRCX;
+	}
+    if (strcmp(registro, "RDX") == 0)
+	{
+		return rRDX;
 	}
 	return EXIT_FAILURE;
 }

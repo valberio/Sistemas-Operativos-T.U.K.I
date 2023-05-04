@@ -57,7 +57,11 @@ int main(void)
 	{
 		log_info(logger, "El servidor del kernel se inició");
 	}
+
+
 	int conexion_consola = esperar_cliente(server_consola);
+
+
 	if (conexion_consola)
 	{	
 		log_info(logger, "El kernel recibió la conexión de consola");
@@ -72,6 +76,20 @@ int main(void)
 		//liberar_pcb(pcb);
 		
 	}
+
+	/*Que deberia haber:
+		-Cola de new
+		-Cola de ready
+		-Algoritmo FIFO que mande el primer proceso a Running, lo mande a la CPU
+
+		while (hay instrucciones en ready)
+		{
+			//mando contexto
+			//cpu devuelve el contexto actualizado
+			//cpu devuelve un int que indica si pasar el proceso a exit o no
+		}
+	*/
+
 	terminar_programa(logger, config);
 	return EXIT_SUCCESS;
 }

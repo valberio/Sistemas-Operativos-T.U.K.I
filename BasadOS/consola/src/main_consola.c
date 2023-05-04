@@ -18,13 +18,13 @@ int main(int argc, char* argv[]) {
 
     // Lectura de config
     char* pseudocodigo = leer_Pseudocodigo(argv[2]);
+    printf("Este es el pseudocodigo %s", pseudocodigo);
 
 
     char* ip = config_get_string_value(config, "IP");
     char* puerto_kernel_consola = config_get_string_value(config, "PUERTO_KERNEL");
 
     int conexion_con_kernel = levantar_conexion(ip, puerto_kernel_consola);
-    
     
     enviar_mensaje(pseudocodigo,conexion_con_kernel);    
     free(pseudocodigo);
@@ -52,7 +52,7 @@ int levantar_conexion(char* ip, char* puerto_kernel_consola) {
 char* leer_Pseudocodigo(char *archivo_path) {
     char* buffer = NULL;
     int string_size, read_size;
-    FILE* handler = fopen(archivo_path, "r");
+    FILE *handler = fopen(archivo_path, "r");
 
     if (handler) {
         // SET AX HOLA
@@ -83,6 +83,13 @@ char* leer_Pseudocodigo(char *archivo_path) {
         // Se cierra el archivo
         fclose(handler);
     }
-
+    else{
+        printf("No se puedo abrir el archivo \n");
+    }
+    if (buffer == NULL)
+    {
+        printf("El buffer es nulo, abortando");
+        EXIT_FAILURE;
+    }
     return buffer;
 }

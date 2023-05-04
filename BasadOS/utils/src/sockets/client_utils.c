@@ -47,8 +47,9 @@ void* serializar_paquete(t_paquete* paquete, int bytes)
 }
 void enviar_mensaje(char* mensaje, int socket_cliente)
 {
-	t_paquete* paquete = malloc(sizeof(t_paquete));
 
+	
+	t_paquete* paquete = malloc(sizeof(t_paquete));
 	paquete->codigo_operacion = MENSAJE;
 	paquete->buffer = malloc(sizeof(t_buffer));
 	paquete->buffer->size = strlen(mensaje) + 1;

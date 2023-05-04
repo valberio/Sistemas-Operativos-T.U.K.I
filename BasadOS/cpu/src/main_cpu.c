@@ -41,22 +41,33 @@ int main(void)
 	//CPU como server del Kernel
 	int conexion_cpu_kernel = conexion_a_kernel(config, logger);
 
-	if(conexion_cpu_kernel)
+	if(true)
 	{
 		log_info(logger, "CPU recibió al kernel");
 		t_contexto_de_ejecucion* contexto = recibir_contexto_de_ejecucion(conexion_cpu_kernel);
 
-		int cant_instrucciones = list_size(contexto->lista_instrucciones);
 
-		while (contexto->program_counter <= cant_instrucciones)
+		//Hardcodeo un contexto para ver que todo funcione
+		/*t_contexto_de_ejecucion* contexto = malloc(sizeof(t_contexto_de_ejecucion));
+		contexto->registros = malloc(sizeof(t_registros));
+		contexto->lista_instrucciones = list_create();
+		list_add(contexto->lista_instrucciones, "SET AX HOLA");
+		list_add(contexto->lista_instrucciones, "YIELD");*/
+
+		contexto->program_counter = 0;
+		int cant_instrucciones = list_size(contexto->lista_instrucciones);
+		log_info(logger, "Cantidad instrucciones: %i", cant_instrucciones);
+		while (contexto->program_counter < cant_instrucciones)
 		{
 			char * instruccion = fetch(contexto);
+			log_info(logger, "La instruccion a ejecutar es %s", instruccion);
 
 			char ** instruccion_array = decode(instruccion);
 
 			execute(logger, instruccion_array, &(contexto->registros));
-
-			contexto->program_counter++;
+			log_info(logger, "Program counter: %i", contexto->program_counter);
+			contexto->program_counter = contexto->program_counter + 1;
+			log_info(logger, "Program counter: %i", contexto->program_counter);
 		}
 	}
 	return 0;

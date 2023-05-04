@@ -27,16 +27,16 @@ typedef struct{
 
 typedef struct{
     int program_counter;
-    t_list * lista_instrucciones;
-    t_registros registros;
+    t_list* lista_instrucciones;
+    t_registros* registros;
 } t_contexto_de_ejecucion;
 
 typedef struct{
     int estado;
     int pid;
     t_contexto_de_ejecucion contexto_de_ejecucion;
-    t_list *tabla_segmentos;
-    t_list *tabla_archivos_abiertos;
+    t_list* tabla_segmentos;
+    t_list* tabla_archivos_abiertos;
     int estimado_rafaga;
 } t_pcb;
 

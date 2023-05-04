@@ -29,7 +29,49 @@ void set(t_log* logger, char** instrucciones, t_registros* registros)
             strcpy(registros->DX, valor);
             log_info(logger, registros->DX);
             break;
-        }
+    
+		//Registros 8 bits
+		case rEAX:
+            strcpy(registros->EAX, valor);
+            log_info(logger, registros->EAX);
+            break;
+        
+		case rEBX:
+            strcpy(registros->EBX, valor);
+            log_info(logger, registros->EBX);
+            break;
+        
+		case rECX:
+            strcpy(registros->EDX, valor);
+            log_info(logger, registros->EDX);
+            break;
+        
+		case rEDX:
+            strcpy(registros->EDX, valor);
+            log_info(logger, registros->EDX);
+            break;
+        
+		//Registros de 16 bits
+		case rRAX:
+            strcpy(registros->RAX, valor);
+            log_info(logger, registros->RAX);
+            break;
+        
+		case rRBX:
+            strcpy(registros->RBX, valor);
+            log_info(logger, registros->RBX);
+            break;
+        
+		case rRCX:
+            strcpy(registros->RDX, valor);
+            log_info(logger, registros->RDX);
+            break;
+        
+		case rRDX:
+            strcpy(registros->RDX, valor);
+            log_info(logger, registros->RDX);
+            break;
+		}
 }
 
 void yield(t_log* logger)
@@ -88,7 +130,7 @@ enum Registros string_a_registro(char* registro)
 	}
     if (strcmp(registro, "REX") == 0)
 	{
-		return rREX;
+		return rRBX;
 	}
     if (strcmp(registro, "RCX") == 0)
 	{

@@ -13,14 +13,7 @@
 
 //Debatir: que condicion de corte le pongo al while?
 
-enum Instrucciones{
-	SET,
-	YIELD,
-	EXIT
-};
 
-
-enum Instrucciones string_a_instruccion(char* instruccion);
 
 int main(void)
 {
@@ -35,10 +28,10 @@ int main(void)
 	//int conexion_cpu_kernel = conexion_a_kernel(config, logger);
 	int conexion_cpu_kernel = 1;
 
-	if(true)
+	if(true) //Cuando quieran probar la conexion con kernel, pongan conexion_cpu_kernel acá
 	{
 		log_info(logger, "CPU recibió al kernel");
-		//t_contexto_de_ejecucion* contexto = recibir_contexto_de_ejecucion(conexion_cpu_kernel);
+		//t_contexto_de_ejecucion* contexto = recibir_contexto_de_ejecucion(conexion_cpu_kernel); //Y descomenten esto
 
 
 		//Hardcodeo un contexto para ver que todo funcione

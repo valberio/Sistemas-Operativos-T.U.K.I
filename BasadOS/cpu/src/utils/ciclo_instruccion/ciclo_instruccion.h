@@ -6,6 +6,11 @@
 #include<sockets/server_utils.h>
 #include<loggers/loggers_utils.h>
 #include<pcb/pcb.h>
+#include "../instrucciones/instrucciones.h"
 
+
+char* fetch(t_contexto_de_ejecucion * contexto);
+char** decode(char* instruccion_string);
+int execute(t_log* logger, char** instrucciones, t_registros* registro);
 
 #endif /* CICLO_INSTRUCCION_H_ */

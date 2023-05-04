@@ -1,5 +1,5 @@
 #include "ciclo_instruccion.h"
-#include <instrucciones/instrucciones.h>
+
 char * fetch(t_contexto_de_ejecucion * contexto)
 {
 	int program_counter = contexto->program_counter;

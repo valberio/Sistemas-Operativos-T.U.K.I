@@ -17,6 +17,8 @@
 
 //Pasar TODO a strings y usar las funciones de strings de la cátedra
 
+//Debatir: que condicion de corte le pongo al while?
+
 enum Instrucciones{
 	SET,
 	YIELD,
@@ -37,30 +39,26 @@ int main(void)
 
 
 	//CPU como server del Kernel
-	/*int conexion_cpu_kernel = conexion_a_kernel(logger);
+	int conexion_cpu_kernel = conexion_a_kernel(logger);
 
 	if(conexion_cpu_kernel)
 	{
 		log_info(logger, "CPU recibió al kernel");
+		t_contexto_de_ejecucion * contexto = recibir_contexto(conexion_cpu_kernel);
+
+		int cant_instrucciones = list_size(contexto->lista_instrucciones);
+
+		while (contexto->program_counter < cant_instrucciones)
+		{
+			char * instruccion = fetch(contexto);
+
+			instruccion = decode(instruccion);
+
+			execute(instruccion, contexto);
+
+			contexto->program_counter++;
+		}
 	}
-*/
-
-	//FETCH: Busco la instrucción siguiente que me mandó el kernel
-	char* instruccion_string = fetch();
-
-	//DECODE: Decodifico la instruccion. Paso el string a un array,
-	//determino qué instrucción del enum de instrucciones tengo que
-	//ejecutar.
-	char** instruccion_array = decode(instruccion_string);
-
-	execute(logger, instruccion_array);
-
-	/*if (string_a_instruccion("SET"))
-	{
-		log_info(logger, "p");
-	}
-	else {log_info(logger, "nope");}*/
-
 	return 0;
 }
 
@@ -101,13 +99,18 @@ int conexion_a_kernel(t_log* logger)
 
 }
 
-char* fetch(void)
+char* fetch(t_contexto_de_ejecucion * contexto)
 {
-	return "SET AX UNO6";
+	int program_counter = contexto->program_counter;
+
+	return list_get(contexto->lista_instrucciones, program_counter);
 }
 
 char** decode(char* instruccion)
 {
+	//Todavia no hay que hacer traducciones de memoria, asi que retorna
+	//el string de la instruccion en un array de chars, para facilitar
+	//el acceso a los datos en execute()
 	return string_split(instruccion, " ");
 }
 

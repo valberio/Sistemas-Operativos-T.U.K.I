@@ -4,16 +4,16 @@
 #include<sockets/client_utils.h>
 #include<sockets/server_utils.h>
 #include<loggers/loggers_utils.h>
-#include "registros.h"
 #include<pcb/pcb.h>
+#include<instrucciones.h>
 
-/*char* fetch();
-char** decode(char* );
-void execute(t_log* , char** );
-*/
-t_list* separar_string(char* );
+char* fetch(t_contexto_de_ejecucion * contexto);
+char** decode(char* instruccion_string);
+void execute(t_log* logger, char** instrucciones, t_registros* registro);
+
 int conectarse_a_memoria(t_config*, t_log* );
 int conexion_a_kernel(t_config*,t_log* );
+t_list* separar_string(char* cadena);
 
 #endif /* CPU_H_ */
 

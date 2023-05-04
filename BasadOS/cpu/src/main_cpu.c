@@ -32,29 +32,29 @@ int main(void)
 {
 	t_log * logger = iniciar_logger("log_cpu.log","LOG_CPU");
 	
-	t_config* config = iniciar_config("configs/cpu.config");
+	t_config* config = iniciar_config("../configs/cpu.config");
 	
 	//CPU como cliente para memoria
 	//int conexion_memoria_cpu = conectarse_a_memoria(logger);
 
 
 	//CPU como server del Kernel
-	int conexion_cpu_kernel = conexion_a_kernel(logger);
+	int conexion_cpu_kernel = conexion_a_kernel(config, logger);
 
 	if(conexion_cpu_kernel)
 	{
 		log_info(logger, "CPU recibió al kernel");
-		t_contexto_de_ejecucion * contexto = recibir_contexto(conexion_cpu_kernel);
+		t_contexto_de_ejecucion* contexto = recibir_contexto_de_ejecucion(conexion_cpu_kernel);
 
 		int cant_instrucciones = list_size(contexto->lista_instrucciones);
 
-		while (contexto->program_counter < cant_instrucciones)
+		while (contexto->program_counter <= cant_instrucciones)
 		{
 			char * instruccion = fetch(contexto);
 
-			instruccion = decode(instruccion);
+			char ** instruccion_array = decode(instruccion);
 
-			execute(instruccion, contexto);
+			execute(logger, instruccion_array, &(contexto->registros));
 
 			contexto->program_counter++;
 		}
@@ -90,7 +90,7 @@ int conexion_a_kernel(t_config* config,t_log* logger)
 
 }
 
-char* fetch(t_contexto_de_ejecucion * contexto)
+char * fetch(t_contexto_de_ejecucion * contexto)
 {
 	int program_counter = contexto->program_counter;
 
@@ -125,24 +125,24 @@ enum Instrucciones string_a_instruccion(char* instruccion)
 
 
 
-void execute(t_log* logger, char** instrucciones)
+void execute(t_log* logger, char** instrucciones, t_registros * registros)
 {
 	//Switcheo sobre el primer elemento del array de instrucciones
 	enum Instrucciones instruccion = string_a_instruccion(instrucciones[0]);
 
 	switch(instruccion) {
 		case SET:
-			set(logger, instrucciones);
+			set(logger, instrucciones, registros);
 			break;
 		case YIELD:
-			yield(logger, instrucciones);
+			yield(logger);
 			break;
 		case EXIT:
-			exit_instruccion(logger, instrucciones);
+			exit_instruccion(logger);
 			break;
 		default:
 			EXIT_FAILURE;
 	}
-
+	
 }
-*/
+

@@ -3,8 +3,8 @@
 //Agrego una r a los nombres para que no se pisen con los nombres de los registros reales
 
 
-/*
-void set(t_log* logger, char** instrucciones)
+
+void set(t_log* logger, char** instrucciones, t_registros* registros)
 {
     //Guardo en el registro de registros.c el valor
     log_info(logger, "Entré en la ejecución de SET");
@@ -14,24 +14,24 @@ void set(t_log* logger, char** instrucciones)
 
     switch (registro){
         case rAX:
-            AX = valor;
-            log_info(logger, AX);
+            strcpy(registros->AX, valor);
+            log_info(logger, registros->AX);
             break;
         case rBX:
-            BX = valor;
-            log_info(logger, BX);
+            strcpy(registros->BX, valor);
+            log_info(logger, registros->BX);
             break;
         case rCX:
-            CX = valor;
-            log_info(logger, CX);
+            strcpy(registros->CX, valor);
+            log_info(logger, registros->CX);
             break;
         case rDX:
-            DX = valor;
-            log_info(logger, DX);
+            strcpy(registros->DX, valor);
+            log_info(logger, registros->DX);
             break;
-        }    
+        }
 }
-*/
+
 void yield(t_log* logger)
 {
     log_info(logger, "Entré en la ejecución de YIELD");
@@ -42,7 +42,7 @@ void exit_instruccion(t_log* logger)
     log_info(logger, "Entré en la ejecución de EXIT");
 }
 
-/*
+
 enum Registros string_a_registro(char* registro)
 {
     if (strcmp(registro, "AX") == 0)
@@ -63,4 +63,3 @@ enum Registros string_a_registro(char* registro)
 	}
 	return EXIT_FAILURE;
 }
-*/

@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
     t_config* config = iniciar_config(argv[1]);
 
     // Lectura de config
-    char *pseudocodigo = leer_Pseudocodigo(argv[2]);
+    char* pseudocodigo = leer_Pseudocodigo(argv[2]);
 
 
     char* ip = config_get_string_value(config, "IP");
@@ -49,10 +49,10 @@ int levantar_conexion(char* ip, char* puerto_kernel_consola) {
    return 0;
 }
 
-char *leer_Pseudocodigo(char *archivo_path) {
-    char *buffer = NULL;
+char* leer_Pseudocodigo(char *archivo_path) {
+    char* buffer = NULL;
     int string_size, read_size;
-    FILE *handler = fopen(archivo_path, "r");
+    FILE* handler = fopen(archivo_path, "r");
 
     if (handler) {
         // SET AX HOLA

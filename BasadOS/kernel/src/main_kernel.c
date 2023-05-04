@@ -19,7 +19,7 @@ int main(void)
 	char* ip;
 	
 	t_log* logger = iniciar_logger("log_kernel.log", "LOG_KERNEL");
-	t_config* config = iniciar_config("configs/config_kernel.config");
+	t_config* config = iniciar_config("../configs/config_kernel.config");
 	
 
 	ip = config_get_string_value(config, "IP");
@@ -49,7 +49,7 @@ int main(void)
 	// {
 	// 	log_info(logger, "El kernel envió su conexión al filesystem!");
 	// }
-
+	
 	//Abro el server del kernel para recibir conexiones de la consola
 	char* puerto_kernel_consola = config_get_string_value(config, "PUERTO_CONSOLA");
 	int server_consola = iniciar_servidor(logger, ip, puerto_kernel_consola);

@@ -62,7 +62,7 @@ int main(void)
 	int conexion_consola = esperar_cliente(server_consola);
 
 
-	if (conexion_consola)
+	if (cliente_cpu)
 	{	
 		log_info(logger, "El kernel recibió la conexión de consola");
 		char* codigo_recibido = recibir_mensaje(conexion_consola);
@@ -73,6 +73,12 @@ int main(void)
 		
 		enviar_contexto_de_ejecucion(&(pcb->contexto_de_ejecucion),cliente_cpu);
 		log_info(logger, "El kernel envio el contexto de ejecucion al CPU!");
+
+		t_contexto_de_ejecucion* contexto_actualizado = malloc(sizeof(t_contexto_de_ejecucion));
+		//contexto_actualizado->registros = malloc(sizeof(t_registros));
+
+		contexto_actualizado = recibir_contexto_de_ejecucion(cliente_cpu);
+		log_info(logger, "Recibi el contexto actualizado");
 		//liberar_pcb(pcb);
 		
 	}

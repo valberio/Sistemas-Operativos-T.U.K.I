@@ -13,7 +13,7 @@
 
 //Debatir: que condicion de corte le pongo al while?
 
-
+//TODO: Funcion que devuelva el contexto de ejecución al kernel
 
 int main(void)
 {
@@ -25,23 +25,23 @@ int main(void)
 	//int conexion_memoria_cpu = conectarse_a_memoria(logger);
 
 	//CPU como server del Kernel
-	//int conexion_cpu_kernel = conexion_a_kernel(config, logger);
-	int conexion_cpu_kernel = 1;
+	int conexion_cpu_kernel = conexion_a_kernel(config, logger);
+	//int conexion_cpu_kernel = 1;
 
-	if(true) //Cuando quieran probar la conexion con kernel, pongan conexion_cpu_kernel acá
+	if(conexion_a_kernel) //Cuando quieran probar la conexion con kernel, pongan conexion_cpu_kernel acá
 	{
 		log_info(logger, "CPU recibió al kernel");
-		//t_contexto_de_ejecucion* contexto = recibir_contexto_de_ejecucion(conexion_cpu_kernel); //Y descomenten esto
+		t_contexto_de_ejecucion* contexto = recibir_contexto_de_ejecucion(conexion_cpu_kernel); //Y descomenten esto
 
 
 		//Hardcodeo un contexto para ver que todo funcione
-		t_contexto_de_ejecucion* contexto = malloc(sizeof(t_contexto_de_ejecucion));
+		/*t_contexto_de_ejecucion* contexto = malloc(sizeof(t_contexto_de_ejecucion));
 		contexto->registros = malloc(sizeof(t_registros));
 		contexto->lista_instrucciones = list_create();
 		list_add(contexto->lista_instrucciones, "SET AX HOLA");
-		list_add(contexto->lista_instrucciones, "YIELD");
+		list_add(contexto->lista_instrucciones, "YIELD");*/
 
-		contexto->program_counter = 0;
+		contexto->program_counter = 0; //Esto hay que pasarlo a crear_pcb
 		int cant_instrucciones = list_size(contexto->lista_instrucciones);
 		log_info(logger, "Cantidad instrucciones: %i", cant_instrucciones);
 
@@ -95,10 +95,6 @@ int conexion_a_kernel(t_config* config,t_log* logger)
 
 }
 
-
-
-
-
 enum Instrucciones string_a_instruccion(char* instruccion)
 {
 
@@ -122,6 +118,7 @@ void devolver_contexto(t_contexto_de_ejecucion* contexto, int conexion_cpu_kerne
 	//TODO
 	//A saber: la CPU *siempre* le termina devolviendo el contexto de ejecucion al kernel,
 	//porque siempre las instrucciones terminan con EXIT.
+	enviar_contexto_de_ejecucion(contexto, conexion_cpu_kernel);
 }
 
 //Si execute() devuelve un 1, es porque la instruccion pide que se devuelva el contexto

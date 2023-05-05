@@ -15,7 +15,6 @@ int crear_conexion_al_server(t_log* logger, char* ip, char* puerto)
                     server_info->ai_socktype,
                     server_info->ai_protocol);
 
-    freeaddrinfo(server_info);
 
     if(connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == -1)
     {
@@ -23,6 +22,7 @@ int crear_conexion_al_server(t_log* logger, char* ip, char* puerto)
         return 0;
     }
     log_info(logger, "Cliente conectado al server");
+	freeaddrinfo(server_info);
     return socket_cliente;
 }
 
@@ -42,13 +42,10 @@ void* serializar_paquete(t_paquete* paquete, int bytes)
 	desplazamiento+= sizeof(int);
 	memcpy(magic + desplazamiento, paquete->buffer->stream, paquete->buffer->size);
 	desplazamiento+= paquete->buffer->size;
-
 	return magic;
 }
 void enviar_mensaje(char* mensaje, int socket_cliente)
 {
-
-	
 	t_paquete* paquete = malloc(sizeof(t_paquete));
 	paquete->codigo_operacion = MENSAJE;
 	paquete->buffer = malloc(sizeof(t_buffer));

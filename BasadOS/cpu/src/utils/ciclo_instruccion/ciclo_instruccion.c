@@ -34,7 +34,24 @@ int execute(t_log* logger, char** instrucciones, t_registros * registros)
 			return 1;
 			break;
 		default:
-			EXIT_FAILURE;
+			return 0;
 	}
-	
+}
+
+enum Instrucciones string_a_instruccion(char* instruccion)
+{
+
+	if (strcmp(instruccion, "SET") == 0)
+	{
+		return SET;
+	}
+	if (strcmp(instruccion, "YIELD") == 0)
+	{
+		return YIELD;
+	}
+	if (strcmp(instruccion, "EXIT") == 0)
+	{
+		return EXIT;
+	}
+	return EXIT_FAILURE;
 }

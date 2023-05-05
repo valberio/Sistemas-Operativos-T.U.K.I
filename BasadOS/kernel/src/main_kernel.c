@@ -19,7 +19,7 @@ int main(void)
 	char* ip;
 	
 	t_log* logger = iniciar_logger("log_kernel.log", "LOG_KERNEL");
-	t_config* config = iniciar_config("../configs/config_kernel.config");
+	t_config* config = iniciar_config("configs/config_kernel.config");
 	
 
 	ip = config_get_string_value(config, "IP");
@@ -36,11 +36,7 @@ int main(void)
 	//Conecto el kernel como cliente a la CPU
 	char* puerto_cpu_kernel = config_get_string_value(config, "PUERTO_CPU");
 	int cliente_cpu = crear_conexion_al_server(logger, ip, puerto_cpu_kernel);
-	 if (cliente_cpu)
-	 {
-	 	log_info(logger, "El kernel envió su conexión a la CPU!");
-	 }
-
+	
 	// //Conecto el kernel como cliente del filesystem
 	// char* puerto_filesystem_kernel = config_get_string_value(config, "PUERTO_FILESYSTEM");;
 	// //int cliente_filesystem = crear_conexion_al_server(logger, ip, puerto_filesystem_kernel);
@@ -63,16 +59,23 @@ int main(void)
 
 	if (cliente_cpu)
 	{	
-		parametros_hilo params = {conexion_consola, cliente_cpu};
-		pthread_t hilo1;
-		pthread_create(&hilo1, NULL, (void*)enviar_instrucciones_a_cpu, (void*) &params);
-		log_info(logger, "El kernel envio el contexto de ejecucion al CPU!");
-		//t_contexto_de_ejecucion* contexto_actualizado = malloc(sizeof(t_contexto_de_ejecucion));
-		//contexto_actualizado->registros = malloc(sizeof(t_registros));
+		log_info(logger, "El kernel envió su conexión a la CPU!");
+		// parametros_hilo params = {conexion_consola, cliente_cpu};
+		// pthread_t hilo1;
+		// pthread_create(&hilo1, NULL, (void*)enviar_instrucciones_a_cpu, (void*) &params);
+		// log_info(logger, "El kernel envio el contexto de ejecucion al CPU!");
+		//parametros_hilo* params = (parametros_hilo*) arg;
+		//int conexion_consola = params->conexion_servidor;
+		//int cliente_cpu = params->conexion_cliente;
+		char* codigo_recibido = recibir_mensaje(conexion_consola);
+		t_pcb * pcb = crear_pcb(codigo_recibido);
+
+		char * temp = list_get(pcb->contexto_de_ejecucion.lista_instrucciones, 0);
 		
-		//contexto_actualizado = recibir_contexto_de_ejecucion(cliente_cpu);
-		//log_info(logger, "Recibi el contexto actualizado");
-		//liberar_pcb(pcb);
+		enviar_contexto_de_ejecucion(&(pcb->contexto_de_ejecucion), cliente_cpu);
+		//t_contexto_de_ejecucion*  contexto_actualizado = recibir_contexto_de_ejecucion(cliente_cpu);
+		log_info(logger, "Recibi el contexto actualizado");
+		liberar_pcb(pcb);
 		
 	}
 

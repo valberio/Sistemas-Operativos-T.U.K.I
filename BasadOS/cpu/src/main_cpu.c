@@ -19,7 +19,7 @@ int main(void)
 {
 
 	t_log * logger = iniciar_logger("log_cpu.log","LOG_CPU");
-	t_config* config = iniciar_config("../configs/cpu.config");
+	t_config* config = iniciar_config("configs/cpu.config");
 	
 	//CPU como cliente para memoria
 	//int conexion_memoria_cpu = conectarse_a_memoria(logger);
@@ -28,7 +28,7 @@ int main(void)
 	int conexion_cpu_kernel = conexion_a_kernel(config, logger);
 	//int conexion_cpu_kernel = 1;
 
-	if(conexion_a_kernel) //Cuando quieran probar la conexion con kernel, pongan conexion_cpu_kernel acá
+	if(conexion_cpu_kernel) //Cuando quieran probar la conexion con kernel, pongan conexion_cpu_kernel acá
 	{
 		log_info(logger, "CPU recibió al kernel");
 		t_contexto_de_ejecucion* contexto = recibir_contexto_de_ejecucion(conexion_cpu_kernel); //Y descomenten esto
@@ -50,13 +50,13 @@ int main(void)
 			char * instruccion = fetch(contexto);
 			log_info(logger, "La instruccion a ejecutar es %s", instruccion);
 
-			char ** instruccion_array = decode(instruccion);
+			char* *instruccion_array = decode(instruccion);
 
-			int resultado = execute(logger, instruccion_array, &(contexto->registros));
+			int resultado = execute(logger, instruccion_array, contexto->registros);
 
 			if (resultado == 1)
 			{
-				devolver_contexto(contexto, conexion_cpu_kernel);
+				enviar_contexto_de_ejecucion(contexto, conexion_cpu_kernel);				
 				log_info(logger, "Devolvi el contexto a kernel");
 				break;
 			}
@@ -65,6 +65,7 @@ int main(void)
 			log_info(logger, "Program counter: %i", contexto->program_counter);
 		}
 	}
+	liberar_conexion(&conexion_cpu_kernel);
 	return 0;
 }
 
@@ -95,31 +96,15 @@ int conexion_a_kernel(t_config* config,t_log* logger)
 
 }
 
-enum Instrucciones string_a_instruccion(char* instruccion)
-{
 
-	if (strcmp(instruccion, "SET") == 0)
-	{
-		return SET;
-	}
-	if (strcmp(instruccion, "YIELD") == 0)
-	{
-		return YIELD;
-	}
-	if (strcmp(instruccion, "EXIT") == 0)
-	{
-		return EXIT;
-	}
-	return EXIT_FAILURE;
-}
 
-void devolver_contexto(t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel)
-{
-	//TODO
-	//A saber: la CPU *siempre* le termina devolviendo el contexto de ejecucion al kernel,
-	//porque siempre las instrucciones terminan con EXIT.
-	enviar_contexto_de_ejecucion(contexto, conexion_cpu_kernel);
-}
+// void devolver_contexto(t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel)
+// {
+// 	//TODO
+// 	//A saber: la CPU *siempre* le termina devolviendo el contexto de ejecucion al kernel,
+// 	//porque siempre las instrucciones terminan con EXIT.
+// 	
+// }
 
 //Si execute() devuelve un 1, es porque la instruccion pide que se devuelva el contexto
 //al kernel. 

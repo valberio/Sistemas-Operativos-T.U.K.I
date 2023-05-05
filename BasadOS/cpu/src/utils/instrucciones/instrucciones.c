@@ -15,61 +15,61 @@ void set(t_log* logger, char** instrucciones, t_registros* registros)
     switch (registro){
         case rAX:
             strcpy(registros->AX, valor);
-            log_info(logger, registros->AX);
+            //log_info(logger, registros->AX);
             break;
         case rBX:
             strcpy(registros->BX, valor);
-            log_info(logger, registros->BX);
+            //log_info(logger, registros->BX);
             break;
         case rCX:
             strcpy(registros->CX, valor);
-            log_info(logger, registros->CX);
+            //log_info(logger, registros->CX);
             break;
         case rDX:
             strcpy(registros->DX, valor);
-            log_info(logger, registros->DX);
+            //log_info(logger, registros->DX);
             break;
     
 		//Registros 8 bits
 		case rEAX:
             strcpy(registros->EAX, valor);
-            log_info(logger, registros->EAX);
+            //log_info(logger, registros->EAX);
             break;
         
 		case rEBX:
             strcpy(registros->EBX, valor);
-            log_info(logger, registros->EBX);
+            //log_info(logger, registros->EBX);
             break;
         
 		case rECX:
             strcpy(registros->EDX, valor);
-            log_info(logger, registros->EDX);
+            //log_info(logger, registros->EDX);
             break;
         
 		case rEDX:
             strcpy(registros->EDX, valor);
-            log_info(logger, registros->EDX);
+            //log_info(logger, registros->EDX);
             break;
         
 		//Registros de 16 bits
 		case rRAX:
             strcpy(registros->RAX, valor);
-            log_info(logger, registros->RAX);
+            //log_info(logger, registros->RAX);
             break;
         
 		case rRBX:
             strcpy(registros->RBX, valor);
-            log_info(logger, registros->RBX);
+            //log_info(logger, registros->RBX);
             break;
         
 		case rRCX:
             strcpy(registros->RDX, valor);
-            log_info(logger, registros->RDX);
+            //log_info(logger, registros->RDX);
             break;
         
 		case rRDX:
             strcpy(registros->RDX, valor);
-            log_info(logger, registros->RDX);
+            //log_info(logger, registros->RDX);
             break;
 		}
 }

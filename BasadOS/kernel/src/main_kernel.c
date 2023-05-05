@@ -1,5 +1,5 @@
 #include "main_kernel.h"
-
+#include <pthread.h>
 //LOS PUERTOS SIGUEN LA SIGUIENTE ASIGNACION: puerto_servidor_cliente
 
 /*------------------------------------------------------------------*/
@@ -38,7 +38,6 @@ int main(void)
 	int cliente_cpu = crear_conexion_al_server(logger, ip, puerto_cpu_kernel);
 	 if (cliente_cpu)
 	 {
-		
 	 	log_info(logger, "El kernel envió su conexión a la CPU!");
 	 }
 
@@ -60,25 +59,19 @@ int main(void)
 
 
 	int conexion_consola = esperar_cliente(server_consola);
-
+	log_info(logger, "El kernel recibió la conexión de consola");
 
 	if (cliente_cpu)
 	{	
-		log_info(logger, "El kernel recibió la conexión de consola");
-		char* codigo_recibido = recibir_mensaje(conexion_consola);
-		t_pcb * pcb = crear_pcb(codigo_recibido);
-
-		char * temp = list_get(pcb->contexto_de_ejecucion.lista_instrucciones, 0);
-		printf("\n%s", temp);
-		
-		enviar_contexto_de_ejecucion(&(pcb->contexto_de_ejecucion),cliente_cpu);
+		parametros_hilo params = {conexion_consola, cliente_cpu};
+		pthread_t hilo1;
+		pthread_create(&hilo1, NULL, (void*)enviar_instrucciones_a_cpu, (void*) &params);
 		log_info(logger, "El kernel envio el contexto de ejecucion al CPU!");
-
-		t_contexto_de_ejecucion* contexto_actualizado = malloc(sizeof(t_contexto_de_ejecucion));
+		//t_contexto_de_ejecucion* contexto_actualizado = malloc(sizeof(t_contexto_de_ejecucion));
 		//contexto_actualizado->registros = malloc(sizeof(t_registros));
-
-		contexto_actualizado = recibir_contexto_de_ejecucion(cliente_cpu);
-		log_info(logger, "Recibi el contexto actualizado");
+		
+		//contexto_actualizado = recibir_contexto_de_ejecucion(cliente_cpu);
+		//log_info(logger, "Recibi el contexto actualizado");
 		//liberar_pcb(pcb);
 		
 	}
@@ -115,4 +108,17 @@ void terminar_programa(t_log* logger, t_config* config)
 	if(config != NULL){
 		config_destroy(config);
 	}
+}
+
+void enviar_instrucciones_a_cpu(void* arg) {
+	parametros_hilo* params = (parametros_hilo*) arg;
+	int conexion_consola = params->conexion_servidor;
+	int cliente_cpu = params->conexion_cliente;
+	char* codigo_recibido = recibir_mensaje(conexion_consola);
+		t_pcb * pcb = crear_pcb(codigo_recibido);
+
+		char * temp = list_get(pcb->contexto_de_ejecucion.lista_instrucciones, 0);
+		printf("\n%s", temp);
+		
+		enviar_contexto_de_ejecucion(&(pcb->contexto_de_ejecucion), cliente_cpu);
 }

@@ -76,6 +76,7 @@ t_contexto_de_ejecucion* recibir_contexto_de_ejecucion(int socket_cliente){
 	t_contexto_de_ejecucion* contexto_de_ejecucion = deserializar_contexto_de_ejecucion(paquete->buffer);
 	return contexto_de_ejecucion;
 }
+
 t_contexto_de_ejecucion* deserializar_contexto_de_ejecucion(t_buffer* buffer){
 	int instruccion_longitud;
 	t_contexto_de_ejecucion* contexto_de_ejecucion = malloc(sizeof(t_contexto_de_ejecucion));

@@ -26,6 +26,7 @@ int main(void)
 
 	//CPU como server del Kernel
 	int conexion_cpu_kernel = conexion_a_kernel(config, logger);
+	config_destroy(config);
 	//int conexion_cpu_kernel = 1;
 
 	if(conexion_cpu_kernel) //Cuando quieran probar la conexion con kernel, pongan conexion_cpu_kernel acá
@@ -44,7 +45,6 @@ int main(void)
 		contexto->program_counter = 0; //Esto hay que pasarlo a crear_pcb
 		int cant_instrucciones = list_size(contexto->lista_instrucciones);
 		log_info(logger, "Cantidad instrucciones: %i", cant_instrucciones);
-
 		while (contexto->program_counter < cant_instrucciones) //Itero sobre todas las instrucciones, ejecutando
 		{
 			char * instruccion = fetch(contexto);
@@ -60,12 +60,16 @@ int main(void)
 
 			if (resultado == 1)
 			{
-				enviar_contexto_de_ejecucion(contexto, conexion_cpu_kernel);				
+				enviar_contexto_de_ejecucion(contexto, conexion_cpu_kernel); 
+							
 				log_info(logger, "Devolvi el contexto a kernel");
+				
 				break;
 			}
-
+			
 		}
+		liberar_contexto_de_ejecucion(contexto);
+		log_destroy(logger);
 	}
 	liberar_conexion(&conexion_cpu_kernel);
 	return 0;

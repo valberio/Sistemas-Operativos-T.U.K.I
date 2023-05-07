@@ -32,17 +32,16 @@ t_pcb * crear_pcb( char* instrucciones)
 	
 	t_list* temp_list = agregar_instrucciones_a_pcb(instrucciones);
 	list_add_all(pcb->contexto_de_ejecucion.lista_instrucciones, temp_list);
-	list_destroy_and_destroy_elements(temp_list, free);
+	list_clean(temp_list);
+	list_destroy(temp_list);
 	pcb->estimado_rafaga = 1;
-
+	
 	return pcb;
 }
 
 t_list* agregar_instrucciones_a_pcb(char* str)
 {
 	t_list* temp_list = list_create();
-	char* buffer = malloc(sizeof(str)+1);
-	strcpy(buffer,str);
 	char* token = strtok(str, "\n");
 
 	while (token != NULL) {
@@ -62,13 +61,19 @@ void liberar_pcb(t_pcb* pcb)
 	free(pcb);
 }
 
+void liberar_contexto_de_ejecucion(t_contexto_de_ejecucion* contexto_de_ejecucion){
+	list_clean(contexto_de_ejecucion->lista_instrucciones);
+	list_destroy(contexto_de_ejecucion->lista_instrucciones);
+	free(contexto_de_ejecucion->registros);
+	free(contexto_de_ejecucion);
+}
+
+
 void enviar_contexto_de_ejecucion(t_contexto_de_ejecucion* contexto_de_ejecucion,int socket_cliente){
-	
 	char* instruccion = list_get(contexto_de_ejecucion->lista_instrucciones,0);
-	
-	int instruccion_longitud = strlen(instruccion);
+	size_t instruccion_longitud = strlen(instruccion);
 	t_paquete* paquete = crear_paquete();
-	paquete->buffer->size = sizeof(int) + sizeof(t_registros) + sizeof(int) + strlen(instruccion) ;
+	paquete->buffer->size = sizeof(int) + sizeof(t_registros) + sizeof(size_t) + strlen(instruccion)+1;
 	void* stream = malloc(paquete->buffer->size);
 	int offset = 0;
 
@@ -76,9 +81,9 @@ void enviar_contexto_de_ejecucion(t_contexto_de_ejecucion* contexto_de_ejecucion
 	offset += sizeof(int);
 	memcpy(stream + offset, contexto_de_ejecucion->registros, sizeof(t_registros));
 	offset += sizeof(t_registros);
-	memcpy(stream + offset, &instruccion_longitud, sizeof(int));
-	offset += sizeof(int);
-	memcpy(stream + offset, instruccion, strlen(instruccion));
+	memcpy(stream + offset, &instruccion_longitud, sizeof(size_t)); 
+	offset += sizeof(size_t);
+	memcpy(stream + offset, instruccion, strlen(instruccion)+1);
 
 	paquete->buffer->stream = stream;
 
@@ -93,11 +98,10 @@ t_contexto_de_ejecucion* recibir_contexto_de_ejecucion(int socket_cliente){
 	contexto_de_ejecucion->registros = malloc(sizeof(t_registros));
 	contexto_de_ejecucion->lista_instrucciones = list_create();
 
-	recv(socket_cliente, &(paquete->codigo_operacion), sizeof(int), 0);
-	recv(socket_cliente, &(paquete->buffer->size), sizeof(int), 0);
-	printf("el tamanio del buffer es %d\n\n",paquete->buffer->size);
+	recv(socket_cliente, &(paquete->codigo_operacion), sizeof(int), MSG_WAITALL);
+	recv(socket_cliente, &(paquete->buffer->size), sizeof(int), MSG_WAITALL);
 	paquete->buffer->stream = malloc(paquete->buffer->size);
-	recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, 0);
+	recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
 
 	contexto_de_ejecucion = deserializar_contexto_de_ejecucion(paquete->buffer);
 	eliminar_paquete(paquete);
@@ -106,7 +110,7 @@ t_contexto_de_ejecucion* recibir_contexto_de_ejecucion(int socket_cliente){
 	
 }
 t_contexto_de_ejecucion* deserializar_contexto_de_ejecucion(t_buffer* buffer){
-	int instruccion_longitud;
+	size_t instruccion_longitud;
 	t_contexto_de_ejecucion* contexto_de_ejecucion = malloc(sizeof(t_contexto_de_ejecucion));
 	contexto_de_ejecucion->registros = malloc(sizeof(t_registros));
 
@@ -118,9 +122,8 @@ t_contexto_de_ejecucion* deserializar_contexto_de_ejecucion(t_buffer* buffer){
     memcpy(contexto_de_ejecucion->registros, stream, sizeof(t_registros));
     stream += sizeof(t_registros);
 
-    // Por último, para obtener el nombre, primero recibimos el tamaño y luego el texto en sí:
-    memcpy(&(instruccion_longitud), stream, sizeof(int));
-    stream += sizeof(int);
+    memcpy(&instruccion_longitud, stream, sizeof(size_t));
+    stream += sizeof(size_t);
     char* instruccion = malloc(instruccion_longitud);
     memcpy(instruccion, stream, instruccion_longitud);
 

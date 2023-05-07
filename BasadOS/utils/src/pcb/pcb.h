@@ -46,6 +46,8 @@ void liberar_pcb(t_pcb* pcb);
 void enviar_contexto_de_ejecucion(t_contexto_de_ejecucion* contexto_de_ejecucion,int);
 t_contexto_de_ejecucion* recibir_contexto_de_ejecucion(int socket_cliente);
 t_contexto_de_ejecucion* deserializar_contexto_de_ejecucion(t_buffer* buffer);
+void liberar_contexto_de_ejecucion(t_contexto_de_ejecucion*);
+
 //void liberar_registros(t_registros registros);
 
 #endif /* PCB_H_ */

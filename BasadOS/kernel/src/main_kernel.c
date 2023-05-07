@@ -69,14 +69,14 @@ int main(void)
 		//int cliente_cpu = params->conexion_cliente;
 		char* codigo_recibido = recibir_mensaje(conexion_consola);
 		t_pcb * pcb = crear_pcb(codigo_recibido);
-
-		char * temp = list_get(pcb->contexto_de_ejecucion.lista_instrucciones, 0);
+		//char * temp = list_get(pcb->contexto_de_ejecucion.lista_instrucciones, 0);
 		
 		enviar_contexto_de_ejecucion(&(pcb->contexto_de_ejecucion), cliente_cpu);
-		t_contexto_de_ejecucion*  contexto_actualizado = recibir_contexto_de_ejecucion(cliente_cpu);
+		t_contexto_de_ejecucion* contexto_actualizado = recibir_contexto_de_ejecucion(cliente_cpu);
 		log_info(logger, "Recibi el contexto actualizado");
 		log_info(logger, "En el contexto hay %i", contexto_actualizado->program_counter);
 		liberar_pcb(pcb);
+		liberar_contexto_de_ejecucion(contexto_actualizado);
 		
 	}
 

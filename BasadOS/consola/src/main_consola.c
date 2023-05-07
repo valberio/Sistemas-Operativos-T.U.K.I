@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
     
     enviar_mensaje(pseudocodigo,conexion_con_kernel);    
     free(pseudocodigo);
-
+    config_destroy(config);
 }
 
 int levantar_conexion(char* ip, char* puerto_kernel_consola) {
@@ -39,13 +39,17 @@ int levantar_conexion(char* ip, char* puerto_kernel_consola) {
     if (conexion_kernel)
     {
         log_info(logger_consola, "Consola envió su conexión al kernel");
+        log_destroy(logger_consola);
+
         return conexion_kernel;
     }
     if ((conexion_kernel == -1))
     {
         log_info(logger_consola, "Error conectando la consola con el kernel");
+        log_destroy(logger_consola);
         return -1;
     }
+   log_destroy(logger_consola);
    return 0;
 }
 

@@ -54,15 +54,17 @@ int main(void)
 
 			int resultado = execute(logger, instruccion_array, contexto->registros);
 
+			log_info(logger, "Program counter: %i", contexto->program_counter);
+			contexto->program_counter = contexto->program_counter + 1;
+			log_info(logger, "Program counter: %i", contexto->program_counter);
+
 			if (resultado == 1)
 			{
 				enviar_contexto_de_ejecucion(contexto, conexion_cpu_kernel);				
 				log_info(logger, "Devolvi el contexto a kernel");
 				break;
 			}
-			log_info(logger, "Program counter: %i", contexto->program_counter);
-			contexto->program_counter = contexto->program_counter + 1;
-			log_info(logger, "Program counter: %i", contexto->program_counter);
+
 		}
 	}
 	liberar_conexion(&conexion_cpu_kernel);

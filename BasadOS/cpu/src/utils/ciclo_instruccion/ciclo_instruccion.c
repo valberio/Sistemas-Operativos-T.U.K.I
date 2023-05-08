@@ -12,7 +12,8 @@ char** decode(char* instruccion)
 	//Todavia no hay que hacer traducciones de memoria, asi que retorna
 	//el string de la instruccion en un array de chars, para facilitar
 	//el acceso a los datos en execute()
-	return string_split(instruccion, " ");
+	char ** array = string_split(instruccion, " ");
+	return array;
 }
 
 int execute(t_log* logger, char** instrucciones, t_registros * registros)
@@ -54,4 +55,14 @@ enum Instrucciones string_a_instruccion(char* instruccion)
 		return EXIT;
 	}
 	return EXIT_FAILURE;
+}
+
+void liberar_array_instrucciones(char** array_instrucciones)
+{
+    char** temp = array_instrucciones;
+    while (*temp) {
+        free(*temp);
+        temp++;
+    }
+    free(array_instrucciones);
 }

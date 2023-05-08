@@ -73,7 +73,6 @@ int main(void)
 		
 		enviar_contexto_de_ejecucion(&(pcb->contexto_de_ejecucion), cliente_cpu);
 
-		
 		t_contexto_de_ejecucion* contexto_actualizado = recibir_contexto_de_ejecucion(cliente_cpu);
 		log_info(logger, "Recibi el contexto actualizado");
 		log_info(logger, "En el contexto hay %i", contexto_actualizado->program_counter);

@@ -61,13 +61,14 @@ int main(void)
 			if (resultado == 1)
 			{
 				enviar_contexto_de_ejecucion(contexto, conexion_cpu_kernel); 
-							
-				log_info(logger, "Devolvi el contexto a kernel");
-				
+				liberar_array_instrucciones(instruccion_array);
+				log_info(logger, "Devolvi el contexto a kernel");		
 				break;
 			}
+			free(instruccion);
 			
 		}
+
 		liberar_contexto_de_ejecucion(contexto);
 		log_destroy(logger);
 	}

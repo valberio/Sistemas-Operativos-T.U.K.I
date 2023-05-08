@@ -9,18 +9,32 @@ int crear_conexion_al_server(t_log* logger, char* ip, char* puerto)
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
 
-    getaddrinfo(ip, puerto, &hints, &server_info);
+    int estado_addr = getaddrinfo(ip, puerto, &hints, &server_info);
+
+	if(estado_addr != 0)
+	{
+		log_info(logger, "Error obteniendo información de la dirección");
+		return 0;
+	}
+
 
     int socket_cliente = socket(server_info->ai_family,
                     server_info->ai_socktype,
                     server_info->ai_protocol);
-
+	if(socket_cliente == -1)
+	{
+		log_info(logger, "Error creando el socket");
+		freeaddrinfo(server_info);
+		return 0;
+	}
 
     if(connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == -1)
     {
         log_info(logger, "El cliente no se pudo conectar al server");
+		freeaddrinfo(server_info);
         return 0;
     }
+	
     log_info(logger, "Cliente conectado al server");
 	freeaddrinfo(server_info);
     return socket_cliente;

@@ -107,8 +107,8 @@ t_contexto_de_ejecucion* recibir_contexto_de_ejecucion(int socket_cliente){
 	eliminar_paquete(paquete);
 	
 	return contexto_de_ejecucion;
-	
 }
+
 t_contexto_de_ejecucion* deserializar_contexto_de_ejecucion(t_buffer* buffer){
 	size_t instruccion_longitud;
 	t_contexto_de_ejecucion* contexto_de_ejecucion = malloc(sizeof(t_contexto_de_ejecucion));
@@ -128,7 +128,6 @@ t_contexto_de_ejecucion* deserializar_contexto_de_ejecucion(t_buffer* buffer){
     memcpy(instruccion, stream, instruccion_longitud);
 
 	list_add(contexto_de_ejecucion->lista_instrucciones,instruccion);
-	free(instruccion);
 
     return contexto_de_ejecucion;
 }

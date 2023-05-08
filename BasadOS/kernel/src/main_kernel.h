@@ -19,4 +19,6 @@ typedef struct {
     int conexion_cliente;
 } parametros_hilo;
 
+
+
 #endif /* KERNEL_H_ */

@@ -66,7 +66,6 @@ int main(void)
 				break;
 			}
 			free(instruccion);
-			
 		}
 
 		liberar_contexto_de_ejecucion(contexto);

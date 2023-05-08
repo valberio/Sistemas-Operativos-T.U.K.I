@@ -13,11 +13,35 @@
 	Planificación de procesos con FIFO: un poquito de avance					*/
 /*------------------------------------------------------------------*/
 
+/*int main (void)
+{
+	// hilo de escucha a consola ---- mete procesos nuevos en new
+
+	//Colas, guardamos PCBs en las colas
+	cola new
+	cola ready
+	running es un estado, los estados son un enum
+	cola exit (porque puede que un proceso termine mientras otro este usando exit)
+	cola blocked 
+
+	1 hilo que escuche las consolas
+	|-> lanza un hilo que mete el proceso en new
+		|-> lanza un hilo que mete el proceso en ready
+			|-> 
+	//Idea para HRRN: que la "cola de ready" sea un diccionario, las keys son el pID,
+	//los values son el PCB. El algortimo HRRN me devuelve el pid y busco el pcb en
+	//el diccionario para ejecutarlo.
+}
+*/
+
+
 
 int main(void)
 {
 	char* ip;
-	
+	//pthread_t hilo_de_escucha;
+	//pthread_create(&hilo_de_escucha, NULL, (void*)conectarse_con_consola, (void*) &params);
+
 	t_log* logger = iniciar_logger("log_kernel.log", "LOG_KERNEL");
 	t_config* config = iniciar_config("configs/config_kernel.config");
 	
@@ -46,6 +70,9 @@ int main(void)
 	// }
 	
 	//Abro el server del kernel para recibir conexiones de la consola
+	
+	//CODIGO DE ESCUCHA
+
 	char* puerto_kernel_consola = config_get_string_value(config, "PUERTO_CONSOLA");
 	int server_consola = iniciar_servidor(logger, ip, puerto_kernel_consola);
 	if (server_consola != -1)
@@ -57,26 +84,32 @@ int main(void)
 	int conexion_consola = esperar_cliente(server_consola);
 	log_info(logger, "El kernel recibió la conexión de consola");
 
+//CREACION DE COLAS DE ESTADOS
+	t_queue* cola_new = queue_create();
+	t_queue* cola_ready = queue_create();
+	t_queue* cola_blocked = queue_create();
+	t_queue* cola_exit = queue_create();
+
+
 	if (cliente_cpu)
 	{	
 		log_info(logger, "El kernel envió su conexión a la CPU!");
-		// parametros_hilo params = {conexion_consola, cliente_cpu};
-		// pthread_t hilo1;
-		// pthread_create(&hilo1, NULL, (void*)enviar_instrucciones_a_cpu, (void*) &params);
-		// log_info(logger, "El kernel envio el contexto de ejecucion al CPU!");
-		//parametros_hilo* params = (parametros_hilo*) arg;
-		//int conexion_consola = params->conexion_servidor;
-		//int cliente_cpu = params->conexion_cliente;
 		char* codigo_recibido = recibir_mensaje(conexion_consola);
-		t_pcb * pcb = crear_pcb(codigo_recibido);
-		//char * temp = list_get(pcb->contexto_de_ejecucion.lista_instrucciones, 0);
+		t_pcb* pcb = crear_pcb(codigo_recibido);
+
+		queue_push(cola_new, pcb);
+		queue_push(cola_ready, queue_pop(cola_new));
 		
-		enviar_contexto_de_ejecucion(&(pcb->contexto_de_ejecucion), cliente_cpu);
+		t_pcb* pcb_a_ejecutar = malloc(sizeof(t_pcb));
+		pcb_a_ejecutar = queue_pop(cola_ready);
+		enviar_contexto_de_ejecucion(&(pcb_a_ejecutar->contexto_de_ejecucion), cliente_cpu);
 
 		t_contexto_de_ejecucion* contexto_actualizado = recibir_contexto_de_ejecucion(cliente_cpu);
 		log_info(logger, "Recibi el contexto actualizado");
 		log_info(logger, "En el contexto hay %i", contexto_actualizado->program_counter);
-		liberar_pcb(pcb);
+		
+		queue_push(cola_exit, pcb);
+		liberar_pcb(queue_pop(cola_exit));
 		liberar_contexto_de_ejecucion(contexto_actualizado);
 	}
 
@@ -97,10 +130,7 @@ int main(void)
 	return EXIT_SUCCESS;
 }
 
-void iterator(char* value) {
-	printf("%s", value);
-	//log_info(logger,"%s", value);
-}
+
 
 void terminar_programa(t_log* logger, t_config* config)
 {
@@ -126,3 +156,24 @@ void enviar_instrucciones_a_cpu(void* arg) {
 		
 		enviar_contexto_de_ejecucion(&(pcb->contexto_de_ejecucion), cliente_cpu);
 }
+
+/*void conectarse_con_consola(config) {
+	char* puerto_kernel_consola = config_get_string_value(config, "PUERTO_CONSOLA");
+	int server_consola = iniciar_servidor(logger, ip, puerto_kernel_consola);
+	if (server_consola != -1)
+	{
+		log_info(logger, "El servidor del kernel se inició");
+	}
+
+
+	int conexion_consola = esperar_cliente(server_consola);
+	log_info(logger, "El kernel recibió la conexión de consola");
+}*/
+
+// parametros_hilo params = {conexion_consola, cliente_cpu};
+		// pthread_t hilo1;
+		// pthread_create(&hilo1, NULL, (void*)enviar_instrucciones_a_cpu, (void*) &params);
+		// log_info(logger, "El kernel envio el contexto de ejecucion al CPU!");
+		//parametros_hilo* params = (parametros_hilo*) arg;
+		//int conexion_consola = params->conexion_servidor;
+		//int cliente_cpu = params->conexion_cliente;

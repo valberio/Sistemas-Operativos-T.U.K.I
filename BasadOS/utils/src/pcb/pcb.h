@@ -48,6 +48,13 @@ t_contexto_de_ejecucion* recibir_contexto_de_ejecucion(int socket_cliente);
 t_contexto_de_ejecucion* deserializar_contexto_de_ejecucion(t_buffer* buffer);
 void liberar_contexto_de_ejecucion(t_contexto_de_ejecucion*);
 
+/*enum Estados {
+    NEW, 
+    READY, 
+    RUNNING,
+    BLOCKED, 
+    EXIT
+};*/
 //void liberar_registros(t_registros registros);
 
-#endif /* PCB_H_ */
+#endif  PCB_H_ 

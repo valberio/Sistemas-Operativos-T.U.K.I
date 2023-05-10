@@ -58,12 +58,17 @@ int main(void)
 			contexto->program_counter = contexto->program_counter + 1;
 			log_info(logger, "Program counter: %i", contexto->program_counter);
 
-			if (resultado == 1)
+
+			switch(resultado)
 			{
-				enviar_contexto_de_ejecucion(contexto, conexion_cpu_kernel); 
-				liberar_array_instrucciones(instruccion_array);
-				log_info(logger, "Devolvi el contexto a kernel");		
-				break;
+				case 0:
+					break;
+				case 1:		//Caso de EXIT, YIELD
+					enviar_contexto_de_ejecucion(contexto, conexion_cpu_kernel);
+					liberar_array_instrucciones(instruccion_array);
+					log_info(logger, "Devolvi el contexto a kernel");		
+					break;	
+				//Va a haber más casos más adelante, por eso el switch
 			}
 			free(instruccion);
 		}
@@ -71,7 +76,8 @@ int main(void)
 		liberar_contexto_de_ejecucion(contexto);
 		log_destroy(logger);
 	}
-	liberar_conexion(&conexion_cpu_kernel);
+	close(conexion_cpu_kernel);
+	//liberar_conexion(&conexion_cpu_kernel);
 	return 0;
 }
 

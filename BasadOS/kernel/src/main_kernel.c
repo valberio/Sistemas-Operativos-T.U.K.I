@@ -104,14 +104,29 @@ int main(void)
 		pcb_a_ejecutar = queue_pop(cola_ready);
 		enviar_contexto_de_ejecucion(&(pcb_a_ejecutar->contexto_de_ejecucion), cliente_cpu);
 
+
 		t_contexto_de_ejecucion* contexto_actualizado = recibir_contexto_de_ejecucion(cliente_cpu);
-		//Hay que hacer que no reviente si no recibe contexto, manejar el error
-		log_info(logger, "Recibi el contexto actualizado");
-		log_info(logger, "En el contexto hay %i", contexto_actualizado->program_counter);
+
+		if (contexto_actualizado == NULL)
+		{
+			log_info(logger, "CPU no devolvió el contexto de ejecución");
+			//liberar_pcb(contexto_actualizado);
+			free(contexto_actualizado);
+			EXIT_FAILURE;
+		}
+
+		else {
+			log_info(logger, "Recibi el contexto actualizado");
+			log_info(logger, "En el contexto hay %i", contexto_actualizado->program_counter);
 		
-		queue_push(cola_exit, pcb);
-		liberar_pcb(queue_pop(cola_exit));
-		liberar_contexto_de_ejecucion(contexto_actualizado);
+			queue_push(cola_exit, pcb);
+			liberar_pcb(queue_pop(cola_exit));
+			liberar_contexto_de_ejecucion(contexto_actualizado);
+		}
+		//Hay que hacer que no reviente si no recibe contexto, manejar el error
+
+
+		
 	}
 
 	/*Que deberia haber:

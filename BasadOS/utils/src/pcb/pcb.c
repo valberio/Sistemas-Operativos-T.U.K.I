@@ -110,6 +110,12 @@ t_contexto_de_ejecucion* recibir_contexto_de_ejecucion(int socket_cliente){
 }
 
 t_contexto_de_ejecucion* deserializar_contexto_de_ejecucion(t_buffer* buffer){
+	printf("El tamaño del buffer es %i", buffer->size);
+	if (buffer->size == 0) //Prevengo el segfault devolviendo null si no hay contexto que enviar
+	{
+		return NULL;
+	}
+
 	size_t instruccion_longitud;
 	t_contexto_de_ejecucion* contexto_de_ejecucion = malloc(sizeof(t_contexto_de_ejecucion));
 	contexto_de_ejecucion->registros = malloc(sizeof(t_registros));

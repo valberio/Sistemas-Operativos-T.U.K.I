@@ -76,11 +76,13 @@ void set(t_log* logger, char** instrucciones, t_registros* registros)
 
 void yield(t_log* logger)
 {
+    //Actualizo el estado del proceso a READY
     log_info(logger, "Entré en la ejecución de YIELD");
 }
 
 void exit_instruccion(t_log* logger)
 {
+    //Actualizo el estado del proceso a EXIT
     log_info(logger, "Entré en la ejecución de EXIT");
 }
 

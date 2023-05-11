@@ -11,7 +11,7 @@ void yield(t_log* logger);
 void exit_instruccion(t_log* logger);
 enum Registros string_a_registro(char* registro);
 
-
+//La instruccion EXIT tiene una i para no pisarse con el estado de proceso EXIT
 enum Instrucciones{
     SET,
     YIELD,

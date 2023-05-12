@@ -32,18 +32,11 @@ int main(void)
 	if(conexion_cpu_kernel) //Cuando quieran probar la conexion con kernel, pongan conexion_cpu_kernel acá
 	{
 		log_info(logger, "CPU recibió al kernel");
-		t_contexto_de_ejecucion* contexto = recibir_contexto_de_ejecucion(conexion_cpu_kernel); //Y descomenten esto
+		t_contexto_de_ejecucion* contexto = malloc(sizeof(t_contexto_de_ejecucion));
+		contexto = recibir_contexto_de_ejecucion(conexion_cpu_kernel); //Y descomenten esto
 
-
-		//Hardcodeo un contexto para ver que todo funcione
-		/*t_contexto_de_ejecucion* contexto = malloc(sizeof(t_contexto_de_ejecucion));
-		contexto->registros = malloc(sizeof(t_registros));
-		contexto->lista_instrucciones = list_create();
-		list_add(contexto->lista_instrucciones, "SET AX HOLA");
-		list_add(contexto->lista_instrucciones, "YIELD");*/
-
-		contexto->program_counter = 0; //Esto hay que pasarlo a crear_pcb
-		int cant_instrucciones = list_size(contexto->lista_instrucciones);
+		//contexto->program_counter = 0; //Esto hay que pasarlo a crear_pcb
+		int cant_instrucciones = list_size(contexto->instrucciones);
 		log_info(logger, "Cantidad instrucciones: %i", cant_instrucciones);
 		while (contexto->program_counter < cant_instrucciones) //Itero sobre todas las instrucciones, ejecutando
 		{
@@ -58,8 +51,13 @@ int main(void)
 			contexto->program_counter = contexto->program_counter + 1;
 			log_info(logger, "Program counter: %i", contexto->program_counter);
 
+			enviar_contexto_de_ejecucion(contexto, conexion_cpu_kernel);
+			liberar_array_instrucciones(instruccion_array);
+			log_info(logger, "Devolvi el contexto a kernel");		
+	
 			//Guardo el codigo de respuesta que me devolvio la ejecucion en el contexto
-			contexto->codigo_respuesta = resultado;
+
+			/*contexto->codigo_respuesta = resultado;
 
 			switch(resultado) 
 			{
@@ -71,7 +69,7 @@ int main(void)
 					log_info(logger, "Devolvi el contexto a kernel");		
 					break;	
 				//Va a haber más casos más adelante, por eso el switch
-			}
+			}*/
 			free(instruccion);
 		}
 
@@ -107,7 +105,6 @@ int conexion_a_kernel(t_config* config,t_log* logger)
 
 	int conexion_kernel = esperar_cliente(server_para_kernel);
 	return conexion_kernel;
-
 }
 
 

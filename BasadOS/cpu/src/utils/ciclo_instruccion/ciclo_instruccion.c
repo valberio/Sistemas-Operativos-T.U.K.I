@@ -4,7 +4,7 @@ char * fetch(t_contexto_de_ejecucion * contexto)
 {
 	int program_counter = contexto->program_counter;
 
-	return list_get(contexto->lista_instrucciones, program_counter);
+	return list_get(contexto->instrucciones, program_counter);
 }
 
 char** decode(char* instruccion)

@@ -72,7 +72,7 @@ char* recibir_mensaje(int socket_cliente)
 	recv(socket_cliente, paquete->buffer->stream,paquete->buffer->size, MSG_WAITALL);
 	char* datos = malloc(paquete->buffer->size);
 	memcpy(datos, paquete->buffer->stream,paquete->buffer->size);
-	printf("Consola me mando %s", datos);
+	//printf("Consola me mando %s", datos);
 	eliminar_paquete(paquete);
 
 	return datos;

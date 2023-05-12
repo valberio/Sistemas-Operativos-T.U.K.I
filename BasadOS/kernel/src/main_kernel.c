@@ -108,7 +108,7 @@ int main(void)
 	pthread_create(&hilo_administrador_de_ready, NULL, recibir_de_consolas_wrapper, (void *)&parametros_hilo_kernel_cpu);
 	pthread_join(hilo_administrador_de_ready, NULL);*/
 	
-	//administrar_procesos_de_ready(cliente_cpu);
+	administrar_procesos_de_ready(cliente_cpu);
 	
 	/*Que deberia haber:
 		-Cola de new
@@ -150,16 +150,19 @@ void recibir_de_consolas(int server_consola) {
 		char* codigo_recibido = recibir_mensaje(conexion_consola);
 		log_info(logger, "El kernel recibió el mensaje de consola");
 		pthread_t hilo_creador_de_proceso[50];
-		pthread_create(&hilo_creador_de_proceso[i], NULL, crear_proceso_wrapper, (void*)&codigo_recibido);
+		Parametros_de_hilo parametros_hilo_crear_proceso;
+		parametros_hilo_crear_proceso.mensaje = codigo_recibido;
+		pthread_create(&hilo_creador_de_proceso[i], NULL, crear_proceso_wrapper, (void*)&parametros_hilo_crear_proceso);
 		pthread_detach(hilo_creador_de_proceso[i]);
 		i++;
-		printf("A el kernel han llegado %d procesos", i);
+		printf("A el kernel han llegado %d procesos\n", i);
 		
 	}
 }
 
 void crear_proceso(char* codigo_recibido) {
 	t_pcb* pcb = crear_pcb(codigo_recibido);
+	//printf("La primera ins es: %s\n", (char*)list_get(pcb->contexto_de_ejecucion.instrucciones, 0));
 	sem_wait(&semaforo_cola_new);
 	queue_push(cola_new, pcb);
 	printf("procesos en cola new: %d\n", queue_size(cola_new));
@@ -168,7 +171,7 @@ void crear_proceso(char* codigo_recibido) {
 }
 
 void* crear_proceso_wrapper(void* arg) {
-	Parametros_de_hilo *args = (Parametros_de_hilo *)arg;
+	Parametros_de_hilo* args = (Parametros_de_hilo *)arg;
     char* parametro = args->mensaje;
     crear_proceso(parametro);
     return NULL;
@@ -183,16 +186,21 @@ void *recibir_de_consolas_wrapper(void *arg) {
 
 
 void administrar_procesos_de_ready(int cliente_cpu){
-	//while(true){
+	while(true){
 		//ESPERA A RECIBIR POR LO MENOS 1 PROCESO
 		sem_wait(&semaforo_de_inicio);
 		sem_wait(&semaforo_cola_new);
 		queue_push(cola_ready, queue_pop(cola_new));
 		sem_post(&semaforo_cola_new);
-		t_pcb* pcb = queue_pop(cola_ready);
-		log_info(logger, "Saque de la cola de ready el proceso %i", pcb->pid);
+		t_pcb* pcb = crear_pcb("SET\n YIELD\n EXIT");
+		//pcb = queue_pop(cola_ready);
+		log_info(logger, "Saque de la cola de ready el proceso %i\n", pcb->pid);
+		log_info(logger, "En el contexto hay %s", list_get(pcb->contexto_de_ejecucion.instrucciones, 0));
+		
 		enviar_contexto_de_ejecucion(&(pcb->contexto_de_ejecucion), cliente_cpu);
-		t_contexto_de_ejecucion* contexto_actualizado = recibir_contexto_de_ejecucion(cliente_cpu);
+
+		t_contexto_de_ejecucion* contexto_actualizado = malloc(sizeof(t_contexto_de_ejecucion));
+		contexto_actualizado = recibir_contexto_de_ejecucion(cliente_cpu);
 		//Hay que hacer que no reviente si no recibe contexto, manejar el error
 		log_info(logger, "Recibi el contexto actualizado");
 		log_info(logger, "En el contexto hay %i", contexto_actualizado->program_counter);
@@ -200,5 +208,5 @@ void administrar_procesos_de_ready(int cliente_cpu){
 		queue_push(cola_exit, pcb);
 		liberar_pcb(queue_pop(cola_exit));
 		liberar_contexto_de_ejecucion(contexto_actualizado);
-	//}
+	}
 }

@@ -1,5 +1,5 @@
 #include "planificacion.h"
-
+/*
 t_queue* crear_cola_fifo()
 {
     return queue_create();
@@ -15,3 +15,4 @@ int siguiente_proceso_a_ejecutar(t_queue* cola)
     int pid = queue_pop(cola);
     return pid;
 }
+*/

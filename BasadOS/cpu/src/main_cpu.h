@@ -14,6 +14,7 @@
 int conectarse_a_memoria(t_config*, t_log* );
 int conexion_a_kernel(t_config*,t_log* );
 t_list* separar_string(char* cadena);
+void liberar_array_instrucciones(char** instruccion_array);
 
 #endif /* CPU_H_ */
 

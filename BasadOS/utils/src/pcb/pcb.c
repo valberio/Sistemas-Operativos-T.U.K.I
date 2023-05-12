@@ -10,6 +10,7 @@ t_pcb * crear_pcb( char* instrucciones)
 	pcb->contexto_de_ejecucion.program_counter = 0;
 	pcb->contexto_de_ejecucion.registros = malloc(sizeof(t_registros));
 	pcb->contexto_de_ejecucion.instrucciones = list_create();
+  
 	pcb->tabla_archivos_abiertos = list_create();
 	pcb->tabla_segmentos = list_create();
 
@@ -18,9 +19,14 @@ t_pcb * crear_pcb( char* instrucciones)
 	instanciar_registros(pcb->contexto_de_ejecucion.registros);
 	
 	t_list* temp_list = string_a_lista(instrucciones);
+    pcb->contexto_de_ejecucion.cant_instrucciones = list_size(temp_list); 
+    pcb->contexto_de_ejecucion.largo_instruccion = (uint32_t*)malloc(sizeof(uint32_t) * pcb->contexto_de_ejecucion.cant_instrucciones);
 	list_add_all(pcb->contexto_de_ejecucion.instrucciones, temp_list);
 	list_clean(temp_list);
 	list_destroy(temp_list);
+
+   
+
 	pcb->estimado_rafaga = 1;
 	
 	return pcb;
@@ -28,15 +34,30 @@ t_pcb * crear_pcb( char* instrucciones)
 
 t_list* string_a_lista(char* str)
 {
-	t_list* temp_list = list_create();
-	char* token = strtok(str, "\n");
+   if (str == NULL) {
+        // Manejo de cadena nula
+        return NULL;
+    }
 
-	while (token != NULL) {
-        printf("%s\n", token);
-		list_add(temp_list, token);
+    t_list *temp_list = list_create();
+    char *temp_str = strdup(str); // Realizar una copia de la cadena
+
+    char *token = strtok(temp_str, "\n");
+
+    while (token != NULL)
+    {
+        if (strlen(token) > 0) {
+            // Agregar token no vacío a la lista
+            char *token_copy = strdup(token); // Realizar una copia del token
+            list_add(temp_list, token_copy);
+        }
+
         token = strtok(NULL, "\n");
     }
-	return temp_list;
+
+    free(temp_str); // Liberar memoria asignada a la copia de la cadena
+
+    return temp_list;
 }
 
 void liberar_pcb(t_pcb* pcb)

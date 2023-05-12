@@ -25,6 +25,7 @@ void* recibir_de_consolas_wrapper(void* arg);
 void crear_proceso(char* mensaje);
 void* crear_proceso_wrapper(void* arg);
 void administrar_procesos_de_ready(int cliente_cpu);
+
 typedef struct {
     int conexion;
     char* mensaje;

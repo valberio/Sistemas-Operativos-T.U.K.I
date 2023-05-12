@@ -26,11 +26,16 @@ typedef struct{
 }t_registros;
 
 typedef struct{
-    int codigo_respuesta;
-    int program_counter;
-    t_list* lista_instrucciones;
+    uint32_t program_counter;
     t_registros* registros;
-} t_contexto_de_ejecucion;
+    uint32_t cant_instrucciones;
+    uint32_t* largo_instruccion;//Guardo la longitud de cada instruccion en este array,
+                                //para más placer. Lleno los valores en otro lado. Como
+                                //puedo declarar arrays de longitud variable en un 
+                                //struct, lo aloco y lleno con los datos que preciso en
+                                //el constructor del contexto
+    t_list* instrucciones;
+}t_contexto_de_ejecucion;
 
 typedef struct{
     int estado;
@@ -41,13 +46,17 @@ typedef struct{
     int estimado_rafaga;
 } t_pcb;
 
-t_pcb *pcb_create();
-t_list* agregar_instrucciones_a_pcb(char*);
+t_pcb* crear_pcb();
+t_list* string_a_lista(char* str);
 void liberar_pcb(t_pcb* pcb);
-void enviar_contexto_de_ejecucion(t_contexto_de_ejecucion* contexto_de_ejecucion,int);
+void liberar_contexto_de_ejecucion(t_contexto_de_ejecucion* contexto);
+void enviar_contexto_de_ejecucion(t_contexto_de_ejecucion* contexto, int conexion_socket);
 t_contexto_de_ejecucion* recibir_contexto_de_ejecucion(int socket_cliente);
+void instanciar_registros(t_registros* registro);
+t_buffer* serializar_contexto(t_contexto_de_ejecucion* contexto);
 t_contexto_de_ejecucion* deserializar_contexto_de_ejecucion(t_buffer* buffer);
-void liberar_contexto_de_ejecucion(t_contexto_de_ejecucion*);
+
+
 
 enum Estados {
     NEW, 

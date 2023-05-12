@@ -9,35 +9,14 @@
 /*------------------------------------------------------------------*/
 
 
-#include "pcb/pcb.h"
+
 
 //Probando cómo serializar una lista.
 
 
-typedef struct{
 
-    uint32_t cant_instrucciones;
-    uint32_t* largo_instruccion;//Guardo la longitud de cada instruccion en este array,
-                                //para más placer. Lleno los valores en otro lado. Como
-                                //puedo declarar arrays de longitud variable en un 
-                                //struct, lo aloco y lleno con los datos que preciso en
-                                //el constructor del contexto
-    t_list* instrucciones;
-}t_contexto;
 
-typedef struct{
-    uint32_t size;
-    void* stream;
-}buffer;
 
-typedef struct{
-    uint8_t codigo_operacion;
-    t_buffer* buffer;
-}paquete;
-
-t_contexto* crear_contexto(t_list* instrucciones);
-t_buffer* serializar_contexto(t_contexto* contexto);
-t_contexto* deserilizar_contexto_(t_buffer* buffer);
 
 int main()
 {
@@ -52,20 +31,64 @@ int main()
     t_buffer* buffer = serializar_contexto(contexto);
     t_contexto* con = deserilizar_contexto_(buffer);
 
-    for (int i = 0; i < con->cant_instrucciones; i++)
+    printf("El pc pre-serializado es %i", contexto->program_counter);
+    printf("El pc deserializado es %i\n", con->program_counter);
+    for (int i = 0; i < 4; i++)
     {
-        printf("%s\n", list_get(con->instrucciones, i));
+        printf("instruccion deserializada %s\n", list_get(con->instrucciones, i));
     }
+    printf("Imprimo %s\n", con->registros->DX);
+
+
+    t_log* logger = iniciar_logger("log_memoria.log", "Servidor");
+    t_config* config = iniciar_config("configs/memoria.config");
+	//La memoria tiene en paralelo 3 conexiones: con kernel, cpu, y fileSystem
+
+	//Creo el server de la memoria en esta ip y puerto
+	char* ip = config_get_string_value(config, "IP");
+
+    char* puerto_filesystem = config_get_string_value(config, "PUERTO_FILESYSTEM");
+
+    int servidor_memoria_filesystem = iniciar_servidor(logger, ip, puerto_filesystem);
+	//Guardo las conexiones con cada modulo en un socket distinto,
+	//cada módulo se conecta a través de un puerto diferente.
+   
+   int conexion_filesystem = esperar_cliente(servidor_memoria_filesystem);
+   if (conexion_filesystem)
+   {
+		log_info(logger, "Se conectó el fileSystem");
+        enviar_contexto(contexto, conexion_filesystem);
+   }
 
     list_destroy(lista);
 
 }
 
+void instanciar_registros(t_registros* registro)
+{
+    strcpy(registro->AX, "0000");
+	strcpy(registro->BX, "0000");
+	strcpy(registro->CX, "0000");
+	strcpy(registro->DX, "UNGA");
+	
+	strcpy(registro->EAX, "00000000");
+	strcpy(registro->EBX, "00000000");
+	strcpy(registro->ECX, "00000000");
+	strcpy(registro->EDX, "00000000");
 
-
+    strcpy(registro->RAX, "0000000000000000");
+	strcpy(registro->RBX, "0000000000000000");
+	strcpy(registro->RCX, "0000000000000000");
+	strcpy(registro->RDX, "0000000000000000");
+}
 
 t_contexto* crear_contexto(t_list* instrucciones){
     t_contexto* contexto = malloc(sizeof(t_contexto));
+    contexto->program_counter = 11;
+    contexto->registros = malloc(sizeof(t_registros));
+
+    instanciar_registros(contexto->registros);
+
     contexto->instrucciones = list_create();
     
     for (int i = 0; i < list_size(instrucciones); i++)
@@ -92,6 +115,12 @@ t_buffer* serializar_contexto(t_contexto* contexto)
     //Calculo el tamaño que necesito darle al buffer.
     uint32_t tamano = 0;
 
+    //0.1 Tamaño del PROGRAM COUNTER
+    tamano += sizeof(uint32_t);
+
+    //0.2 Tamaño de los registros
+    tamano += sizeof(t_registros);
+
     //1. Tamaño de las INSTRUCCIONES de la lista
     for (int i = 0; i < contexto->cant_instrucciones; i++)
     {
@@ -116,8 +145,16 @@ t_buffer* serializar_contexto(t_contexto* contexto)
     void* stream = malloc(buffer->size);
     int offset = 0;
 
+    memcpy(stream + offset, &(contexto->program_counter), sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+
+     //Copio los registros
+    memcpy(stream + offset, contexto->registros, sizeof(t_registros));
+    offset += sizeof(t_registros);
+
     memcpy(stream + offset, &contexto->cant_instrucciones, sizeof(uint32_t));
     offset += sizeof(uint32_t);
+
 
     //Copio el array del largo de instrucciones
     for (int i = 0; i < contexto->cant_instrucciones; i++)
@@ -134,8 +171,11 @@ t_buffer* serializar_contexto(t_contexto* contexto)
         offset += contexto->largo_instruccion[i];
     }
 
+   
+
     //Guardo el buffer
     buffer->stream = stream;
+    buffer->size = tamano;  
     return buffer;
 }
 
@@ -146,9 +186,17 @@ t_contexto* deserilizar_contexto_(t_buffer* buffer)
     //Hago el proceso inverso: copio del stream a las variables
 
     t_contexto * contexto = malloc(sizeof(t_contexto));
+    contexto->registros = malloc(sizeof(t_registros));  //Tengo que copiar los registros uno por uno?
     contexto->instrucciones = list_create();
 
     void* stream = buffer->stream;
+
+    //0. Deserializo PROGRAM COUNTER y REGISTROS
+    memcpy(&contexto->program_counter, stream, sizeof(uint32_t));
+    stream += sizeof(uint32_t);
+
+    memcpy(contexto->registros, stream, sizeof(t_registros));
+    stream += sizeof(t_registros);
     
     //1. Deserializo la CANTIDAD de instrucciones
     uint32_t cant_instrucciones;
@@ -178,7 +226,33 @@ t_contexto* deserilizar_contexto_(t_buffer* buffer)
     return contexto;
 }
 
+void enviar_contexto(t_contexto* contexto, int conexion_socket)
+{
+    t_paquete* paquete = crear_paquete();
+    t_buffer* buffer = serializar_contexto(contexto);
 
+    paquete->buffer = buffer;
+    paquete->codigo_operacion = 0;
+
+    enviar_paquete(paquete, conexion_socket);
+    eliminar_paquete(paquete);
+}
+
+t_contexto* recibir_contexto(int conexion_socket)
+{
+    t_paquete* paquete = crear_paquete();
+    t_contexto* contexto = malloc(sizeof(t_contexto));
+
+    recv(conexion_socket, &(paquete->codigo_operacion), sizeof(int), MSG_WAITALL);
+    recv(conexion_socket, &(paquete->buffer->size), sizeof(uint32_t), MSG_WAITALL);
+    paquete->buffer->stream = malloc(paquete->buffer->stream);
+    recv(conexion_socket, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
+
+    contexto = deserilizar_contexto_(paquete->buffer);
+    eliminar_paquete(paquete);
+
+    return contexto;
+}
 
 
 /*
@@ -226,6 +300,3 @@ int main(int argc, char* argv[]) {
    }
 }
 */
-/*void iterator(char* value) {
-	log_info(logger,"%s", value);
-}*/

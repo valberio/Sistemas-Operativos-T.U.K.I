@@ -7,32 +7,18 @@ t_pcb * crear_pcb( char* instrucciones)
     t_pcb *pcb = malloc(sizeof(t_pcb));
 	pcb->estado = 1;
 	pcb->pid = contador;
-	pcb->contexto_de_ejecucion.codigo_respuesta = 0;
 	pcb->contexto_de_ejecucion.program_counter = 0;
 	pcb->contexto_de_ejecucion.registros = malloc(sizeof(t_registros));
-	pcb->contexto_de_ejecucion.lista_instrucciones = list_create();
+	pcb->contexto_de_ejecucion.instrucciones = list_create();
 	pcb->tabla_archivos_abiertos = list_create();
 	pcb->tabla_segmentos = list_create();
 
 	contador++;
 
-	strcpy(pcb->contexto_de_ejecucion.registros->AX, "0000");
-	strcpy(pcb->contexto_de_ejecucion.registros->BX, "0000");
-	strcpy(pcb->contexto_de_ejecucion.registros->CX, "0000");
-	strcpy(pcb->contexto_de_ejecucion.registros->DX, "0000");
+	instanciar_registros(pcb->contexto_de_ejecucion.registros);
 	
-	strcpy(pcb->contexto_de_ejecucion.registros->EAX, "00000000");
-	strcpy(pcb->contexto_de_ejecucion.registros->EBX, "00000000");
-	strcpy(pcb->contexto_de_ejecucion.registros->ECX, "00000000");
-	strcpy(pcb->contexto_de_ejecucion.registros->EDX, "00000000");
-
-    strcpy(pcb->contexto_de_ejecucion.registros->RAX, "0000000000000000");
-	strcpy(pcb->contexto_de_ejecucion.registros->RBX, "0000000000000000");
-	strcpy(pcb->contexto_de_ejecucion.registros->RCX, "0000000000000000");
-	strcpy(pcb->contexto_de_ejecucion.registros->RDX, "0000000000000000");
-	
-	t_list* temp_list = agregar_instrucciones_a_pcb(instrucciones);
-	list_add_all(pcb->contexto_de_ejecucion.lista_instrucciones, temp_list);
+	t_list* temp_list = string_a_lista(instrucciones);
+	list_add_all(pcb->contexto_de_ejecucion.instrucciones, temp_list);
 	list_clean(temp_list);
 	list_destroy(temp_list);
 	pcb->estimado_rafaga = 1;
@@ -40,7 +26,7 @@ t_pcb * crear_pcb( char* instrucciones)
 	return pcb;
 }
 
-t_list* agregar_instrucciones_a_pcb(char* str)
+t_list* string_a_lista(char* str)
 {
 	t_list* temp_list = list_create();
 	char* token = strtok(str, "\n");
@@ -55,7 +41,7 @@ t_list* agregar_instrucciones_a_pcb(char* str)
 
 void liberar_pcb(t_pcb* pcb)
 {
-	list_destroy_and_destroy_elements(pcb->contexto_de_ejecucion.lista_instrucciones, free);
+	list_destroy_and_destroy_elements(pcb->contexto_de_ejecucion.instrucciones, free);
 	list_destroy_and_destroy_elements(pcb->tabla_segmentos, free);
 	list_destroy_and_destroy_elements(pcb->tabla_archivos_abiertos, free);
 	free(pcb->contexto_de_ejecucion.registros);
@@ -63,106 +49,173 @@ void liberar_pcb(t_pcb* pcb)
 }
 
 void liberar_contexto_de_ejecucion(t_contexto_de_ejecucion* contexto_de_ejecucion){
-	list_clean(contexto_de_ejecucion->lista_instrucciones);
-	list_destroy(contexto_de_ejecucion->lista_instrucciones);
+	list_clean(contexto_de_ejecucion->instrucciones);
+	list_destroy(contexto_de_ejecucion->instrucciones);
 	free(contexto_de_ejecucion->registros);
 	free(contexto_de_ejecucion);
 }
 
 
-void enviar_contexto_de_ejecucion(t_contexto_de_ejecucion* contexto_de_ejecucion,int socket_cliente){
-	char* instruccion = list_get(contexto_de_ejecucion->lista_instrucciones,0);
-	
-	size_t instruccion_longitud = strlen(instruccion);	
+void enviar_contexto_de_ejecucion(t_contexto_de_ejecucion* contexto,int conexion_socket)
+{
+    t_paquete* paquete = crear_paquete();
+    t_buffer* buffer = serializar_contexto(contexto);
 
-	printf("La instruccion que voy a mandar es %s y tiene de largo %i\n", instruccion, instruccion_longitud);
+    paquete->buffer = buffer;
+    paquete->codigo_operacion = 0;
 
-	t_paquete* paquete = crear_paquete();
-	paquete->buffer->size = sizeof(int) + sizeof(t_registros) + sizeof(size_t) + strlen(instruccion)+1;
-	void* stream = malloc(paquete->buffer->size);
-	int offset = 0;
-
-	memcpy(stream + offset, &(contexto_de_ejecucion->codigo_respuesta), sizeof(int));
-	offset += sizeof(int);
-	memcpy(stream + offset, &(contexto_de_ejecucion->program_counter), sizeof(int));
-	offset += sizeof(int);
-	memcpy(stream + offset, contexto_de_ejecucion->registros, sizeof(t_registros));
-	offset += sizeof(t_registros);
-	memcpy(stream + offset, &instruccion_longitud, sizeof(size_t)); 
-	offset += sizeof(size_t);
-	memcpy(stream + offset, instruccion, strlen(instruccion)+1);
-
-	paquete->buffer->stream = stream;
-
-
-	enviar_paquete(paquete,socket_cliente);
-	eliminar_paquete(paquete);
+    enviar_paquete(paquete, conexion_socket);
+    eliminar_paquete(paquete);
 }
 
-t_contexto_de_ejecucion* recibir_contexto_de_ejecucion(int socket_cliente){
-	t_paquete* paquete = crear_paquete();
-	t_contexto_de_ejecucion* contexto_de_ejecucion = malloc(sizeof(t_contexto_de_ejecucion));
-	contexto_de_ejecucion->registros = malloc(sizeof(t_registros));
-	contexto_de_ejecucion->lista_instrucciones = list_create();
+t_contexto_de_ejecucion* recibir_contexto_de_ejecucion(int conexion_socket){
+    t_paquete* paquete = crear_paquete();
+    t_contexto_de_ejecucion* contexto = malloc(sizeof(t_contexto_de_ejecucion));
 
-	recv(socket_cliente, &(paquete->codigo_operacion), sizeof(int), MSG_WAITALL);
-	recv(socket_cliente, &(paquete->buffer->size), sizeof(int), MSG_WAITALL);
-	paquete->buffer->stream = malloc(paquete->buffer->size);
-	recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
+    recv(conexion_socket, &(paquete->codigo_operacion), sizeof(int), MSG_WAITALL);
+    recv(conexion_socket, &(paquete->buffer->size), sizeof(uint32_t), MSG_WAITALL);
+    paquete->buffer->stream = malloc(paquete->buffer->stream);
+    recv(conexion_socket, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
 
-	contexto_de_ejecucion = deserializar_contexto_de_ejecucion(paquete->buffer);
-	eliminar_paquete(paquete);
+    contexto = deserializar_contexto_de_ejecucion(paquete->buffer);
+    eliminar_paquete(paquete);
+
+    return contexto;
+}
+
+void instanciar_registros(t_registros* registro)
+{
+    strcpy(registro->AX, "0000");
+	strcpy(registro->BX, "0000");
+	strcpy(registro->CX, "0000");
+	strcpy(registro->DX, "UNGA");
 	
-	return contexto_de_ejecucion;
+	strcpy(registro->EAX, "00000000");
+	strcpy(registro->EBX, "00000000");
+	strcpy(registro->ECX, "00000000");
+	strcpy(registro->EDX, "00000000");
+
+    strcpy(registro->RAX, "0000000000000000");
+	strcpy(registro->RBX, "0000000000000000");
+	strcpy(registro->RCX, "0000000000000000");
+	strcpy(registro->RDX, "0000000000000000");
+}
+
+t_buffer* serializar_contexto(t_contexto_de_ejecucion* contexto)
+{
+    t_buffer* buffer = malloc(sizeof(t_buffer));
+
+    //Calculo el tamaño que necesito darle al buffer.
+    uint32_t tamano = 0;
+
+    //0.1 Tamaño del PROGRAM COUNTER
+    tamano += sizeof(uint32_t);
+
+    //0.2 Tamaño de los registros
+    tamano += sizeof(t_registros);
+
+    //1. Tamaño de las INSTRUCCIONES de la lista
+    for (int i = 0; i < contexto->cant_instrucciones; i++)
+    {
+        tamano += strlen(list_get(contexto->instrucciones, i)) + 1;
+    }
+
+    //2. NO tengo que guardar el puntero de la lista, creo la lista y le guardo
+    //las instrucciones en el momento de deserializar.
+
+    //3. Tamaño del CANTIDAD INSTRUCCIONES
+    tamano += sizeof(uint32_t);
+
+    //4. Tamaño del ARRAY del largo de cada instruccion
+    //Sé que el array de largos va a tener la misma cant. de elemntos que cant_instrucciones
+    for(int i = 0; i < contexto->cant_instrucciones; i++)
+    {
+        tamano += sizeof(uint32_t);
+    }
+    
+    //Aloco la memoria para el buffer.
+    buffer->size = tamano;
+    void* stream = malloc(buffer->size);
+    int offset = 0;
+
+    memcpy(stream + offset, &(contexto->program_counter), sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+
+     //Copio los registros
+    memcpy(stream + offset, contexto->registros, sizeof(t_registros));
+    offset += sizeof(t_registros);
+
+    memcpy(stream + offset, &contexto->cant_instrucciones, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+
+
+    //Copio el array del largo de instrucciones
+    for (int i = 0; i < contexto->cant_instrucciones; i++)
+    {
+        printf("%i\n", i);
+        memcpy(stream + offset, &(contexto->largo_instruccion[i]), sizeof(uint32_t));
+        offset += sizeof(uint32_t);
+    }
+
+    //Copio las instrucciones, usando el largo del array
+    for (int i = 0; i < contexto->cant_instrucciones; i++)
+    {
+        memcpy(stream + offset, list_get(contexto->instrucciones, i), contexto->largo_instruccion[i]); //Puede que aca haya q usar &
+        offset += contexto->largo_instruccion[i];
+    }
+
+   
+
+    //Guardo el buffer
+    buffer->stream = stream;
+    buffer->size = tamano;  
+    return buffer;
 }
 
 t_contexto_de_ejecucion* deserializar_contexto_de_ejecucion(t_buffer* buffer){
-	printf("El tamaño del buffer es %i\n", buffer->size);
+
 	if (buffer->size == 0) //Prevengo el segfault devolviendo null si no hay contexto que enviar
 	{
 		return NULL;
 	}
 
-	size_t instruccion_longitud;
-	t_contexto_de_ejecucion* contexto_de_ejecucion = malloc(sizeof(t_contexto_de_ejecucion));
-	contexto_de_ejecucion->registros = malloc(sizeof(t_registros));
+	t_contexto_de_ejecucion * contexto = malloc(sizeof(t_contexto_de_ejecucion));
+    contexto->registros = malloc(sizeof(t_registros)); 
+    contexto->instrucciones = list_create();
 
-	contexto_de_ejecucion ->lista_instrucciones = list_create();
+    void* stream = buffer->stream;
 
-	void* stream = buffer->stream;
-	memcpy(&(contexto_de_ejecucion->codigo_respuesta), stream, sizeof(int));
-	stream += sizeof(int);
-    memcpy(&(contexto_de_ejecucion->program_counter), stream, sizeof(int));
-    stream += sizeof(int);
-    memcpy(contexto_de_ejecucion->registros, stream, sizeof(t_registros));
+    //0. Deserializo PROGRAM COUNTER y REGISTROS
+    memcpy(&contexto->program_counter, stream, sizeof(uint32_t));
+    stream += sizeof(uint32_t);
+
+    memcpy(contexto->registros, stream, sizeof(t_registros));
     stream += sizeof(t_registros);
+    
+    //1. Deserializo la CANTIDAD de instrucciones
+    uint32_t cant_instrucciones;
+    memcpy(&cant_instrucciones, stream, sizeof(uint32_t));
+    memcpy(&contexto->cant_instrucciones, stream, sizeof(uint32_t));
+    stream += sizeof(uint32_t);
 
-    memcpy(&instruccion_longitud, stream, sizeof(size_t));
-    stream += sizeof(size_t);
-	printf("La longitud de la instruccion a deserializar es %i\n", instruccion_longitud);
-    char* instruccion =(char *) malloc((instruccion_longitud + 1) * sizeof(char));
+    //2. Deserializo el ARRAY de largos de instrucciones
+    uint32_t* largo_instruccion = malloc(sizeof(uint32_t) * cant_instrucciones);
 
-    memcpy(instruccion, stream, instruccion_longitud);
-	printf("La instruccion que deserialice es %s", instruccion);
-	list_add(contexto_de_ejecucion->lista_instrucciones,instruccion);
+    for (int i = 0; i < cant_instrucciones; i++)
+    {
+        memcpy(&(largo_instruccion[i]), stream, sizeof(uint32_t));
+        stream += sizeof(uint32_t);
+    }
 
-    return contexto_de_ejecucion;
+    //3. Deserializo la LISTA de instrucciones
+    
+    for(int i = 0; i < cant_instrucciones; i++)
+    {
+        char* instruccion_leida = malloc(largo_instruccion[i] * sizeof(char));
+        memcpy(instruccion_leida, stream, largo_instruccion[i]);
+        //instruccion_leida[largo_instruccion[i]] = '\0';
+        list_add(contexto->instrucciones, instruccion_leida);
+        stream += largo_instruccion[i];
+    }
+    return contexto;
 }
-
-// NO hace falta liberar los registros (dejo la funcion por las dudas)
-// void liberar_registros(t_registros registros){
-// 	free(registros.AX);
-// 	free(registros.BX);
-// 	free(registros.CX);
-// 	free(registros.DX);
-
-// 	free(registros.EAX);
-// 	free(registros.EBX);
-// 	free(registros.ECX);
-// 	free(registros.EDX);
-
-// 	free(registros.RAX);
-// 	free(registros.RBX);
-// 	free(registros.RCX);
-// 	free(registros.RDX);
-// }

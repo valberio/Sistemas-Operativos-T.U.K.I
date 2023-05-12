@@ -38,6 +38,7 @@ int esperar_cliente(int socket_servidor)
 	int socket_cliente = accept(socket_servidor, NULL, NULL);
 	return socket_cliente;
 }
+
 int recibir_operacion(int socket_cliente)
 {
 	int cod_op;

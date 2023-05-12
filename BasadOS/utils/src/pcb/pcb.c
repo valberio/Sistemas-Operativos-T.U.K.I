@@ -7,6 +7,7 @@ t_pcb * crear_pcb( char* instrucciones)
     t_pcb *pcb = malloc(sizeof(t_pcb));
 	pcb->estado = 1;
 	pcb->pid = contador;
+	pcb->contexto_de_ejecucion.codigo_respuesta = 0;
 	pcb->contexto_de_ejecucion.program_counter = 0;
 	pcb->contexto_de_ejecucion.registros = malloc(sizeof(t_registros));
 	pcb->contexto_de_ejecucion.lista_instrucciones = list_create();
@@ -45,7 +46,7 @@ t_list* agregar_instrucciones_a_pcb(char* str)
 	char* token = strtok(str, "\n");
 
 	while (token != NULL) {
-        //printf("%s\n", token);
+        printf("%s\n", token);
 		list_add(temp_list, token);
         token = strtok(NULL, "\n");
     }
@@ -71,12 +72,18 @@ void liberar_contexto_de_ejecucion(t_contexto_de_ejecucion* contexto_de_ejecucio
 
 void enviar_contexto_de_ejecucion(t_contexto_de_ejecucion* contexto_de_ejecucion,int socket_cliente){
 	char* instruccion = list_get(contexto_de_ejecucion->lista_instrucciones,0);
-	size_t instruccion_longitud = strlen(instruccion);
+	
+	size_t instruccion_longitud = strlen(instruccion);	
+
+	printf("La instruccion que voy a mandar es %s y tiene de largo %i\n", instruccion, instruccion_longitud);
+
 	t_paquete* paquete = crear_paquete();
 	paquete->buffer->size = sizeof(int) + sizeof(t_registros) + sizeof(size_t) + strlen(instruccion)+1;
 	void* stream = malloc(paquete->buffer->size);
 	int offset = 0;
 
+	memcpy(stream + offset, &(contexto_de_ejecucion->codigo_respuesta), sizeof(int));
+	offset += sizeof(int);
 	memcpy(stream + offset, &(contexto_de_ejecucion->program_counter), sizeof(int));
 	offset += sizeof(int);
 	memcpy(stream + offset, contexto_de_ejecucion->registros, sizeof(t_registros));
@@ -110,7 +117,7 @@ t_contexto_de_ejecucion* recibir_contexto_de_ejecucion(int socket_cliente){
 }
 
 t_contexto_de_ejecucion* deserializar_contexto_de_ejecucion(t_buffer* buffer){
-	printf("El tamaño del buffer es %i", buffer->size);
+	printf("El tamaño del buffer es %i\n", buffer->size);
 	if (buffer->size == 0) //Prevengo el segfault devolviendo null si no hay contexto que enviar
 	{
 		return NULL;
@@ -123,6 +130,8 @@ t_contexto_de_ejecucion* deserializar_contexto_de_ejecucion(t_buffer* buffer){
 	contexto_de_ejecucion ->lista_instrucciones = list_create();
 
 	void* stream = buffer->stream;
+	memcpy(&(contexto_de_ejecucion->codigo_respuesta), stream, sizeof(int));
+	stream += sizeof(int);
     memcpy(&(contexto_de_ejecucion->program_counter), stream, sizeof(int));
     stream += sizeof(int);
     memcpy(contexto_de_ejecucion->registros, stream, sizeof(t_registros));
@@ -130,9 +139,11 @@ t_contexto_de_ejecucion* deserializar_contexto_de_ejecucion(t_buffer* buffer){
 
     memcpy(&instruccion_longitud, stream, sizeof(size_t));
     stream += sizeof(size_t);
-    char* instruccion = malloc(instruccion_longitud);
-    memcpy(instruccion, stream, instruccion_longitud);
+	printf("La longitud de la instruccion a deserializar es %i\n", instruccion_longitud);
+    char* instruccion =(char *) malloc((instruccion_longitud + 1) * sizeof(char));
 
+    memcpy(instruccion, stream, instruccion_longitud);
+	printf("La instruccion que deserialice es %s", instruccion);
 	list_add(contexto_de_ejecucion->lista_instrucciones,instruccion);
 
     return contexto_de_ejecucion;

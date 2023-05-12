@@ -32,7 +32,7 @@ int execute(t_log* logger, char** instrucciones, t_registros * registros)
 			break;
 		case EXIT:
 			exit_instruccion(logger);
-			return 1;
+			return 2;
 			break;
 		default:
 			return 0;

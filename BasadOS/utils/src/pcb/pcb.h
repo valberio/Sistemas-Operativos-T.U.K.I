@@ -26,6 +26,7 @@ typedef struct{
 }t_registros;
 
 typedef struct{
+    int codigo_respuesta;
     int program_counter;
     t_list* lista_instrucciones;
     t_registros* registros;

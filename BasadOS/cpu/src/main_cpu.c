@@ -27,7 +27,7 @@ int main(void)
 	//CPU como server del Kernel
 	int conexion_cpu_kernel = conexion_a_kernel(config, logger);
 	config_destroy(config);
-	//int conexion_cpu_kernel = 1;
+
 
 	if(conexion_cpu_kernel) //Cuando quieran probar la conexion con kernel, pongan conexion_cpu_kernel acá
 	{
@@ -58,10 +58,12 @@ int main(void)
 			contexto->program_counter = contexto->program_counter + 1;
 			log_info(logger, "Program counter: %i", contexto->program_counter);
 
+			//Guardo el codigo de respuesta que me devolvio la ejecucion en el contexto
+			contexto->codigo_respuesta = resultado;
 
-			switch(resultado)
+			switch(resultado) 
 			{
-				case 0:
+				case 0:		//Caso de instrucciones que no requieren desalojo
 					break;
 				case 1:		//Caso de EXIT, YIELD
 					enviar_contexto_de_ejecucion(contexto, conexion_cpu_kernel);

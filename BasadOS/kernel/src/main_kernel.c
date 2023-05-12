@@ -95,8 +95,10 @@ int main(void)
 	{	
 		log_info(logger, "El kernel envió su conexión a la CPU!");
 		char* codigo_recibido = recibir_mensaje(conexion_consola);
+		log_info(logger, "Recibi de consola %s", codigo_recibido);
 		t_pcb* pcb = crear_pcb(codigo_recibido);
-
+		char* instruccion_serializada = list_get(pcb->contexto_de_ejecucion.lista_instrucciones, 0);
+		log_info(logger, "La instruccion serializada es %s", instruccion_serializada);
 		queue_push(cola_new, pcb);
 		queue_push(cola_ready, queue_pop(cola_new));
 		
@@ -105,28 +107,38 @@ int main(void)
 		enviar_contexto_de_ejecucion(&(pcb_a_ejecutar->contexto_de_ejecucion), cliente_cpu);
 
 
-		t_contexto_de_ejecucion* contexto_actualizado = recibir_contexto_de_ejecucion(cliente_cpu);
+		t_contexto_de_ejecucion* contexto_actualizado = malloc(sizeof(t_contexto_de_ejecucion));
+		contexto_actualizado = recibir_contexto_de_ejecucion(cliente_cpu);
 
 		if (contexto_actualizado == NULL)
 		{
 			log_info(logger, "CPU no devolvió el contexto de ejecución");
-			//liberar_pcb(contexto_actualizado);
 			free(contexto_actualizado);
 			EXIT_FAILURE;
 		}
 
-		else {
-			log_info(logger, "Recibi el contexto actualizado");
-			log_info(logger, "En el contexto hay %i", contexto_actualizado->program_counter);
+		//Tengo que switchear el código de respuesta que me mando la cpu en el contexto
+		log_info(logger, "Recibi el contexto actualizado");
+
+		//Guardo el contexto nuevo en el PCB de ese proceso
+		pcb->contexto_de_ejecucion = *contexto_actualizado;
+		log_info(logger, "En el contexto hay %i", contexto_actualizado->program_counter);
+		log_info(logger, "El codigo de retorno es %i", contexto_actualizado->codigo_respuesta);
 		
-			queue_push(cola_exit, pcb);
-			liberar_pcb(queue_pop(cola_exit));
-			liberar_contexto_de_ejecucion(contexto_actualizado);
+		int codigo_respuesta = pcb->contexto_de_ejecucion.codigo_respuesta;
+
+		switch(codigo_respuesta){
+			case 1: //YIELD: mando el proceso a ready de nuevo
+				break;
+
+			case 2: //EXIT: mando el proceso a la lista de exit
+				break;
 		}
-		//Hay que hacer que no reviente si no recibe contexto, manejar el error
 
-
-		
+		queue_push(cola_exit, pcb);
+		liberar_pcb(queue_pop(cola_exit));
+		liberar_contexto_de_ejecucion(contexto_actualizado);
+				
 	}
 
 	/*Que deberia haber:

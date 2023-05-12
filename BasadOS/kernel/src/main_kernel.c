@@ -98,16 +98,17 @@ int main(void)
 	Parametros_de_hilo parametros_hilo_consola_kernel;
 	parametros_hilo_consola_kernel.conexion = server_consola;
 	pthread_t hilo_receptor_de_consolas;
-	pthread_create(&hilo_receptor_de_consolas, NULL, traductor_de_parametros, (void *)&parametros_hilo_consola_kernel);
+	pthread_create(&hilo_receptor_de_consolas, NULL, recibir_de_consolas_wrapper, (void *)&parametros_hilo_consola_kernel);
 
 
 	//HILO 2	
 	/*Parametros_de_hilo parametros_hilo_kernel_cpu;
 	parametros_hilo_kernel_cpu.conexion = cliente_cpu;
 	pthread_t hilo_administrador_de_ready;
-	pthread_create(&hilo_administrador_de_ready, NULL, traductor_de_parametros, (void *)&parametros_hilo_kernel_cpu);
+	pthread_create(&hilo_administrador_de_ready, NULL, recibir_de_consolas_wrapper, (void *)&parametros_hilo_kernel_cpu);
 	pthread_join(hilo_administrador_de_ready, NULL);*/
-	administrar_procesos_de_ready(cliente_cpu);
+	
+	//administrar_procesos_de_ready(cliente_cpu);
 	
 	/*Que deberia haber:
 		-Cola de new
@@ -121,6 +122,7 @@ int main(void)
 			//cpu devuelve un int que indica si pasar el proceso a exit o no
 		}
 	*/
+	pthread_join(hilo_receptor_de_consolas, NULL);
 	
 	terminar_programa(logger, config);
 	return EXIT_SUCCESS;
@@ -142,24 +144,43 @@ void terminar_programa(t_log* logger, t_config* config)
 
 
 void recibir_de_consolas(int server_consola) {
+	int i = 0;
 	while(true){
 		int conexion_consola = esperar_cliente(server_consola);
 		char* codigo_recibido = recibir_mensaje(conexion_consola);
 		log_info(logger, "El kernel recibió el mensaje de consola");
-		t_pcb* pcb = crear_pcb(codigo_recibido);
-		sem_wait(&semaforo_cola_new);
-		queue_push(cola_new, pcb);
-		sem_post(&semaforo_cola_new);
-		sem_post(&semaforo_de_inicio);
+		pthread_t hilo_creador_de_proceso[50];
+		pthread_create(&hilo_creador_de_proceso[i], NULL, crear_proceso_wrapper, (void*)&codigo_recibido);
+		pthread_detach(hilo_creador_de_proceso[i]);
+		i++;
+		printf("A el kernel han llegado %d procesos", i);
+		
 	}
 }
 
-void *traductor_de_parametros(void *arg) {
+void crear_proceso(char* codigo_recibido) {
+	t_pcb* pcb = crear_pcb(codigo_recibido);
+	sem_wait(&semaforo_cola_new);
+	queue_push(cola_new, pcb);
+	printf("procesos en cola new: %d\n", queue_size(cola_new));
+	sem_post(&semaforo_cola_new);
+	sem_post(&semaforo_de_inicio);
+}
+
+void* crear_proceso_wrapper(void* arg) {
+	Parametros_de_hilo *args = (Parametros_de_hilo *)arg;
+    char* parametro = args->mensaje;
+    crear_proceso(parametro);
+    return NULL;
+}
+
+void *recibir_de_consolas_wrapper(void *arg) {
     Parametros_de_hilo *args = (Parametros_de_hilo *)arg;
     int parametro = args->conexion;
     recibir_de_consolas(parametro);
     return NULL;
 }
+
 
 void administrar_procesos_de_ready(int cliente_cpu){
 	//while(true){

@@ -21,7 +21,7 @@ int main(void)
 	t_log * logger = iniciar_logger("log_cpu.log","LOG_CPU");
 	t_config* config = iniciar_config("configs/cpu.config");
 	
-	char* inst = "SET\nYIELD\nEXIT\nESTO ES DE PRUEBA";
+	/*char* inst = "SET\nYIELD\nEXIT\nESTO ES DE PRUEBA";
 
 	t_pcb* pcb = crear_pcb(inst);
 	t_buffer* buffer = malloc(sizeof(t_buffer));
@@ -32,7 +32,7 @@ int main(void)
 	for (int i = 0; i<4; i++)
 	{
 		printf("%s\n", list_get(con->instrucciones, i));
-	}
+	}*/
 
 	//CPU como cliente para memoria
 	//int conexion_memoria_cpu = conectarse_a_memoria(logger);
@@ -46,7 +46,16 @@ int main(void)
 	{
 		log_info(logger, "CPU recibió al kernel");
 		t_contexto_de_ejecucion* contexto = malloc(sizeof(t_contexto_de_ejecucion));
+
 		contexto = recibir_contexto_de_ejecucion(conexion_cpu_kernel); //Y descomenten esto
+
+		if(contexto == NULL) {log_info(logger, "error con el contexto");}
+
+		    for(int i = 0; i < contexto->cant_instrucciones; i++)
+    		{
+        	printf("Largo instruccion %i\n", contexto->largo_instruccion[i]);
+    		}
+
 
 		//contexto->program_counter = 0; //Esto hay que pasarlo a crear_pcb
 		int cant_instrucciones = list_size(contexto->instrucciones);
@@ -83,7 +92,7 @@ int main(void)
 					break;	
 				//Va a haber más casos más adelante, por eso el switch
 			}*/
-			free(instruccion);
+			//free(instruccion);
 		}
 
 		liberar_contexto_de_ejecucion(contexto);

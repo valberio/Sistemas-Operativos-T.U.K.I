@@ -116,11 +116,16 @@ t_contexto_de_ejecucion* recibir_contexto_de_ejecucion(int conexion_socket){
 
     recv(conexion_socket, &(paquete->codigo_operacion), sizeof(int), MSG_WAITALL);
     recv(conexion_socket, &(paquete->buffer->size), sizeof(uint32_t), MSG_WAITALL);
-    paquete->buffer->stream = malloc(paquete->buffer->stream);
+    paquete->buffer->stream = malloc(paquete->buffer->size);
     recv(conexion_socket, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
 
     contexto = deserializar_contexto_de_ejecucion(paquete->buffer);
     eliminar_paquete(paquete);
+
+    if(contexto == NULL)
+    {
+        printf("El buffer es nulo\n");
+    }
 
     return contexto;
 }
@@ -192,9 +197,13 @@ t_buffer* serializar_contexto(t_contexto_de_ejecucion* contexto)
 
 
     //Copio el array del largo de instrucciones
+    for(int i = 0; i < contexto->cant_instrucciones; i++)
+    {
+        printf("Largo instruccion %i\n", contexto->largo_instruccion[i]);
+    }
+
     for (int i = 0; i < contexto->cant_instrucciones; i++)
     {
-        printf("%i\n", i);
         memcpy(stream + offset, &(contexto->largo_instruccion[i]), sizeof(uint32_t));
         offset += sizeof(uint32_t);
     }
@@ -222,7 +231,8 @@ t_contexto_de_ejecucion* deserializar_contexto_de_ejecucion(t_buffer* buffer){
 	}
 
 	t_contexto_de_ejecucion * contexto = malloc(sizeof(t_contexto_de_ejecucion));
-    contexto->registros = malloc(sizeof(t_registros)); 
+    contexto->registros = malloc(sizeof(t_registros));
+    contexto->largo_instruccion =  
     contexto->instrucciones = list_create();
 
     void* stream = buffer->stream;
@@ -241,11 +251,11 @@ t_contexto_de_ejecucion* deserializar_contexto_de_ejecucion(t_buffer* buffer){
     stream += sizeof(uint32_t);
 
     //2. Deserializo el ARRAY de largos de instrucciones
-    uint32_t* largo_instruccion = malloc(sizeof(uint32_t) * cant_instrucciones);
+    contexto->largo_instruccion = malloc(sizeof(uint32_t) * cant_instrucciones);
 
     for (int i = 0; i < cant_instrucciones; i++)
     {
-        memcpy(&(largo_instruccion[i]), stream, sizeof(uint32_t));
+        memcpy(&(contexto->largo_instruccion[i]), stream, sizeof(uint32_t));
         stream += sizeof(uint32_t);
     }
 
@@ -253,11 +263,11 @@ t_contexto_de_ejecucion* deserializar_contexto_de_ejecucion(t_buffer* buffer){
     
     for(int i = 0; i < cant_instrucciones; i++)
     {
-        char* instruccion_leida = malloc(largo_instruccion[i] * sizeof(char));
-        memcpy(instruccion_leida, stream, largo_instruccion[i]);
-        //instruccion_leida[largo_instruccion[i]] = '\0';
+        char* instruccion_leida = malloc(contexto->largo_instruccion[i] * sizeof(char));
+        memcpy(instruccion_leida, stream, contexto->largo_instruccion[i]);
+
         list_add(contexto->instrucciones, instruccion_leida);
-        stream += largo_instruccion[i];
+        stream += contexto->largo_instruccion[i];
     }
     return contexto;
 }

@@ -162,6 +162,11 @@ void recibir_de_consolas(int server_consola) {
 
 void crear_proceso(char* codigo_recibido) {
 	t_pcb* pcb = crear_pcb(codigo_recibido);
+
+	for (int i = 0; i < pcb->contexto_de_ejecucion->cant_instrucciones; i++)
+	{
+		printf("Largo instruccion %i\n", pcb->contexto_de_ejecucion->largo_instruccion[i]);
+	}
 	//printf("La primera ins es: %s\n", (char*)list_get(pcb->contexto_de_ejecucion.instrucciones, 0));
 	sem_wait(&semaforo_cola_new);
 	queue_push(cola_new, pcb);
@@ -190,23 +195,27 @@ void administrar_procesos_de_ready(int cliente_cpu){
 		//ESPERA A RECIBIR POR LO MENOS 1 PROCESO
 		sem_wait(&semaforo_de_inicio);
 		sem_wait(&semaforo_cola_new);
+
 		queue_push(cola_ready, queue_pop(cola_new));
+
 		sem_post(&semaforo_cola_new);
-		t_pcb* pcb = crear_pcb("SET\n YIELD\n EXIT");
-		//pcb = queue_pop(cola_ready);
+	
+		t_pcb* pcb = queue_pop(cola_ready);
+
 		log_info(logger, "Saque de la cola de ready el proceso %i\n", pcb->pid);
-		log_info(logger, "En el contexto hay %s", list_get(pcb->contexto_de_ejecucion.instrucciones, 0));
+		log_info(logger, "En el contexto hay %s", list_get(pcb->contexto_de_ejecucion->instrucciones, 0));
 		
-		enviar_contexto_de_ejecucion(&(pcb->contexto_de_ejecucion), cliente_cpu);
+		enviar_contexto_de_ejecucion(pcb->contexto_de_ejecucion, cliente_cpu);
 
 		t_contexto_de_ejecucion* contexto_actualizado = malloc(sizeof(t_contexto_de_ejecucion));
 		contexto_actualizado = recibir_contexto_de_ejecucion(cliente_cpu);
+		printf("En el contexto actualizo el pc es de %i\n", contexto_actualizado->program_counter);
+
+		
 		//Hay que hacer que no reviente si no recibe contexto, manejar el error
-		log_info(logger, "Recibi el contexto actualizado");
-		log_info(logger, "En el contexto hay %i", contexto_actualizado->program_counter);
+		//log_info(logger, "Recibi el contexto actualizado");
+		//log_info(logger, "En el contexto hay %i", contexto_actualizado->program_counter);
 	
 		queue_push(cola_exit, pcb);
-		liberar_pcb(queue_pop(cola_exit));
-		liberar_contexto_de_ejecucion(contexto_actualizado);
 	}
 }

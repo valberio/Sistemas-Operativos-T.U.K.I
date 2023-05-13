@@ -102,7 +102,7 @@ void serializar_contexto(contexto* contexto)
 
 
 
-/*void deserializar_contexto(t_buffer* buffer)
+void deserializar_contexto(t_buffer* buffer)
 {
 
 }*/

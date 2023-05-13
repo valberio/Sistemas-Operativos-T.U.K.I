@@ -20,7 +20,7 @@ void execute(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* conte
 {
 	//Switcheo sobre el primer elemento del array de instrucciones
 	enum Instrucciones instruccion = string_a_instruccion(instrucciones[0]);
-
+	
 	switch(instruccion) {
 		case SET:
 			set(logger, instrucciones, contexto);

@@ -154,23 +154,21 @@ void recibir_de_consolas(int server_consola) {
 		parametros_hilo_crear_proceso.mensaje = codigo_recibido;
 		pthread_create(&hilo_creador_de_proceso[i], NULL, crear_proceso_wrapper, (void*)&parametros_hilo_crear_proceso);
 		pthread_detach(hilo_creador_de_proceso[i]);
+		log_info(logger, "A el kernel ha llegado el proceso numero %d\n", i);
 		i++;
-		printf("A el kernel han llegado %d procesos\n", i);
-		
 	}
 }
 
 void crear_proceso(char* codigo_recibido) {
 	t_pcb* pcb = crear_pcb(codigo_recibido);
 
-	for (int i = 0; i < pcb->contexto_de_ejecucion->cant_instrucciones; i++)
+	/*for (int i = 0; i < pcb->contexto_de_ejecucion->cant_instrucciones; i++)
 	{
 		printf("Largo instruccion %i\n", pcb->contexto_de_ejecucion->largo_instruccion[i]);
-	}
+	}*/
 	//printf("La primera ins es: %s\n", (char*)list_get(pcb->contexto_de_ejecucion.instrucciones, 0));
 	sem_wait(&semaforo_cola_new);
 	queue_push(cola_new, pcb);
-	printf("procesos en cola new: %d\n", queue_size(cola_new));
 	sem_post(&semaforo_cola_new);
 	sem_post(&semaforo_de_procesos_para_ejecutar);
 }//crear un hilo por cada proceso que se genera, que se encargue de terminarlo cuando este en exit
@@ -194,26 +192,32 @@ void administrar_procesos_de_ready(int cliente_cpu){
 	//no tiene que ser un break
 	while(true){
 		//ESPERA A RECIBIR POR LO MENOS 1 PROCESO
+		
 		sem_wait(&semaforo_de_procesos_para_ejecutar);
 
 		sem_wait(&semaforo_cola_new);
-		queue_push(cola_ready, queue_pop(cola_new));
+		t_pcb* nuevo_pcb = queue_pop(cola_new);
 		sem_post(&semaforo_cola_new);
+
+		queue_push(cola_ready, nuevo_pcb);
+		
 	
 		t_pcb* pcb = queue_pop(cola_ready);
 
 		log_info(logger, "Saque de la cola de ready el proceso %i\n", pcb->pid);
-		log_info(logger, "En el contexto hay %s", list_get(pcb->contexto_de_ejecucion->instrucciones, 0));
+		log_info(logger, "En el contexto hay %s", list_get(pcb->contexto_de_ejecucion->instrucciones, 0));//esto esta mal por que siempre muestra la primera
 		
 		enviar_contexto_de_ejecucion(pcb->contexto_de_ejecucion, cliente_cpu);
 
 		t_paquete* paquete = recibir_contexto_de_ejecucion(cliente_cpu);
 
+		t_contexto_de_ejecucion* contexto_actualizado = malloc(sizeof(t_contexto_de_ejecucion));
+		contexto_actualizado = deserializar_contexto_de_ejecucion(paquete->buffer);
+		pcb->contexto_de_ejecucion = contexto_actualizado;
+
 		switch(paquete->codigo_operacion)
 		{
-			t_contexto_de_ejecucion* contexto_actualizado = malloc(sizeof(t_contexto_de_ejecucion));
-			contexto_actualizado = deserializar_contexto_de_ejecucion(paquete->buffer);
-			pcb->contexto_de_ejecucion = contexto_actualizado;
+			
 			case PAQUETE: //Caso YIELD
 
 				//Actualizo el PCB y lo mando a ready
@@ -229,8 +233,6 @@ void administrar_procesos_de_ready(int cliente_cpu){
 			default:
 				break; 
 		}
-
-
 
 		//Hay que hacer que no reviente si no recibe contexto, manejar el error
 		//log_info(logger, "Recibi el contexto actualizado");

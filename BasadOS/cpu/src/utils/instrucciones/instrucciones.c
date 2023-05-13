@@ -4,13 +4,13 @@
 
 
 
-void set(t_log* logger, char* instrucciones, t_contexto_de_ejecucion* contexto) {
+void set(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto) {
     //Guardo en el registro de registros.c el valor
     log_info(logger, "Entré en la ejecución de SET");
     
     enum Registros registro = string_a_registro(instrucciones[1]);
-    char * valor = instrucciones[2];
-
+    char* valor = instrucciones[2];
+    
     switch (registro){
         case rAX:
             strcpy(contexto->registros->AX , valor);
@@ -89,7 +89,7 @@ void exit_instruccion(t_log* logger, t_contexto_de_ejecucion* contexto, int cone
     t_paquete* paquete = crear_paquete();
     paquete->codigo_operacion = PAQUETE;
     paquete->buffer = serializar_contexto(contexto);
-
+    
     enviar_paquete(paquete, conexion_cpu_kernel);
 }
 
@@ -97,55 +97,55 @@ void exit_instruccion(t_log* logger, t_contexto_de_ejecucion* contexto, int cone
 //Esta funcion deberia estar en la carpeta del pcb
 enum Registros string_a_registro(char* registro)       
 {
-    if (strcmp(registro, "AX") == 0)
+    if (strncmp(registro, "AX", 2) == 0)
 	{
 		return rAX;
 	}
-	if (strcmp(registro, "BX") == 0)
+	if (strncmp(registro, "BX", 2) == 0)
 	{
 		return rBX;
 	}
-	if (strcmp(registro, "CX") == 0)
+	if (strncmp(registro, "CX", 2) == 0)
 	{
 		return rCX;
 	}
-    if (strcmp(registro, "DX") == 0)
+    if (strncmp(registro, "DX", 2) == 0)
 	{
 		return rDX;
 	}
 
     //Registros de 8 bits
-    if (strcmp(registro, "EAX") == 0)
+    if (strncmp(registro, "EAX", 3) == 0)
 	{
 		return rEAX;
 	}
-    if (strcmp(registro, "EBX") == 0)
+    if (strncmp(registro, "EBX", 3) == 0)
 	{
 		return rEBX;
 	}
-    if (strcmp(registro, "ECX") == 0)
+    if (strncmp(registro, "ECX", 3) == 0)
 	{
 		return rECX;
 	}
-    if (strcmp(registro, "EDX") == 0)
+    if (strncmp(registro, "EDX", 3) == 0)
 	{
 		return rEDX;
 	}
 
     //Registros de 16 bits
-    if (strcmp(registro, "RAX") == 0)
+    if (strncmp(registro, "RAX", 3) == 0)
 	{
 		return rRAX;
 	}
-    if (strcmp(registro, "REX") == 0)
+    if (strncmp(registro, "REX", 3) == 0)
 	{
 		return rRBX;
 	}
-    if (strcmp(registro, "RCX") == 0)
+    if (strncmp(registro, "RCX", 3) == 0)
 	{
 		return rRCX;
 	}
-    if (strcmp(registro, "RDX") == 0)
+    if (strncmp(registro, "RDX", 3) == 0)
 	{
 		return rRDX;
 	}

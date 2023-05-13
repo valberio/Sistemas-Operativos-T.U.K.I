@@ -51,26 +51,32 @@ int main(void)
 			paquete = recibir_contexto_de_ejecucion(conexion_cpu_kernel); //Y descomenten esto
 			contexto = deserializar_contexto_de_ejecucion(paquete->buffer);
 
-			if(contexto == NULL) {log_info(logger, "error con el contexto");}
+			if(contexto == NULL) {
+				log_info(logger, "error con el contexto");
+				break;
+				}
 
-		    	for(int i = 0; i < contexto->cant_instrucciones; i++)
+		    	/*for(int i = 0; i < contexto->cant_instrucciones; i++)
     			{
         		printf("Largo instruccion %i\n", contexto->largo_instruccion[i]);
-    			}
+    			}*/
 
 
 			//contexto->program_counter = 0; //Esto hay que pasarlo a crear_pcb
+			printf("\n");
+			log_info(logger, "Recibi un nuevo proceso");
 			int cant_instrucciones = list_size(contexto->instrucciones);
 			log_info(logger, "Cantidad instrucciones: %i", cant_instrucciones);
 			while (contexto->program_counter < cant_instrucciones) //Itero sobre todas las instrucciones, ejecutando
 			{
 				char * instruccion = fetch(contexto);
 				log_info(logger, "La instruccion a ejecutar es %s", instruccion);
-
+				
 				char* *instruccion_array = decode(instruccion);
-
+				
 				execute(logger, instruccion_array, contexto, conexion_cpu_kernel); //El envio del contexto de ejecucion al kernel pasa en execute
 
+				contexto->program_counter++;
 			}
 			liberar_contexto_de_ejecucion(contexto);
 		}

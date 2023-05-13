@@ -52,7 +52,7 @@ t_list* string_a_lista(char* str);
 void liberar_pcb(t_pcb* pcb);
 void liberar_contexto_de_ejecucion(t_contexto_de_ejecucion* contexto);
 void enviar_contexto_de_ejecucion(t_contexto_de_ejecucion* contexto, int conexion_socket);
-t_contexto_de_ejecucion* recibir_contexto_de_ejecucion(int socket_cliente);
+t_paquete* recibir_contexto_de_ejecucion(int socket_cliente);
 void instanciar_registros(t_registros* registro);
 t_buffer* serializar_contexto(t_contexto_de_ejecucion* contexto);
 t_contexto_de_ejecucion* deserializar_contexto_de_ejecucion(t_buffer* buffer);

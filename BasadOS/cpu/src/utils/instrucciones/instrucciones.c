@@ -4,8 +4,7 @@
 
 
 
-void set(t_log* logger, char** instrucciones, t_registros* registros)
-{
+void set(t_log* logger, char* instrucciones, t_contexto_de_ejecucion* contexto) {
     //Guardo en el registro de registros.c el valor
     log_info(logger, "Entré en la ejecución de SET");
     
@@ -14,76 +13,84 @@ void set(t_log* logger, char** instrucciones, t_registros* registros)
 
     switch (registro){
         case rAX:
-            strcpy(registros->AX, valor);
-            //log_info(logger, registros->AX);
+            strcpy(contexto->registros->AX , valor);
+            log_info(logger, contexto->registros->AX);
             break;
         case rBX:
-            strcpy(registros->BX, valor);
-            //log_info(logger, registros->BX);
+            strcpy(contexto->registros->BX, valor);
+            log_info(logger, contexto->registros->BX);
             break;
         case rCX:
-            strcpy(registros->CX, valor);
-            //log_info(logger, registros->CX);
+            strcpy(contexto->registros->CX, valor);
+            log_info(logger, contexto->registros->CX);
             break;
         case rDX:
-            strcpy(registros->DX, valor);
-            //log_info(logger, registros->DX);
+            strcpy(contexto->registros->DX, valor);
+            log_info(logger, contexto->registros->DX);
             break;
     
 		//Registros 8 bits
 		case rEAX:
-            strcpy(registros->EAX, valor);
-            //log_info(logger, registros->EAX);
+            strcpy(contexto->registros->EAX, valor);
+            log_info(logger, contexto->registros->EAX);
             break;
-        
+    
 		case rEBX:
-            strcpy(registros->EBX, valor);
-            //log_info(logger, registros->EBX);
+            strcpy(contexto->registros->EBX, valor);
+            log_info(logger, contexto->registros->EBX);
             break;
         
 		case rECX:
-            strcpy(registros->EDX, valor);
-            //log_info(logger, registros->EDX);
+            strcpy(contexto->registros->EDX, valor);
+            log_info(logger, contexto->registros->EDX);
             break;
         
 		case rEDX:
-            strcpy(registros->EDX, valor);
+            strcpy(contexto->registros->EDX, valor);
             //log_info(logger, registros->EDX);
             break;
         
 		//Registros de 16 bits
 		case rRAX:
-            strcpy(registros->RAX, valor);
+            strcpy(contexto->registros->RAX, valor);
             //log_info(logger, registros->RAX);
             break;
         
 		case rRBX:
-            strcpy(registros->RBX, valor);
+            strcpy(contexto->registros->RBX, valor);
             //log_info(logger, registros->RBX);
             break;
         
 		case rRCX:
-            strcpy(registros->RDX, valor);
+            strcpy(contexto->registros->RDX, valor);
             //log_info(logger, registros->RDX);
             break;
         
 		case rRDX:
-            strcpy(registros->RDX, valor);
+            strcpy(contexto->registros->RDX, valor);
             //log_info(logger, registros->RDX);
             break;
 		}
 }
 
-void yield(t_log* logger)
-{
-    //Actualizo el estado del proceso a READY
+void yield(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel) {
+    //Tengo que armar el paquete con codigo de operacion 1
     log_info(logger, "Entré en la ejecución de YIELD");
+    t_paquete* paquete = crear_paquete();
+    paquete->codigo_operacion = MENSAJE;
+    paquete->buffer = serializar_contexto(contexto);
+
+    enviar_paquete(paquete, conexion_cpu_kernel);
 }
 
-void exit_instruccion(t_log* logger)
-{
-    //Actualizo el estado del proceso a EXIT
+void exit_instruccion(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel) {
     log_info(logger, "Entré en la ejecución de EXIT");
+    //Tengo que armar el paquete con codigo de operacion 1
+    t_paquete* paquete = crear_paquete();
+    paquete->codigo_operacion = PAQUETE;
+    paquete->buffer = serializar_contexto(contexto);
+
+    enviar_paquete(paquete, conexion_cpu_kernel);
 }
 
 

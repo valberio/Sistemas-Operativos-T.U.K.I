@@ -36,7 +36,7 @@
 
 //Esta variable se fija que haya por lo menos un elemento en la cola de new antes de pasar a mandarlos a 
 //ready, habria que fijarse de resolver con una mejor solucion como semaforos o etc.
-sem_t semaforo_de_inicio;
+sem_t semaforo_de_procesos_para_ejecutar;
 sem_t semaforo_cola_new;
 
 t_queue* cola_new;
@@ -55,7 +55,7 @@ int main(void)
 	cola_blocked = queue_create();
 	cola_exit = queue_create();
 	
-	sem_init(&semaforo_de_inicio, 0, 0);
+	sem_init(&semaforo_de_procesos_para_ejecutar, 0, 0);
 	sem_init(&semaforo_cola_new, 0, 1);
 
 	logger = iniciar_logger("log_kernel.log", "LOG_KERNEL");
@@ -172,8 +172,8 @@ void crear_proceso(char* codigo_recibido) {
 	queue_push(cola_new, pcb);
 	printf("procesos en cola new: %d\n", queue_size(cola_new));
 	sem_post(&semaforo_cola_new);
-	sem_post(&semaforo_de_inicio);
-}
+	sem_post(&semaforo_de_procesos_para_ejecutar);
+}//crear un hilo por cada proceso que se genera, que se encargue de terminarlo cuando este en exit
 
 void* crear_proceso_wrapper(void* arg) {
 	Parametros_de_hilo* args = (Parametros_de_hilo *)arg;
@@ -191,13 +191,13 @@ void *recibir_de_consolas_wrapper(void *arg) {
 
 
 void administrar_procesos_de_ready(int cliente_cpu){
+	//no tiene que ser un break
 	while(true){
 		//ESPERA A RECIBIR POR LO MENOS 1 PROCESO
-		sem_wait(&semaforo_de_inicio);
+		sem_wait(&semaforo_de_procesos_para_ejecutar);
+
 		sem_wait(&semaforo_cola_new);
-
 		queue_push(cola_ready, queue_pop(cola_new));
-
 		sem_post(&semaforo_cola_new);
 	
 		t_pcb* pcb = queue_pop(cola_ready);
@@ -207,15 +207,35 @@ void administrar_procesos_de_ready(int cliente_cpu){
 		
 		enviar_contexto_de_ejecucion(pcb->contexto_de_ejecucion, cliente_cpu);
 
-		t_contexto_de_ejecucion* contexto_actualizado = malloc(sizeof(t_contexto_de_ejecucion));
-		contexto_actualizado = recibir_contexto_de_ejecucion(cliente_cpu);
-		printf("En el contexto actualizo el pc es de %i\n", contexto_actualizado->program_counter);
+		t_paquete* paquete = recibir_contexto_de_ejecucion(cliente_cpu);
 
-		
+		switch(paquete->codigo_operacion)
+		{
+			t_contexto_de_ejecucion* contexto_actualizado = malloc(sizeof(t_contexto_de_ejecucion));
+			contexto_actualizado = deserializar_contexto_de_ejecucion(paquete->buffer);
+			pcb->contexto_de_ejecucion = contexto_actualizado;
+			case PAQUETE: //Caso YIELD
+
+				//Actualizo el PCB y lo mando a ready
+
+				sem_post(&semaforo_de_procesos_para_ejecutar);
+				queue_push(cola_ready, pcb);
+				break;
+			case MENSAJE: //Caso EXIT
+				
+				queue_push(cola_exit, pcb);
+				//Actualizo el PCB y lo mando a exit
+				break;
+			default:
+				break; 
+		}
+
+
+
 		//Hay que hacer que no reviente si no recibe contexto, manejar el error
 		//log_info(logger, "Recibi el contexto actualizado");
 		//log_info(logger, "En el contexto hay %i", contexto_actualizado->program_counter);
 	
-		queue_push(cola_exit, pcb);
+		
 	}
 }

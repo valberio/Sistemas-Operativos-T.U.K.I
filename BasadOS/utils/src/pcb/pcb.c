@@ -110,7 +110,7 @@ void enviar_contexto_de_ejecucion(t_contexto_de_ejecucion* contexto,int conexion
     eliminar_paquete(paquete);
 }
 
-t_contexto_de_ejecucion* recibir_contexto_de_ejecucion(int conexion_socket){
+t_paquete* recibir_contexto_de_ejecucion(int conexion_socket){
     t_paquete* paquete = crear_paquete();
     t_contexto_de_ejecucion* contexto = malloc(sizeof(t_contexto_de_ejecucion));
 
@@ -119,15 +119,16 @@ t_contexto_de_ejecucion* recibir_contexto_de_ejecucion(int conexion_socket){
     paquete->buffer->stream = malloc(paquete->buffer->size);
     recv(conexion_socket, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
 
-    contexto = deserializar_contexto_de_ejecucion(paquete->buffer);
-    eliminar_paquete(paquete);
+    return paquete;
+    //contexto = deserializar_contexto_de_ejecucion(paquete->buffer);
+    
 
-    if(contexto == NULL)
+    /*if(contexto == NULL)
     {
         printf("El buffer es nulo\n");
-    }
+    }*/
 
-    return contexto;
+    //return contexto;
 }
 
 void instanciar_registros(t_registros* registro)

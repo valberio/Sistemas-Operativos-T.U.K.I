@@ -16,26 +16,23 @@ char** decode(char* instruccion)
 	return array;
 }
 
-int execute(t_log* logger, char** instrucciones, t_registros * registros)
+void execute(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel)
 {
 	//Switcheo sobre el primer elemento del array de instrucciones
 	enum Instrucciones instruccion = string_a_instruccion(instrucciones[0]);
 
 	switch(instruccion) {
 		case SET:
-			set(logger, instrucciones, registros);
-			return 0;
+			set(logger, instrucciones, contexto);
 			break;
 		case YIELD:
-			yield(logger);
-			return 1;
+			yield(logger, contexto, conexion_cpu_kernel);
 			break;
 		case EXIT:
-			exit_instruccion(logger);
-			return 2;
+			exit_instruccion(logger, contexto, conexion_cpu_kernel);
 			break;
 		default:
-			return 0;
+			break;
 	}
 }
 

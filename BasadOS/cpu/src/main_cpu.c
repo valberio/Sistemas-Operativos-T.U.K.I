@@ -45,57 +45,35 @@ int main(void)
 	if(conexion_cpu_kernel) //Cuando quieran probar la conexion con kernel, pongan conexion_cpu_kernel acá
 	{
 		log_info(logger, "CPU recibió al kernel");
-		t_contexto_de_ejecucion* contexto = malloc(sizeof(t_contexto_de_ejecucion));
+		while(conexion_cpu_kernel) {
+			t_contexto_de_ejecucion* contexto = malloc(sizeof(t_contexto_de_ejecucion));
+			t_paquete* paquete = malloc(sizeof(t_paquete));
+			paquete = recibir_contexto_de_ejecucion(conexion_cpu_kernel); //Y descomenten esto
+			contexto = deserializar_contexto_de_ejecucion(paquete->buffer);
 
-		contexto = recibir_contexto_de_ejecucion(conexion_cpu_kernel); //Y descomenten esto
+			if(contexto == NULL) {log_info(logger, "error con el contexto");}
 
-		if(contexto == NULL) {log_info(logger, "error con el contexto");}
-
-		    for(int i = 0; i < contexto->cant_instrucciones; i++)
-    		{
-        	printf("Largo instruccion %i\n", contexto->largo_instruccion[i]);
-    		}
+		    	for(int i = 0; i < contexto->cant_instrucciones; i++)
+    			{
+        		printf("Largo instruccion %i\n", contexto->largo_instruccion[i]);
+    			}
 
 
-		//contexto->program_counter = 0; //Esto hay que pasarlo a crear_pcb
-		int cant_instrucciones = list_size(contexto->instrucciones);
-		log_info(logger, "Cantidad instrucciones: %i", cant_instrucciones);
-		while (contexto->program_counter < cant_instrucciones) //Itero sobre todas las instrucciones, ejecutando
-		{
-			char * instruccion = fetch(contexto);
-			log_info(logger, "La instruccion a ejecutar es %s", instruccion);
-
-			char* *instruccion_array = decode(instruccion);
-
-			int resultado = execute(logger, instruccion_array, contexto->registros);
-
-			log_info(logger, "Program counter: %i", contexto->program_counter);
-			contexto->program_counter = contexto->program_counter + 1;
-			log_info(logger, "Program counter: %i", contexto->program_counter);
-
-			enviar_contexto_de_ejecucion(contexto, conexion_cpu_kernel);
-			liberar_array_instrucciones(instruccion_array);
-			log_info(logger, "Devolvi el contexto a kernel");		
-	
-			//Guardo el codigo de respuesta que me devolvio la ejecucion en el contexto
-
-			/*contexto->codigo_respuesta = resultado;
-
-			switch(resultado) 
+			//contexto->program_counter = 0; //Esto hay que pasarlo a crear_pcb
+			int cant_instrucciones = list_size(contexto->instrucciones);
+			log_info(logger, "Cantidad instrucciones: %i", cant_instrucciones);
+			while (contexto->program_counter < cant_instrucciones) //Itero sobre todas las instrucciones, ejecutando
 			{
-				case 0:		//Caso de instrucciones que no requieren desalojo
-					break;
-				case 1:		//Caso de EXIT, YIELD
-					enviar_contexto_de_ejecucion(contexto, conexion_cpu_kernel);
-					liberar_array_instrucciones(instruccion_array);
-					log_info(logger, "Devolvi el contexto a kernel");		
-					break;	
-				//Va a haber más casos más adelante, por eso el switch
-			}*/
-			//free(instruccion);
-		}
+				char * instruccion = fetch(contexto);
+				log_info(logger, "La instruccion a ejecutar es %s", instruccion);
 
-		liberar_contexto_de_ejecucion(contexto);
+				char* *instruccion_array = decode(instruccion);
+
+				execute(logger, instruccion_array, contexto, conexion_cpu_kernel); //El envio del contexto de ejecucion al kernel pasa en execute
+
+			}
+			liberar_contexto_de_ejecucion(contexto);
+		}
 		log_destroy(logger);
 	}
 	close(conexion_cpu_kernel);

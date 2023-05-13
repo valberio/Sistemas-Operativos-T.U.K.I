@@ -9,7 +9,7 @@
 
 char* fetch(t_contexto_de_ejecucion * contexto);
 char** decode(char* instruccion_string);
-int execute(t_log* logger, char** instrucciones, t_registros* registro);
+void execute(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel);
 enum Instrucciones string_a_instruccion(char* instruccion);
 
 #endif /* CICLO_INSTRUCCION_H_ */

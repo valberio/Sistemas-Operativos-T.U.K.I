@@ -40,12 +40,13 @@ typedef struct{
 typedef struct{
     int estado;
     int pid;
-    t_contexto_de_ejecucion contexto_de_ejecucion;
+    t_contexto_de_ejecucion* contexto_de_ejecucion;
     t_list* tabla_segmentos;
     t_list* tabla_archivos_abiertos;
     int estimado_rafaga;
 } t_pcb;
 
+t_contexto_de_ejecucion* crear_contexto_de_ejecucion(char* instrucciones);
 t_pcb* crear_pcb();
 t_list* string_a_lista(char* str);
 void liberar_pcb(t_pcb* pcb);

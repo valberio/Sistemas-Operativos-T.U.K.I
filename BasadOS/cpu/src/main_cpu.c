@@ -21,6 +21,19 @@ int main(void)
 	t_log * logger = iniciar_logger("log_cpu.log","LOG_CPU");
 	t_config* config = iniciar_config("configs/cpu.config");
 	
+	char* inst = "SET\nYIELD\nEXIT\nESTO ES DE PRUEBA";
+
+	t_pcb* pcb = crear_pcb(inst);
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+	buffer = serializar_contexto(pcb->contexto_de_ejecucion);
+	t_contexto_de_ejecucion* con = deserializar_contexto_de_ejecucion(buffer);
+
+
+	for (int i = 0; i<4; i++)
+	{
+		printf("%s\n", list_get(con->instrucciones, i));
+	}
+
 	//CPU como cliente para memoria
 	//int conexion_memoria_cpu = conectarse_a_memoria(logger);
 

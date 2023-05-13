@@ -29,6 +29,7 @@ int main(int argc, char* argv[]) {
     enviar_mensaje(pseudocodigo,conexion_con_kernel);    
     free(pseudocodigo);
     config_destroy(config);
+    return 0;
 }
 
 int levantar_conexion(char* ip, char* puerto_kernel_consola) {

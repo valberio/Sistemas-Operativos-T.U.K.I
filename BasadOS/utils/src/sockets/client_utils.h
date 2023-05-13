@@ -14,9 +14,12 @@
 // Estrucutras para paquetes, que capaz usamos despues
 typedef enum
 {
-	MENSAJE,
-	PAQUETE
-
+	INTERRUPCION_A_READY,
+	FINALIZACION,
+	INTERRUPCION_BLOQUEANTE,
+	PETICION_RECURSO,
+	CREAR_SEGMENTO,
+	ELIMINAR_SEGMENTO
 }op_code;
 
 typedef struct

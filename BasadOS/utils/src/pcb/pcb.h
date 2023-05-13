@@ -40,6 +40,7 @@ typedef struct{
 typedef struct{
     int estado;
     int pid;
+    int socket_consola;
     t_contexto_de_ejecucion* contexto_de_ejecucion;
     t_list* tabla_segmentos;
     t_list* tabla_archivos_abiertos;

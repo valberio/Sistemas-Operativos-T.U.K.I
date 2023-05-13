@@ -18,11 +18,11 @@ extern t_log* logger;
 
 int conectarse_a_memoria(t_log* logger);
 int conexion_a_kernel(t_log* logger);
-t_pcb * crear_pcb( char* instrucciones);
+t_pcb * crear_pcb(char* instrucciones, int socket);
 void terminar_programa(t_log* logger, t_config* config);
 void recibir_de_consolas(int server_consola);
 void* recibir_de_consolas_wrapper(void* arg);
-void crear_proceso(char* mensaje);
+void crear_proceso(char* mensaje, int conexion);
 void* crear_proceso_wrapper(void* arg);
 void administrar_procesos_de_ready(int cliente_cpu);
 

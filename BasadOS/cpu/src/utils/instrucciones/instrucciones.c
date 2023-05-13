@@ -47,28 +47,28 @@ void set(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto)
         
 		case rEDX:
             strcpy(contexto->registros->EDX, valor);
-            //log_info(logger, registros->EDX);
+            log_info(logger, contexto->registros->EDX);
             break;
         
 		//Registros de 16 bits
 		case rRAX:
             strcpy(contexto->registros->RAX, valor);
-            //log_info(logger, registros->RAX);
+            log_info(logger, contexto->registros->RAX);
             break;
         
 		case rRBX:
             strcpy(contexto->registros->RBX, valor);
-            //log_info(logger, registros->RBX);
+            log_info(logger, contexto->registros->RBX);
             break;
         
 		case rRCX:
             strcpy(contexto->registros->RDX, valor);
-            //log_info(logger, registros->RDX);
+            log_info(logger, contexto->registros->RDX);
             break;
         
 		case rRDX:
             strcpy(contexto->registros->RDX, valor);
-            //log_info(logger, registros->RDX);
+            log_info(logger, contexto->registros->RDX);
             break;
 		}
 }
@@ -77,20 +77,22 @@ void yield(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_cpu_ke
     //Tengo que armar el paquete con codigo de operacion 1
     log_info(logger, "Entré en la ejecución de YIELD");
     t_paquete* paquete = crear_paquete();
-    paquete->codigo_operacion = MENSAJE;
+    paquete->codigo_operacion = INTERRUPCION_A_READY;
     paquete->buffer = serializar_contexto(contexto);
-
+    
     enviar_paquete(paquete, conexion_cpu_kernel);
+    eliminar_paquete(paquete);
 }
 
 void exit_instruccion(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel) {
     log_info(logger, "Entré en la ejecución de EXIT");
     //Tengo que armar el paquete con codigo de operacion 1
     t_paquete* paquete = crear_paquete();
-    paquete->codigo_operacion = PAQUETE;
+    paquete->codigo_operacion = FINALIZACION;
     paquete->buffer = serializar_contexto(contexto);
     
     enviar_paquete(paquete, conexion_cpu_kernel);
+    eliminar_paquete(paquete);
 }
 
 

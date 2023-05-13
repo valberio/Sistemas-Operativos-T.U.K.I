@@ -99,7 +99,7 @@ int main(void)
 	parametros_hilo_consola_kernel.conexion = server_consola;
 	pthread_t hilo_receptor_de_consolas;
 	pthread_create(&hilo_receptor_de_consolas, NULL, recibir_de_consolas_wrapper, (void *)&parametros_hilo_consola_kernel);
-
+	pthread_detach(hilo_receptor_de_consolas);
 
 	//HILO 2	
 	/*Parametros_de_hilo parametros_hilo_kernel_cpu;
@@ -122,7 +122,7 @@ int main(void)
 			//cpu devuelve un int que indica si pasar el proceso a exit o no
 		}
 	*/
-	pthread_join(hilo_receptor_de_consolas, NULL);
+	
 	
 	terminar_programa(logger, config);
 	return EXIT_SUCCESS;
@@ -152,6 +152,7 @@ void recibir_de_consolas(int server_consola) {
 		pthread_t hilo_creador_de_proceso[50];
 		Parametros_de_hilo parametros_hilo_crear_proceso;
 		parametros_hilo_crear_proceso.mensaje = codigo_recibido;
+		parametros_hilo_crear_proceso.conexion = conexion_consola;
 		pthread_create(&hilo_creador_de_proceso[i], NULL, crear_proceso_wrapper, (void*)&parametros_hilo_crear_proceso);
 		pthread_detach(hilo_creador_de_proceso[i]);
 		log_info(logger, "A el kernel ha llegado el proceso numero %d\n", i);
@@ -159,8 +160,8 @@ void recibir_de_consolas(int server_consola) {
 	}
 }
 
-void crear_proceso(char* codigo_recibido) {
-	t_pcb* pcb = crear_pcb(codigo_recibido);
+void crear_proceso(char* codigo_recibido, int socket_consola) {
+	t_pcb* pcb = crear_pcb(codigo_recibido, socket_consola);
 
 	/*for (int i = 0; i < pcb->contexto_de_ejecucion->cant_instrucciones; i++)
 	{
@@ -171,12 +172,13 @@ void crear_proceso(char* codigo_recibido) {
 	queue_push(cola_new, pcb);
 	sem_post(&semaforo_cola_new);
 	sem_post(&semaforo_de_procesos_para_ejecutar);
-}//crear un hilo por cada proceso que se genera, que se encargue de terminarlo cuando este en exit
+}
 
 void* crear_proceso_wrapper(void* arg) {
 	Parametros_de_hilo* args = (Parametros_de_hilo *)arg;
     char* parametro = args->mensaje;
-    crear_proceso(parametro);
+	int conexion = args->conexion;
+    crear_proceso(parametro, conexion);
     return NULL;
 }
 
@@ -190,22 +192,29 @@ void *recibir_de_consolas_wrapper(void *arg) {
 
 void administrar_procesos_de_ready(int cliente_cpu){
 	//no tiene que ser un break
-	while(true){
+	while(cliente_cpu){
 		//ESPERA A RECIBIR POR LO MENOS 1 PROCESO
 		
 		sem_wait(&semaforo_de_procesos_para_ejecutar);
-
+		
 		sem_wait(&semaforo_cola_new);
+		if (queue_size(cola_new) == 0)
+		{
+			log_info(logger, "No hay procesos en la cola de new");
+			cliente_cpu = 0;
+			close(cliente_cpu);
+		} else {
 		t_pcb* nuevo_pcb = queue_pop(cola_new);
+
 		sem_post(&semaforo_cola_new);
 
 		queue_push(cola_ready, nuevo_pcb);
 		
-	
+		
 		t_pcb* pcb = queue_pop(cola_ready);
 
 		log_info(logger, "Saque de la cola de ready el proceso %i\n", pcb->pid);
-		log_info(logger, "En el contexto hay %s", list_get(pcb->contexto_de_ejecucion->instrucciones, 0));//esto esta mal por que siempre muestra la primera
+		log_info(logger, "En el contexto hay %i", pcb->pid);//esto esta mal por que siempre muestra la primera
 		
 		enviar_contexto_de_ejecucion(pcb->contexto_de_ejecucion, cliente_cpu);
 
@@ -218,26 +227,24 @@ void administrar_procesos_de_ready(int cliente_cpu){
 		switch(paquete->codigo_operacion)
 		{
 			
-			case PAQUETE: //Caso YIELD
+			case INTERRUPCION_A_READY: //Caso YIELD
 
 				//Actualizo el PCB y lo mando a ready
-
-				sem_post(&semaforo_de_procesos_para_ejecutar);
 				queue_push(cola_ready, pcb);
-				break;
-			case MENSAJE: //Caso EXIT
+				sem_post(&semaforo_de_procesos_para_ejecutar);
 				
+				break;
+
+			case FINALIZACION: //Caso EXIT
 				queue_push(cola_exit, pcb);
 				//Actualizo el PCB y lo mando a exit
 				break;
 			default:
 				break; 
 		}
-
+		}
 		//Hay que hacer que no reviente si no recibe contexto, manejar el error
 		//log_info(logger, "Recibi el contexto actualizado");
 		//log_info(logger, "En el contexto hay %i", contexto_actualizado->program_counter);
-	
-		
 	}
 }

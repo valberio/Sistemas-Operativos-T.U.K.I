@@ -42,7 +42,7 @@ int main(void)
 	config_destroy(config);
 
 
-	if(conexion_cpu_kernel) //Cuando quieran probar la conexion con kernel, pongan conexion_cpu_kernel acá
+	if(conexion_cpu_kernel)  //Cuando quieran probar la conexion con kernel, pongan conexion_cpu_kernel acá
 	{
 		log_info(logger, "CPU recibió al kernel");
 		while(conexion_cpu_kernel) {
@@ -51,38 +51,37 @@ int main(void)
 			paquete = recibir_contexto_de_ejecucion(conexion_cpu_kernel); //Y descomenten esto
 			contexto = deserializar_contexto_de_ejecucion(paquete->buffer);
 
+			printf("Recibi %i\n", paquete->codigo_operacion);
 			if(contexto == NULL) {
-				log_info(logger, "error con el contexto");
-				break;
+				log_info(logger, "No recibi mas procesos del kernel");
+				close(conexion_cpu_kernel);
+				conexion_cpu_kernel = 0;
 				}
-
-		    	/*for(int i = 0; i < contexto->cant_instrucciones; i++)
-    			{
-        		printf("Largo instruccion %i\n", contexto->largo_instruccion[i]);
-    			}*/
-
-
-			//contexto->program_counter = 0; //Esto hay que pasarlo a crear_pcb
-			printf("\n");
-			log_info(logger, "Recibi un nuevo proceso");
-			int cant_instrucciones = list_size(contexto->instrucciones);
-			log_info(logger, "Cantidad instrucciones: %i", cant_instrucciones);
-			while (contexto->program_counter < cant_instrucciones) //Itero sobre todas las instrucciones, ejecutando
-			{
-				char * instruccion = fetch(contexto);
-				log_info(logger, "La instruccion a ejecutar es %s", instruccion);
+			else{
+				printf("\n");
+				log_info(logger, "Recibi un nuevo proceso");
+				int cant_instrucciones = list_size(contexto->instrucciones);
+				log_info(logger, "Cantidad instrucciones: %i", cant_instrucciones);
+				while (contexto->program_counter < cant_instrucciones) //Itero sobre todas las instrucciones, ejecutando
+				{
+					char * instruccion = fetch(contexto);
+					log_info(logger, "La instruccion a ejecutar es %s", instruccion);
 				
-				char* *instruccion_array = decode(instruccion);
+					char* *instruccion_array = decode(instruccion);
 				
-				execute(logger, instruccion_array, contexto, conexion_cpu_kernel); //El envio del contexto de ejecucion al kernel pasa en execute
+					execute(logger, instruccion_array, contexto, conexion_cpu_kernel); //El envio del contexto de ejecucion al kernel pasa en execute
 
-				contexto->program_counter++;
-			}
+					contexto->program_counter++;
+					free(instruccion_array);
+				}	
+			
+			eliminar_paquete(paquete);
 			liberar_contexto_de_ejecucion(contexto);
+			}
 		}
 		log_destroy(logger);
 	}
-	close(conexion_cpu_kernel);
+	
 	//liberar_conexion(&conexion_cpu_kernel);
 	return 0;
 }

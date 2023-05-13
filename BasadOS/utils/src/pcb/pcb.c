@@ -2,9 +2,10 @@
 
 int contador = 0;
 
-t_pcb * crear_pcb( char* instrucciones)
+t_pcb * crear_pcb( char* instrucciones, int socket)
 {
     t_pcb *pcb = malloc(sizeof(t_pcb));
+    pcb->socket_consola = socket;
 	pcb->estado = 1;
 	pcb->pid = contador;
     pcb->contexto_de_ejecucion = crear_contexto_de_ejecucion(instrucciones);
@@ -198,11 +199,6 @@ t_buffer* serializar_contexto(t_contexto_de_ejecucion* contexto)
 
 
     //Copio el array del largo de instrucciones
-    for(int i = 0; i < contexto->cant_instrucciones; i++)
-    {
-        printf("Largo instruccion %i\n", contexto->largo_instruccion[i]);
-    }
-
     for (int i = 0; i < contexto->cant_instrucciones; i++)
     {
         memcpy(stream + offset, &(contexto->largo_instruccion[i]), sizeof(uint32_t));

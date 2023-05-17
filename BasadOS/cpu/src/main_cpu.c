@@ -4,16 +4,18 @@
 
 
 /*------------------------------------------------------------------*/
-/*|						CHECKPOINT 2					   			*/
+/*|						CHECKPOINT 3					   			*/
 /*------------------------------------------------------------------*/
-/*		Levanta el archivo de configuración: HECHO
-		Se conecta a Memoria y espera conexiones del Kernel: HECHO.
-		Ejecuta las instrucciones SET, YIELD y EXIT.				*/
+/*		Interpreta todas las operaciones
+		Ejecuta las instrucciones I/O, WAIT y SIGNAL.				*/
 /*------------------------------------------------------------------*/
 
-//Debatir: que condicion de corte le pongo al while?
-
-//TODO: Funcion que devuelva el contexto de ejecución al kernel
+//TO-DO GENERAL CPU
+/*-Serializar los distintos valores de retorno de las instrucciones (parametros
+	para kernel)
+  -Implementar de manera genérica todas las instrucciones
+  -Serializar diccionarios y cambiar el contexto a un diccionario	
+	*/
 
 int main(void)
 {
@@ -21,19 +23,6 @@ int main(void)
 	t_log * logger = iniciar_logger("log_cpu.log","LOG_CPU");
 	t_config* config = iniciar_config("configs/cpu.config");
 	
-	/*char* inst = "SET\nYIELD\nEXIT\nESTO ES DE PRUEBA";
-
-	t_pcb* pcb = crear_pcb(inst);
-	t_buffer* buffer = malloc(sizeof(t_buffer));
-	buffer = serializar_contexto(pcb->contexto_de_ejecucion);
-	t_contexto_de_ejecucion* con = deserializar_contexto_de_ejecucion(buffer);
-
-
-	for (int i = 0; i<4; i++)
-	{
-		printf("%s\n", list_get(con->instrucciones, i));
-	}*/
-
 	//CPU como cliente para memoria
 	//int conexion_memoria_cpu = conectarse_a_memoria(logger);
 
@@ -42,13 +31,13 @@ int main(void)
 	config_destroy(config);
 
 
-	if(conexion_cpu_kernel)  //Cuando quieran probar la conexion con kernel, pongan conexion_cpu_kernel acá
+	if(conexion_cpu_kernel) 
 	{
 		log_info(logger, "CPU recibió al kernel");
 		while(conexion_cpu_kernel) {
 			t_contexto_de_ejecucion* contexto = malloc(sizeof(t_contexto_de_ejecucion));
 			t_paquete* paquete = malloc(sizeof(t_paquete));
-			paquete = recibir_contexto_de_ejecucion(conexion_cpu_kernel); //Y descomenten esto
+			paquete = recibir_contexto_de_ejecucion(conexion_cpu_kernel); 
 			contexto = deserializar_contexto_de_ejecucion(paquete->buffer);
 
 			printf("Recibi %i\n", paquete->codigo_operacion);
@@ -113,20 +102,5 @@ int conexion_a_kernel(t_config* config,t_log* logger)
 }
 
 
-
-// void devolver_contexto(t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel)
-// {
-// 	//TODO
-// 	//A saber: la CPU *siempre* le termina devolviendo el contexto de ejecucion al kernel,
-// 	//porque siempre las instrucciones terminan con EXIT.
-// 	
-// }
-
-//Si execute() devuelve un 1, es porque la instruccion pide que se devuelva el contexto
-//al kernel. 
-
-//DUDA: "Para las siguientes instrucciones se deberá devolver al módulo Kernel
-// el Contexto de Ejecución actualizado junto al motivo del desalojo"
-//Cuáles son los motivos de desalojo?
 
 

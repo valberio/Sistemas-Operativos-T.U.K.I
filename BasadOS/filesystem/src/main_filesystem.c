@@ -3,10 +3,12 @@
 
 
 /*------------------------------------------------------------------*/
-/*						CHECKPOINT 2								*/
+/*						CHECKPOINT 3								*/
 /*------------------------------------------------------------------*/
-/*		Levanta el archivo de configuración: HECHO!
-		Se conecta a Memoria y espera la conexión de Kernel: HECHO!
+/*		Espera las peticiones del Kernel y responde las mismas
+		con mensajes genéricos.
+		Levanta los archivos de Superbloque, bitmap y 
+		archivo de bloques.
 																	*/
 /*------------------------------------------------------------------*/					
 

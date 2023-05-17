@@ -29,6 +29,9 @@ int main(int argc, char* argv[]) {
     enviar_mensaje(pseudocodigo,conexion_con_kernel);    
     free(pseudocodigo);
     config_destroy(config);
+
+    //Acá espero la respuesta de kernel
+
     return 0;
 }
 

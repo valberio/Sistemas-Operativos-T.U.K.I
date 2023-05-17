@@ -3,8 +3,8 @@
 /*------------------------------------------------------------------*/
 /*						CHECKPOINT 2								*/
 /*------------------------------------------------------------------*/
-/*		Levanta el archivo de configuración: HECHO!
-		Espera las conexiones de CPU, Kernel y File System: HECHO!
+/*		Espera las peticiones de los demás módulos y responde
+        con mensajes genéricos.
 																	*/
 /*------------------------------------------------------------------*/
 

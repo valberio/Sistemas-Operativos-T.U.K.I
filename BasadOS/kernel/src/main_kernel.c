@@ -5,32 +5,23 @@
 /*------------------------------------------------------------------*/
 /*						CHECKPOINT 2								*/
 /*------------------------------------------------------------------*/
-/*	Levanta el archivo de configuración: HECHO!
-	Se conecta a CPU, Memoria y File System: HECHO!
-	Espera conexiones de las consolas: wip, habría que implementar
-									   concurrencia
-	Recibe de las consolas las instrucciones y arma el PCB: wip,falta el PCB
-	Planificación de procesos con FIFO: un poquito de avance					*/
+/*			Planificación FIFO
+			Planificación HRRN
+			Manejo de recursos compartidos							*/
 /*------------------------------------------------------------------*/
 
 /*int main (void)
 {
-	// hilo de escucha a consola ---- mete procesos nuevos en new
+	--Ideas de diseño de kernel:
+	//Un hilo que manda a los pcbs nuevos a la cola de ready
+	//Un hilo que planifique el hilo siguiente a ejecutar (puedo tener un hilo fifo y un hilo
+	//hrrn, con un switch de una variable de la config elijo cuál lanzar)
+	//Un hilo que reciba por parámetro el pcb y lo ejecute
 
-	//Colas, guardamos PCBs en las colas
-	cola new
-	cola ready
-	running es un estado, los estados son un enum
-	cola exit (porque puede que un proceso termine mientras otro este usando exit)
-	cola blocked 
-
-	1 hilo que escuche las consolas
-	|-> lanza un hilo que mete el proceso en new
-		|-> lanza un hilo que mete el proceso en ready
-			|-> 
 	//Idea para HRRN: que la "cola de ready" sea un diccionario, las keys son el pID,
 	//los values son el PCB. El algortimo HRRN me devuelve el pid y busco el pcb en
 	//el diccionario para ejecutarlo.
+
 }
 */
 
@@ -238,13 +229,12 @@ void administrar_procesos_de_ready(int cliente_cpu){
 			case FINALIZACION: //Caso EXIT
 				queue_push(cola_exit, pcb);
 				//Actualizo el PCB y lo mando a exit
+				//Mando un mensaje a la consola del proceso avisándole que completó la ejecución
+				//Mando un paquete con buffer vacio y código de operación EXIT
 				break;
 			default:
 				break; 
 		}
 		}
-		//Hay que hacer que no reviente si no recibe contexto, manejar el error
-		//log_info(logger, "Recibi el contexto actualizado");
-		//log_info(logger, "En el contexto hay %i", contexto_actualizado->program_counter);
 	}
 }

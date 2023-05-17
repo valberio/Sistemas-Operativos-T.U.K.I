@@ -14,6 +14,7 @@ int main(int argc, char* argv[]) {
     t_config* config = iniciar_config("../configs/memoria.config");
 	//La memoria tiene en paralelo 3 conexiones: con kernel, cpu, y fileSystem
 
+
 	//Creo el server de la memoria en esta ip y puerto
 	char* ip = config_get_string_value(config, "IP");
 

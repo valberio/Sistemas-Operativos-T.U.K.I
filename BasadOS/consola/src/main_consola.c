@@ -31,6 +31,13 @@ int main(int argc, char* argv[]) {
     config_destroy(config);
 
     //Acá espero la respuesta de kernel
+    t_paquete* paquete = crear_paquete();
+    paquete = recibir_paquete(conexion_con_kernel);
+    printf("Recibo paquete");
+    if (paquete->codigo_operacion)
+    {
+        printf("Recibi la finalizacion de kernel %i", paquete->codigo_operacion);
+    }
 
     return 0;
 }

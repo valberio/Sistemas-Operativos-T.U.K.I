@@ -114,7 +114,7 @@ void enviar_contexto_de_ejecucion(t_contexto_de_ejecucion* contexto,int conexion
 t_paquete* recibir_contexto_de_ejecucion(int conexion_socket){
     t_paquete* paquete = crear_paquete();
     //t_contexto_de_ejecucion* contexto = malloc(sizeof(t_contexto_de_ejecucion));
-
+    
     recv(conexion_socket, &(paquete->codigo_operacion), sizeof(int), MSG_WAITALL);
     recv(conexion_socket, &(paquete->buffer->size), sizeof(uint32_t), MSG_WAITALL);
     paquete->buffer->stream = malloc(paquete->buffer->size);

@@ -78,25 +78,15 @@ char* recibir_mensaje(int socket_cliente)
 	return datos;
 }
 
-t_list* recibir_paquete(int socket_cliente)
-{
-	int size;
-	int desplazamiento = 0;
-	void * buffer;
-	printf("Comienza la funcion");
-	t_list* valores = list_create();
-	printf("Crea la lista");
-	int tamanio;
-	buffer = recibir_buffer(&size, socket_cliente);
-	while(desplazamiento < size)
-	{
-		memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
-		desplazamiento+=sizeof(int);
-		char* valor = malloc(tamanio);
-		memcpy(valor, buffer+desplazamiento, tamanio);
-		desplazamiento+=tamanio;
-		list_add(valores, valor);
+t_paquete* recibir_paquete(int conexion_socket)
+{	
+  	t_paquete* paquete = crear_paquete();
+	recv(conexion_socket, &(paquete->codigo_operacion), sizeof(int), MSG_WAITALL);
+    recv(conexion_socket, &(paquete->buffer->size), sizeof(uint32_t), MSG_WAITALL);
+
+    paquete->buffer->stream = malloc(paquete->buffer->size);
+    if (paquete->buffer->size > 0) {
+    recv(conexion_socket, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
 	}
-	free(buffer);
-	return valores;
+    return paquete;
 }

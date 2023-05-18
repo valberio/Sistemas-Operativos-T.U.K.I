@@ -18,7 +18,7 @@ void* recibir_buffer(int*, int);
 
 int iniciar_servidor(t_log* , char* , char* );
 int esperar_cliente(int);
-t_list* recibir_paquete(int);
+t_paquete* recibir_paquete(int);
 char* recibir_mensaje(int);
 int recibir_operacion(int);
 void iterator(char*);

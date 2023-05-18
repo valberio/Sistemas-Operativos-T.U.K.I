@@ -115,7 +115,7 @@ int main(void)
 	*/
 	
 	
-	terminar_programa(logger, config);
+	//terminar_programa(logger, config);
 	return EXIT_SUCCESS;
 }
 
@@ -215,6 +215,7 @@ void administrar_procesos_de_ready(int cliente_cpu){
 		contexto_actualizado = deserializar_contexto_de_ejecucion(paquete->buffer);
 		pcb->contexto_de_ejecucion = contexto_actualizado;
 
+		log_info(logger, "Voy a ejecutar lo que recibi %i", paquete->codigo_operacion);
 		switch(paquete->codigo_operacion)
 		{
 			
@@ -231,6 +232,13 @@ void administrar_procesos_de_ready(int cliente_cpu){
 				//Actualizo el PCB y lo mando a exit
 				//Mando un mensaje a la consola del proceso avisándole que completó la ejecución
 				//Mando un paquete con buffer vacio y código de operación EXIT
+				t_paquete* paquete = crear_paquete();
+				crear_buffer(paquete);
+				paquete->codigo_operacion = 1;
+				
+
+				enviar_paquete(paquete, pcb->socket_consola);
+				printf("Envio el mensaje de finalizacion a consola \n");
 				break;
 			default:
 				break; 

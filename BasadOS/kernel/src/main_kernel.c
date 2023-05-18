@@ -153,12 +153,6 @@ void recibir_de_consolas(int server_consola) {
 
 void crear_proceso(char* codigo_recibido, int socket_consola) {
 	t_pcb* pcb = crear_pcb(codigo_recibido, socket_consola);
-
-	/*for (int i = 0; i < pcb->contexto_de_ejecucion->cant_instrucciones; i++)
-	{
-		printf("Largo instruccion %i\n", pcb->contexto_de_ejecucion->largo_instruccion[i]);
-	}*/
-	//printf("La primera ins es: %s\n", (char*)list_get(pcb->contexto_de_ejecucion.instrucciones, 0));
 	sem_wait(&semaforo_cola_new);
 	queue_push(cola_new, pcb);
 	sem_post(&semaforo_cola_new);
@@ -182,22 +176,25 @@ void *recibir_de_consolas_wrapper(void *arg) {
 
 
 void administrar_procesos_de_ready(int cliente_cpu){
-	//no tiene que ser un break
 	while(cliente_cpu){
 		//ESPERA A RECIBIR POR LO MENOS 1 PROCESO
-		
 		sem_wait(&semaforo_de_procesos_para_ejecutar);
-		
+
+		int valor = sem_getvalue(&semaforo_de_procesos_para_ejecutar, &valor);
+		printf("el valor del semaforo es %d\n", valor);
+
 		sem_wait(&semaforo_cola_new);
+
 		if (queue_size(cola_new) == 0)
 		{
 			log_info(logger, "No hay procesos en la cola de new");
 			cliente_cpu = 0;
 			close(cliente_cpu);
 		} else {
+
 		t_pcb* nuevo_pcb = queue_pop(cola_new);
 
-		sem_post(&semaforo_cola_new);
+		
 
 		queue_push(cola_ready, nuevo_pcb);
 		

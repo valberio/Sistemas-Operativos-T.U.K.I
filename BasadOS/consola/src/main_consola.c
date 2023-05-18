@@ -31,6 +31,12 @@ int main(int argc, char* argv[]) {
     config_destroy(config);
 
     //Acá espero la respuesta de kernel
+    t_list* lista = list_create(); 
+    lista = recibir_paquete(conexion_con_kernel);
+    if(list_get(lista, 0) == 1)
+    {
+        printf("Recibi el mensaje de finalizacion de kernel");
+    }
 
     return 0;
 }

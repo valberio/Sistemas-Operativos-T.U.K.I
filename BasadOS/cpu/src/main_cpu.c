@@ -57,10 +57,12 @@ int main(void)
 					log_info(logger, "La instruccion a ejecutar es %s", instruccion);
 				
 					char* *instruccion_array = decode(instruccion);
-				
-					execute(logger, instruccion_array, contexto, conexion_cpu_kernel); //El envio del contexto de ejecucion al kernel pasa en execute
-
 					contexto->program_counter++;
+					execute(logger, instruccion_array, contexto, conexion_cpu_kernel); //El envio del contexto de ejecucion al kernel pasa en execute
+					if(!strcmp(instruccion, "YIELD")){
+						break;
+					}
+					
 					free(instruccion_array);
 				}	
 			

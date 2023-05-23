@@ -28,7 +28,9 @@
 //Esta variable se fija que haya por lo menos un elemento en la cola de new antes de pasar a mandarlos a 
 //ready, habria que fijarse de resolver con una mejor solucion como semaforos o etc.
 sem_t semaforo_de_procesos_para_ejecutar;
-sem_t semaforo_cola_new;
+sem_t semaforo_procesos_en_ready;
+sem_t mutex_cola_new;
+sem_t mutex_cola_ready;
 
 t_queue* cola_new;
 t_queue* cola_ready;
@@ -47,7 +49,10 @@ int main(void)
 	cola_exit = queue_create();
 	
 	sem_init(&semaforo_de_procesos_para_ejecutar, 0, 0);
-	sem_init(&semaforo_cola_new, 0, 1);
+	sem_init(&semaforo_procesos_en_ready, 0, 0);
+
+	sem_init(&mutex_cola_new, 0, 1);
+	sem_init(&mutex_cola_ready, 0, 1);
 
 	logger = iniciar_logger("log_kernel.log", "LOG_KERNEL");
 	t_config* config = iniciar_config("configs/config_kernel.config");
@@ -92,12 +97,12 @@ int main(void)
 	pthread_create(&hilo_receptor_de_consolas, NULL, recibir_de_consolas_wrapper, (void *)&parametros_hilo_consola_kernel);
 	pthread_detach(hilo_receptor_de_consolas);
 
-	//HILO 2	
-	/*Parametros_de_hilo parametros_hilo_kernel_cpu;
-	parametros_hilo_kernel_cpu.conexion = cliente_cpu;
-	pthread_t hilo_administrador_de_ready;
-	pthread_create(&hilo_administrador_de_ready, NULL, recibir_de_consolas_wrapper, (void *)&parametros_hilo_kernel_cpu);
-	pthread_join(hilo_administrador_de_ready, NULL);*/
+	//HILO 2: ADMINISTRA PROCESOS DE NEW	
+	Parametros_de_hilo parametros_hilo_procesos_new;
+	parametros_hilo_procesos_new.conexion = cliente_cpu;
+	pthread_t hilo_administrador_de_new;
+	pthread_create(&hilo_administrador_de_new, NULL, administrar_procesos_de_new_wrapper , (void *)&parametros_hilo_procesos_new);
+	pthread_detach(hilo_administrador_de_new);
 	
 	administrar_procesos_de_ready(cliente_cpu);
 	
@@ -153,9 +158,9 @@ void recibir_de_consolas(int server_consola) {
 
 void crear_proceso(char* codigo_recibido, int socket_consola) {
 	t_pcb* pcb = crear_pcb(codigo_recibido, socket_consola);
-	sem_wait(&semaforo_cola_new);
+	sem_wait(&mutex_cola_new);
 	queue_push(cola_new, pcb);
-	sem_post(&semaforo_cola_new);
+	sem_post(&mutex_cola_new);
 	sem_post(&semaforo_de_procesos_para_ejecutar);
 }
 
@@ -174,22 +179,43 @@ void *recibir_de_consolas_wrapper(void *arg) {
     return NULL;
 }
 
+void administrar_procesos_de_new(int cliente_cpu){
+	while(cliente_cpu){
+		printf("ESPERANDO A QUE LLEGUE UN PROCESO A NEW\n");
+		sem_wait(&semaforo_de_procesos_para_ejecutar);
+		printf("PASE EL SEMAFORO DE NEW\n");
+
+		sem_wait(&mutex_cola_new);
+		t_pcb* nuevo_pcb = queue_pop(cola_new);
+		sem_post(&mutex_cola_new);
+
+		sem_wait(&mutex_cola_ready);
+		queue_push(cola_ready, nuevo_pcb);
+		sem_post(&mutex_cola_ready);
+
+		sem_post(&semaforo_procesos_en_ready);
+	}
+}
+
+void* administrar_procesos_de_new_wrapper(void* arg){
+	Parametros_de_hilo *args = (Parametros_de_hilo *)arg;
+    int parametro = args->conexion;
+    administrar_procesos_de_new(parametro);
+    return NULL;
+}
 
 void administrar_procesos_de_ready(int cliente_cpu){
 	while(cliente_cpu){
-		//ESPERA A RECIBIR POR LO MENOS 1 PROCESO
-		printf("ESPERANDO A QUE LLEGUE UN PROCESO\n");
-		sem_wait(&semaforo_de_procesos_para_ejecutar);
-		printf("PASE EL SEMAFORO\n");
+		//ESPERA A QUE HAYA POR LO MENOS 1 PROCESO EN READY	
+		printf("ESPERANDO A QUE LLEGUE UN PROCESO A READY\n");
+		sem_wait(&semaforo_procesos_en_ready);
+		printf("PASE EL SEMAFORO DE READY\n");
 
-		sem_wait(&semaforo_cola_new);
-		t_pcb* nuevo_pcb = queue_pop(cola_new);
-		sem_post(&semaforo_cola_new);
-
-		queue_push(cola_ready, nuevo_pcb);
-		
+		sem_wait(&mutex_cola_ready);
 		t_pcb* pcb = queue_pop(cola_ready);
+		sem_post(&mutex_cola_ready);
 
+		//PLANIFICACION
 		log_info(logger, "Saque de la cola de ready el proceso %i\n", pcb->pid);
 		
 		enviar_contexto_de_ejecucion(pcb->contexto_de_ejecucion, cliente_cpu);
@@ -205,10 +231,12 @@ void administrar_procesos_de_ready(int cliente_cpu){
 		{
 			
 			case INTERRUPCION_A_READY: //Caso YIELD
-
 				//Actualizo el PCB y lo mando a ready
+				sem_wait(&mutex_cola_ready);
 				queue_push(cola_ready, pcb);
-				sem_post(&semaforo_de_procesos_para_ejecutar);
+				sem_post(&mutex_cola_ready);
+
+				sem_post(&semaforo_procesos_en_ready);
 				
 				break;
 

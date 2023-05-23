@@ -32,9 +32,8 @@ t_contexto_de_ejecucion* crear_contexto_de_ejecucion(char* instrucciones){
     t_list* lista_instrucciones = string_a_lista(instrucciones);
     list_add_all(contexto->instrucciones, lista_instrucciones);
 
-    printf("%s\n", list_get(lista_instrucciones, 0));
-    printf("%s\n", list_get(contexto->instrucciones, 0));
-
+    printf("%s\n", instrucciones);
+    
     contexto->cant_instrucciones = list_size(contexto->instrucciones); //Funciona
 
     contexto->largo_instruccion = malloc(sizeof(uint32_t) * contexto->cant_instrucciones);
@@ -229,7 +228,8 @@ t_contexto_de_ejecucion* deserializar_contexto_de_ejecucion(t_buffer* buffer){
 
 	t_contexto_de_ejecucion * contexto = malloc(sizeof(t_contexto_de_ejecucion));
     contexto->registros = malloc(sizeof(t_registros));
-    contexto->largo_instruccion =  
+    
+
     contexto->instrucciones = list_create();
 
     void* stream = buffer->stream;

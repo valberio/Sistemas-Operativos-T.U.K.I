@@ -140,13 +140,13 @@ void recibir_de_consolas(int server_consola) {
 		int conexion_consola = esperar_cliente(server_consola);
 		char* codigo_recibido = recibir_mensaje(conexion_consola);
 		log_info(logger, "El kernel recibió el mensaje de consola");
-		pthread_t hilo_creador_de_proceso[50];
+		pthread_t hilo_creador_de_proceso;
 		Parametros_de_hilo parametros_hilo_crear_proceso;
 		parametros_hilo_crear_proceso.mensaje = codigo_recibido;
 		parametros_hilo_crear_proceso.conexion = conexion_consola;
-		pthread_create(&hilo_creador_de_proceso[i], NULL, crear_proceso_wrapper, (void*)&parametros_hilo_crear_proceso);
-		pthread_detach(hilo_creador_de_proceso[i]);
 		log_info(logger, "A el kernel ha llegado el proceso numero %d\n", i);
+		pthread_create(&hilo_creador_de_proceso, NULL, crear_proceso_wrapper, (void*)&parametros_hilo_crear_proceso);
+		pthread_join(hilo_creador_de_proceso, NULL);
 		i++;
 	}
 }
@@ -178,31 +178,19 @@ void *recibir_de_consolas_wrapper(void *arg) {
 void administrar_procesos_de_ready(int cliente_cpu){
 	while(cliente_cpu){
 		//ESPERA A RECIBIR POR LO MENOS 1 PROCESO
+		printf("ESPERANDO A QUE LLEGUE UN PROCESO\n");
 		sem_wait(&semaforo_de_procesos_para_ejecutar);
-
-		int valor = sem_getvalue(&semaforo_de_procesos_para_ejecutar, &valor);
-		printf("el valor del semaforo es %d\n", valor);
+		printf("PASE EL SEMAFORO\n");
 
 		sem_wait(&semaforo_cola_new);
-
-		if (queue_size(cola_new) == 0)
-		{
-			log_info(logger, "No hay procesos en la cola de new");
-			cliente_cpu = 0;
-			close(cliente_cpu);
-		} else {
-
 		t_pcb* nuevo_pcb = queue_pop(cola_new);
-
-		
+		sem_post(&semaforo_cola_new);
 
 		queue_push(cola_ready, nuevo_pcb);
-		
 		
 		t_pcb* pcb = queue_pop(cola_ready);
 
 		log_info(logger, "Saque de la cola de ready el proceso %i\n", pcb->pid);
-		log_info(logger, "En el contexto hay %i", pcb->pid);//esto esta mal por que siempre muestra la primera
 		
 		enviar_contexto_de_ejecucion(pcb->contexto_de_ejecucion, cliente_cpu);
 
@@ -233,13 +221,12 @@ void administrar_procesos_de_ready(int cliente_cpu){
 				crear_buffer(paquete);
 				paquete->codigo_operacion = 1;
 				
-
 				enviar_paquete(paquete, pcb->socket_consola);
-				printf("Envio el mensaje de finalizacion a consola \n");
+				log_info(logger, "Envio el mensaje de finalizacion a consola \n");
 				break;
 			default:
 				break; 
 		}
-		}
+		
 	}
 }

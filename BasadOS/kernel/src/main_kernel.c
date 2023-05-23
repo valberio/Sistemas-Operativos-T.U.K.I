@@ -31,6 +31,7 @@ sem_t semaforo_de_procesos_para_ejecutar;
 sem_t semaforo_procesos_en_ready;
 sem_t mutex_cola_new;
 sem_t mutex_cola_ready;
+sem_t semaforo_multiprogramacion;
 
 t_queue* cola_new;
 t_queue* cola_ready;
@@ -39,23 +40,29 @@ t_queue* cola_exit;
 
 //Creacion del log
 t_log* logger;
+t_config* config;
 
 int main(void)
 {
+	logger = iniciar_logger("log_kernel.log", "LOG_KERNEL");
+	config = iniciar_config("configs/config_kernel.config");
+
 	char* ip;
 	cola_new = queue_create();
 	cola_ready = queue_create();
 	cola_blocked = queue_create();
 	cola_exit = queue_create();
 	
+	int multiprogramacion = config_get_int_value(config, "GRADO_MAX_MULTIPROGRAMACION");	
+
+	sem_init(&semaforo_multiprogramacion, 0, multiprogramacion);
 	sem_init(&semaforo_de_procesos_para_ejecutar, 0, 0);
 	sem_init(&semaforo_procesos_en_ready, 0, 0);
 
 	sem_init(&mutex_cola_new, 0, 1);
 	sem_init(&mutex_cola_ready, 0, 1);
 
-	logger = iniciar_logger("log_kernel.log", "LOG_KERNEL");
-	t_config* config = iniciar_config("configs/config_kernel.config");
+
 	ip = config_get_string_value(config, "IP");
 	
 	/*char* puerto_memoria_kernel = config_get_string_value(config, "PUERTO_MEMORIA");
@@ -185,6 +192,8 @@ void administrar_procesos_de_new(int cliente_cpu){
 		sem_wait(&semaforo_de_procesos_para_ejecutar);
 		printf("PASE EL SEMAFORO DE NEW\n");
 
+		sem_wait(&semaforo_multiprogramacion);
+
 		sem_wait(&mutex_cola_new);
 		t_pcb* nuevo_pcb = queue_pop(cola_new);
 		sem_post(&mutex_cola_new);
@@ -204,6 +213,19 @@ void* administrar_procesos_de_new_wrapper(void* arg){
     return NULL;
 }
 
+
+t_pcb* salida_FIFO(){
+	sem_wait(&mutex_cola_ready);
+	t_pcb* pcb = queue_pop(cola_ready);
+	sem_post(&mutex_cola_ready);
+	return pcb;
+}
+
+//t_pcb* salida_HRRN(){
+
+//}
+
+
 void administrar_procesos_de_ready(int cliente_cpu){
 	while(cliente_cpu){
 		//ESPERA A QUE HAYA POR LO MENOS 1 PROCESO EN READY	
@@ -211,29 +233,37 @@ void administrar_procesos_de_ready(int cliente_cpu){
 		sem_wait(&semaforo_procesos_en_ready);
 		printf("PASE EL SEMAFORO DE READY\n");
 
-		sem_wait(&mutex_cola_ready);
-		t_pcb* pcb = queue_pop(cola_ready);
-		sem_post(&mutex_cola_ready);
+		t_pcb* proceso_en_ejecucion;
+
+		char* planificador = config_get_string_value(config, "ALGORITMO_PLANIFICACION");
+		
+		/*if(strcmp(planificador, "HRRN") == 0){
+		proceso_a_ejecutar = salida_HRRN();
+		}*/
+
+		if(strcmp(planificador, "FIFO") == 0){
+		proceso_en_ejecucion = salida_FIFO();
+		}
 
 		//PLANIFICACION
-		log_info(logger, "Saque de la cola de ready el proceso %i\n", pcb->pid);
+		log_info(logger, "Saque de la cola de ready el proceso %i\n", proceso_en_ejecucion->pid);
 		
-		enviar_contexto_de_ejecucion(pcb->contexto_de_ejecucion, cliente_cpu);
+		enviar_contexto_de_ejecucion(proceso_en_ejecucion->contexto_de_ejecucion, cliente_cpu);
 
 		t_paquete* paquete = recibir_contexto_de_ejecucion(cliente_cpu);
 
 		t_contexto_de_ejecucion* contexto_actualizado = malloc(sizeof(t_contexto_de_ejecucion));
 		contexto_actualizado = deserializar_contexto_de_ejecucion(paquete->buffer);
-		pcb->contexto_de_ejecucion = contexto_actualizado;
+		proceso_en_ejecucion->contexto_de_ejecucion = contexto_actualizado;
 
 		log_info(logger, "Voy a ejecutar lo que recibi %i", paquete->codigo_operacion);
 		switch(paquete->codigo_operacion)
 		{
 			
 			case INTERRUPCION_A_READY: //Caso YIELD
-				//Actualizo el PCB y lo mando a ready
+				//Actualizo el Proceso_en_ejecucion y lo mando a ready
 				sem_wait(&mutex_cola_ready);
-				queue_push(cola_ready, pcb);
+				queue_push(cola_ready, proceso_en_ejecucion);
 				sem_post(&mutex_cola_ready);
 
 				sem_post(&semaforo_procesos_en_ready);
@@ -241,16 +271,17 @@ void administrar_procesos_de_ready(int cliente_cpu){
 				break;
 
 			case FINALIZACION: //Caso EXIT
-				queue_push(cola_exit, pcb);
-				//Actualizo el PCB y lo mando a exit
+				queue_push(cola_exit, proceso_en_ejecucion);
+				//Actualizo el Proceso_en_ejecucion y lo mando a exit
 				//Mando un mensaje a la consola del proceso avisándole que completó la ejecución
 				//Mando un paquete con buffer vacio y código de operación EXIT
 				t_paquete* paquete = crear_paquete();
 				crear_buffer(paquete);
 				paquete->codigo_operacion = 1;
 				
-				enviar_paquete(paquete, pcb->socket_consola);
+				enviar_paquete(paquete, proceso_en_ejecucion->socket_consola);
 				log_info(logger, "Envio el mensaje de finalizacion a consola \n");
+				sem_post(&semaforo_multiprogramacion);
 				break;
 			default:
 				break; 

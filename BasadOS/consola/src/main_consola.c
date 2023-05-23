@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
 
     // Lectura de config
     char* pseudocodigo = leer_Pseudocodigo(argv[2]);
-    printf("Este es el pseudocodigo %s", pseudocodigo);
+    printf("Este es el pseudocodigo \n%s", pseudocodigo);
 
 
     char* ip = config_get_string_value(config, "IP");
@@ -33,10 +33,10 @@ int main(int argc, char* argv[]) {
     //Acá espero la respuesta de kernel
     t_paquete* paquete = crear_paquete();
     paquete = recibir_paquete(conexion_con_kernel);
-    printf("Recibo paquete");
+    printf("Recibo paquete\n");
     if (paquete->codigo_operacion)
     {
-        printf("Recibi la finalizacion de kernel %i", paquete->codigo_operacion);
+        printf("Recibi la finalizacion de kernel %i\n", paquete->codigo_operacion);
     }
 
     return 0;

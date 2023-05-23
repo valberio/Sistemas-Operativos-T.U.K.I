@@ -15,6 +15,7 @@ extern t_queue* cola_blocked;
 extern t_queue* cola_exit;
 
 extern t_log* logger;
+extern t_config* config;
 
 int conectarse_a_memoria(t_log* logger);
 int conexion_a_kernel(t_log* logger);
@@ -27,9 +28,13 @@ void* crear_proceso_wrapper(void* arg);
 void administrar_procesos_de_ready(int cliente_cpu);
 void administrar_procesos_de_new(int cliente_cpu);
 void* administrar_procesos_de_new_wrapper(void* arg);
+
+t_pcb* salida_FIFO();
 typedef struct {
     int conexion;
     char* mensaje;
 } Parametros_de_hilo;
+
+
 
 #endif /* KERNEL_H_ */

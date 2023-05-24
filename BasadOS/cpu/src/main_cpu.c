@@ -51,6 +51,7 @@ int main(void)
 				log_info(logger, "Recibi un nuevo proceso");
 				int cant_instrucciones = list_size(contexto->instrucciones);
 				log_info(logger, "Cantidad instrucciones: %i", cant_instrucciones);
+
 				while (contexto->program_counter < cant_instrucciones) //Itero sobre todas las instrucciones, ejecutando
 				{
 					char * instruccion = fetch(contexto);
@@ -58,14 +59,22 @@ int main(void)
 				
 					char* *instruccion_array = decode(instruccion);
 					contexto->program_counter++;
-					execute(logger, instruccion_array, contexto, conexion_cpu_kernel); //El envio del contexto de ejecucion al kernel pasa en execute
-					if(!strcmp(instruccion, "YIELD")){
-						break;
+					int resultado = execute(logger, instruccion_array, contexto, conexion_cpu_kernel); //El envio del contexto de ejecucion al kernel pasa en execute
+
+					//Si execute devuelve un 1, desalojo. Si devuelve un 0, no. Desalojo sacando del while
+					switch(resultado){
+						case 1:
+							goto desalojo;
+							break;
+						case 0:
+							break;
 					}
-					
 					free(instruccion_array);
-				}	
-			
+				}
+
+			desalojo:
+			log_info(logger, "Desalojé el proceso");
+
 			eliminar_paquete(paquete);
 			liberar_contexto_de_ejecucion(contexto);
 			}

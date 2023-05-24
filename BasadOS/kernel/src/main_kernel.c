@@ -257,6 +257,9 @@ void administrar_procesos_de_ready(int cliente_cpu){
 		proceso_en_ejecucion->contexto_de_ejecucion = contexto_actualizado;
 
 		log_info(logger, "Voy a ejecutar lo que recibi %i", paquete->codigo_operacion);
+
+		char* parametros_retorno;
+
 		switch(paquete->codigo_operacion)
 		{
 			
@@ -282,6 +285,15 @@ void administrar_procesos_de_ready(int cliente_cpu){
 				enviar_paquete(paquete, proceso_en_ejecucion->socket_consola);
 				log_info(logger, "Envio el mensaje de finalizacion a consola \n");
 				sem_post(&semaforo_multiprogramacion);
+				break;
+			case INTERRUPCION_BLOQUEANTE: //Caso I/O, tengo que recibir el tiempo que se bloquea el proceso
+				parametros_retorno = recibir_mensaje(cliente_cpu);
+				break;
+			case PETICION_RECURSO: //Caso WAIT, proceso pide un recurso
+				parametros_retorno = recibir_mensaje(cliente_cpu);
+				break;
+			case LIBERACION_RECURSO: //Caso SIGNAL, proceso libera un recurso
+				parametros_retorno = recibir_mensaje(cliente_cpu);
 				break;
 			default:
 				break; 

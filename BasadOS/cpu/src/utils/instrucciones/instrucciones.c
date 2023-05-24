@@ -4,7 +4,7 @@
 
 
 
-void set(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto) {
+int set(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto) {
     //Guardo en el registro de registros.c el valor
     log_info(logger, "Entré en la ejecución de SET");
     
@@ -71,9 +71,10 @@ void set(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto)
             log_info(logger, contexto->registros->RDX);
             break;
 		}
+    return 0;
 }
 
-void yield(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel) {
+int yield(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel) {
     //Tengo que armar el paquete con codigo de operacion 1
     log_info(logger, "Entré en la ejecución de YIELD");
     t_paquete* paquete = crear_paquete();
@@ -82,9 +83,11 @@ void yield(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_cpu_ke
     
     enviar_paquete(paquete, conexion_cpu_kernel);
     eliminar_paquete(paquete);
+
+    return 1;
 }
 
-void exit_instruccion(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel) {
+int exit_instruccion(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel) {
     log_info(logger, "Entré en la ejecución de EXIT");
     //Tengo que armar el paquete con codigo de operacion 1
     t_paquete* paquete = crear_paquete();
@@ -93,8 +96,57 @@ void exit_instruccion(t_log* logger, t_contexto_de_ejecucion* contexto, int cone
     
     enviar_paquete(paquete, conexion_cpu_kernel);
     eliminar_paquete(paquete);
+
+    return 1;
 }
 
+int wait(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel, char** instrucciones)
+{
+    log_info(logger, "Entre en la ejecución de WAIT");
+    t_paquete* paquete = crear_paquete();
+    paquete->codigo_operacion = PETICION_RECURSO;
+    paquete->buffer = serializar_contexto(contexto);
+    
+    enviar_paquete(paquete, conexion_cpu_kernel);
+    eliminar_paquete(paquete);
+
+    //Envio el parámetro
+    enviar_mensaje(instrucciones[1], conexion_cpu_kernel);
+
+    return 1;
+}
+
+int signal_instruccion(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel, char** instrucciones)
+{
+    log_info(logger, "Entre en la ejecución de SIGNAL");
+    t_paquete* paquete = crear_paquete();
+    paquete->codigo_operacion = LIBERACION_RECURSO;
+    paquete->buffer = serializar_contexto(contexto);
+    
+    enviar_paquete(paquete, conexion_cpu_kernel);
+    eliminar_paquete(paquete);
+
+    //Envio el parámetro
+    enviar_mensaje(instrucciones[1], conexion_cpu_kernel);
+
+    return 1;
+}
+
+int i_o(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel, char** instrucciones)
+{
+    log_info(logger, "Entre en la ejecución de I/O");
+    t_paquete* paquete = crear_paquete();
+    paquete->codigo_operacion = INTERRUPCION_BLOQUEANTE;
+    paquete->buffer = serializar_contexto(contexto);
+    
+    enviar_paquete(paquete, conexion_cpu_kernel);
+    eliminar_paquete(paquete);
+
+    //Envio el parámetro
+    enviar_mensaje(instrucciones[1], conexion_cpu_kernel);
+
+    return 1;
+}
 
 //Esta funcion deberia estar en la carpeta del pcb
 enum Registros string_a_registro(char* registro)       

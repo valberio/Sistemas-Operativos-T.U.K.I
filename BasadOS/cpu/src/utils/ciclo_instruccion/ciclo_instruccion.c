@@ -16,24 +16,34 @@ char** decode(char* instruccion)
 	return array;
 }
 
-void execute(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel)
+int execute(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel)
 {
 	//Switcheo sobre el primer elemento del array de instrucciones
 	enum Instrucciones instruccion = string_a_instruccion(instrucciones[0]);
-	
+	int resultado;
 	switch(instruccion) {
 		case SET:
-			set(logger, instrucciones, contexto);
+			resultado = set(logger, instrucciones, contexto);
 			break;
 		case YIELD:
-			yield(logger, contexto, conexion_cpu_kernel);
+			resultado = yield(logger, contexto, conexion_cpu_kernel);
 			break;
 		case EXIT:
-			exit_instruccion(logger, contexto, conexion_cpu_kernel);
+			resultado = exit_instruccion(logger, contexto, conexion_cpu_kernel);
+			break;
+		case I_O:
+			resultado = i_o(logger, contexto, conexion_cpu_kernel, instrucciones);
+			break;
+		case WAIT:
+			resultado = wait(logger, contexto, conexion_cpu_kernel, instrucciones);
+			break;
+		case SIGNAL:
+			resultado = signal_instruccion(logger, contexto, conexion_cpu_kernel, instrucciones);
 			break;
 		default:
 			break;
 	}
+	return resultado;
 }
 
 enum Instrucciones string_a_instruccion(char* instruccion)
@@ -50,6 +60,18 @@ enum Instrucciones string_a_instruccion(char* instruccion)
 	if (strcmp(instruccion, "EXIT") == 0)
 	{
 		return EXIT;
+	}
+	if (strcmp(instruccion, "I/O") == 0)
+	{
+		return I_O;
+	}
+	if (strcmp(instruccion, "WAIT") == 0)
+	{
+		return WAIT;
+	}
+	if (strcmp(instruccion, "SIGNAL") == 0)
+	{
+		return SIGNAL;
 	}
 	return EXIT_FAILURE;
 }

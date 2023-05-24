@@ -2,7 +2,7 @@
 
 int contador = 0;
 
-t_pcb * crear_pcb( char* instrucciones, int socket)
+t_pcb * crear_pcb( char* instrucciones, int socket, double estimado_rafaga)
 {
     t_pcb *pcb = malloc(sizeof(t_pcb));
     pcb->socket_consola = socket;
@@ -13,7 +13,7 @@ t_pcb * crear_pcb( char* instrucciones, int socket)
 	pcb->tabla_segmentos = list_create();
 
 
-	pcb->estimado_rafaga = 1;
+	pcb->estimado_rafaga = estimado_rafaga;
 	
     contador++;
     

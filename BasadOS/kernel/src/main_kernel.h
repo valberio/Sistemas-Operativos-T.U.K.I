@@ -19,20 +19,21 @@ extern t_config* config;
 
 int conectarse_a_memoria(t_log* logger);
 int conexion_a_kernel(t_log* logger);
-t_pcb * crear_pcb(char* instrucciones, int socket);
 void terminar_programa(t_log* logger, t_config* config);
 void recibir_de_consolas(int server_consola);
 void* recibir_de_consolas_wrapper(void* arg);
-void crear_proceso(char* mensaje, int conexion);
+void crear_proceso(char* mensaje, int conexion, double estimado);
 void* crear_proceso_wrapper(void* arg);
 void administrar_procesos_de_ready(int cliente_cpu);
 void administrar_procesos_de_new(int cliente_cpu);
 void* administrar_procesos_de_new_wrapper(void* arg);
 
 t_pcb* salida_FIFO();
+t_pcb* salida_HRRN();
 typedef struct {
     int conexion;
     char* mensaje;
+    double estimacion;
 } Parametros_de_hilo;
 
 

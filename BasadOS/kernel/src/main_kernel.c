@@ -1,29 +1,12 @@
 #include "main_kernel.h"
 
-//LOS PUERTOS SIGUEN LA SIGUIENTE ASIGNACION: puerto_servidor_cliente
-
 /*------------------------------------------------------------------*/
 /*						CHECKPOINT 2								*/
 /*------------------------------------------------------------------*/
-/*			Planificación FIFO
+/*			Planificación FIFO---YA TAAAAA
 			Planificación HRRN
 			Manejo de recursos compartidos							*/
 /*------------------------------------------------------------------*/
-
-/*int main (void)
-{
-	--Ideas de diseño de kernel:
-	//Un hilo que manda a los pcbs nuevos a la cola de ready
-	//Un hilo que planifique el hilo siguiente a ejecutar (puedo tener un hilo fifo y un hilo
-	//hrrn, con un switch de una variable de la config elijo cuál lanzar)
-	//Un hilo que reciba por parámetro el pcb y lo ejecute
-
-	//Idea para HRRN: que la "cola de ready" sea un diccionario, las keys son el pID,
-	//los values son el PCB. El algortimo HRRN me devuelve el pid y busco el pcb en
-	//el diccionario para ejecutarlo.
-
-}
-*/
 
 //Esta variable se fija que haya por lo menos un elemento en la cola de new antes de pasar a mandarlos a 
 //ready, habria que fijarse de resolver con una mejor solucion como semaforos o etc.
@@ -54,6 +37,7 @@ int main(void)
 	cola_exit = queue_create();
 	
 	int multiprogramacion = config_get_int_value(config, "GRADO_MAX_MULTIPROGRAMACION");	
+	
 
 	sem_init(&semaforo_multiprogramacion, 0, multiprogramacion);
 	sem_init(&semaforo_de_procesos_para_ejecutar, 0, 0);
@@ -113,21 +97,8 @@ int main(void)
 	
 	administrar_procesos_de_ready(cliente_cpu);
 	
-	/*Que deberia haber:
-		-Cola de new
-		-Cola de ready
-		-Algoritmo FIFO que mande el primer proceso a Running, lo mande a la CPU
-
-		while (hay instrucciones en ready)
-		{
-			//mando contexto
-			//cpu devuelve el contexto actualizado
-			//cpu devuelve un int que indica si pasar el proceso a exit o no
-		}
-	*/
 	
-	
-	//terminar_programa(logger, config);
+	terminar_programa(logger, config);
 	return EXIT_SUCCESS;
 }
 
@@ -152,10 +123,12 @@ void recibir_de_consolas(int server_consola) {
 		int conexion_consola = esperar_cliente(server_consola);
 		char* codigo_recibido = recibir_mensaje(conexion_consola);
 		log_info(logger, "El kernel recibió el mensaje de consola");
+		double estimado_de_rafaga = config_get_double_value(config, "ESTIMACION_INICIAL");
 		pthread_t hilo_creador_de_proceso;
 		Parametros_de_hilo parametros_hilo_crear_proceso;
 		parametros_hilo_crear_proceso.mensaje = codigo_recibido;
 		parametros_hilo_crear_proceso.conexion = conexion_consola;
+		parametros_hilo_crear_proceso.estimacion = estimado_de_rafaga;
 		log_info(logger, "A el kernel ha llegado el proceso numero %d\n", i);
 		pthread_create(&hilo_creador_de_proceso, NULL, crear_proceso_wrapper, (void*)&parametros_hilo_crear_proceso);
 		pthread_join(hilo_creador_de_proceso, NULL);
@@ -163,8 +136,8 @@ void recibir_de_consolas(int server_consola) {
 	}
 }
 
-void crear_proceso(char* codigo_recibido, int socket_consola) {
-	t_pcb* pcb = crear_pcb(codigo_recibido, socket_consola);
+void crear_proceso(char* codigo_recibido, int socket_consola, double estimado_inicial) {
+	t_pcb* pcb = crear_pcb(codigo_recibido, socket_consola, estimado_inicial);
 	sem_wait(&mutex_cola_new);
 	queue_push(cola_new, pcb);
 	sem_post(&mutex_cola_new);
@@ -175,7 +148,8 @@ void* crear_proceso_wrapper(void* arg) {
 	Parametros_de_hilo* args = (Parametros_de_hilo *)arg;
     char* parametro = args->mensaje;
 	int conexion = args->conexion;
-    crear_proceso(parametro, conexion);
+	double estimacion = args->estimacion;
+    crear_proceso(parametro, conexion, estimacion);
     return NULL;
 }
 
@@ -185,6 +159,7 @@ void *recibir_de_consolas_wrapper(void *arg) {
     recibir_de_consolas(parametro);
     return NULL;
 }
+
 
 void administrar_procesos_de_new(int cliente_cpu){
 	while(cliente_cpu){
@@ -199,6 +174,7 @@ void administrar_procesos_de_new(int cliente_cpu){
 		sem_post(&mutex_cola_new);
 
 		sem_wait(&mutex_cola_ready);
+		time(&(nuevo_pcb->tiempo_de_llegada_a_ready)); //ACA EMPIEZA A CORRER SU TIEMPO EN READY
 		queue_push(cola_ready, nuevo_pcb);
 		sem_post(&mutex_cola_ready);
 
@@ -213,7 +189,6 @@ void* administrar_procesos_de_new_wrapper(void* arg){
     return NULL;
 }
 
-
 t_pcb* salida_FIFO(){
 	sem_wait(&mutex_cola_ready);
 	t_pcb* pcb = queue_pop(cola_ready);
@@ -221,9 +196,34 @@ t_pcb* salida_FIFO(){
 	return pcb;
 }
 
-//t_pcb* salida_HRRN(){
+void calcular_estimado_de_rafaga(t_pcb* pcb){
+	double alfa = config_get_double_value(config, "HRRN_ALFA");
+	pcb->tiempo_de_la_ultima_rafaga = ((double) (pcb->fin_de_uso_de_cpu - pcb->inicio_de_uso_de_cpu) / CLOCKS_PER_SEC )* 1000;
+	pcb->estimado_rafaga = alfa * pcb->tiempo_de_la_ultima_rafaga + (1-alfa) * pcb->estimado_rafaga;
+} // esto esta bien
 
-//}
+t_pcb* salida_HRRN(){
+	t_pcb* pcb;
+	t_pcb* pcb_hrr;
+	time_t tiempo;
+	double tiempo_esperando_en_ready, highest_response_ratio;
+	int indice;
+	highest_response_ratio = 0;
+	time(&tiempo);
+	for(int i = 0; i< queue_size(cola_ready); i ++){
+		pcb = list_get(cola_ready->elements, i);
+		tiempo_esperando_en_ready = difftime(pcb->tiempo_de_llegada_a_ready,tiempo);
+		if((tiempo_esperando_en_ready + pcb->estimado_rafaga) / pcb->estimado_rafaga > highest_response_ratio){
+			highest_response_ratio = (tiempo_esperando_en_ready + pcb->estimado_rafaga) / pcb->estimado_rafaga;
+			pcb_hrr = list_get(cola_ready->elements, i);
+			indice = i;
+		}
+	}
+	// list_sort(cola_ready->elements, (tiempo_esperando_en_ready + pcb->estimado_rafaga) / pcb->estimado_rafaga > highest_response_ratio) DEBERIA FUNCIONAR
+	// queue_pop(cola_ready) DEBERIA FUNCIONAR
+	list_remove(cola_ready->elements,indice);
+	return pcb_hrr;
+}
 
 
 void administrar_procesos_de_ready(int cliente_cpu){
@@ -237,17 +237,19 @@ void administrar_procesos_de_ready(int cliente_cpu){
 
 		char* planificador = config_get_string_value(config, "ALGORITMO_PLANIFICACION");
 		
-		/*if(strcmp(planificador, "HRRN") == 0){
-		proceso_a_ejecutar = salida_HRRN();
-		}*/
+		if(strcmp(planificador, "HRRN") == 0){
+		proceso_en_ejecucion = salida_HRRN();
+		}
 
 		if(strcmp(planificador, "FIFO") == 0){
 		proceso_en_ejecucion = salida_FIFO();
 		}
 
+		proceso_en_ejecucion->inicio_de_uso_de_cpu = clock();//ACA SE INICIALIZA EL TIEMPO EN EJECUCION
+		
 		//PLANIFICACION
 		log_info(logger, "Saque de la cola de ready el proceso %i\n", proceso_en_ejecucion->pid);
-		
+		printf("EL ESTIMADO DE RAFAGA %f\n", proceso_en_ejecucion->estimado_rafaga);
 		enviar_contexto_de_ejecucion(proceso_en_ejecucion->contexto_de_ejecucion, cliente_cpu);
 
 		t_paquete* paquete = recibir_contexto_de_ejecucion(cliente_cpu);
@@ -259,16 +261,18 @@ void administrar_procesos_de_ready(int cliente_cpu){
 		log_info(logger, "Voy a ejecutar lo que recibi %i", paquete->codigo_operacion);
 
 		char* parametros_retorno;
-
+		
 		switch(paquete->codigo_operacion)
 		{
 			
 			case INTERRUPCION_A_READY: //Caso YIELD
 				//Actualizo el Proceso_en_ejecucion y lo mando a ready
 				sem_wait(&mutex_cola_ready);
+				proceso_en_ejecucion->fin_de_uso_de_cpu = clock();
+				calcular_estimado_de_rafaga(proceso_en_ejecucion);
 				queue_push(cola_ready, proceso_en_ejecucion);
 				sem_post(&mutex_cola_ready);
-
+				printf("EL ESTIMADO NUEVO ES %f\n", proceso_en_ejecucion->estimado_rafaga);
 				sem_post(&semaforo_procesos_en_ready);
 				
 				break;

@@ -44,11 +44,15 @@ typedef struct{
     t_contexto_de_ejecucion* contexto_de_ejecucion;
     t_list* tabla_segmentos;
     t_list* tabla_archivos_abiertos;
-    int estimado_rafaga;
+    time_t tiempo_de_llegada_a_ready;
+    clock_t inicio_de_uso_de_cpu;
+    clock_t fin_de_uso_de_cpu;
+    double estimado_rafaga;
+    double tiempo_de_la_ultima_rafaga;
 } t_pcb;
 
 t_contexto_de_ejecucion* crear_contexto_de_ejecucion(char* instrucciones);
-t_pcb* crear_pcb();
+t_pcb* crear_pcb(char* instrucciones, int socket, double estimado_rafaga);
 t_list* string_a_lista(char* str);
 void liberar_pcb(t_pcb* pcb);
 void liberar_contexto_de_ejecucion(t_contexto_de_ejecucion* contexto);

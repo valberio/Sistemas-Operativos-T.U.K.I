@@ -4,7 +4,8 @@
 /*						CHECKPOINT 2								*/
 /*------------------------------------------------------------------*/
 /*			Planificación FIFO---YA TAAAAA
-			Planificación HRRN
+			Planificación HRRN--- Ya estaaa
+			LECTURA DE I/O---- YA ESTA
 			Manejo de recursos compartidos							*/
 /*------------------------------------------------------------------*/
 
@@ -14,6 +15,7 @@ sem_t semaforo_de_procesos_para_ejecutar;
 sem_t semaforo_procesos_en_ready;
 sem_t mutex_cola_new;
 sem_t mutex_cola_ready;
+sem_t mutex_cola_blocked;
 sem_t semaforo_multiprogramacion;
 
 t_queue* cola_new;
@@ -21,6 +23,8 @@ t_queue* cola_ready;
 t_queue* cola_blocked;
 t_queue* cola_exit;
 
+size_t cantidad_recursos;
+t_list* recursos;
 //Creacion del log
 t_log* logger;
 t_config* config;
@@ -37,6 +41,26 @@ int main(void)
 	cola_exit = queue_create();
 	
 	int multiprogramacion = config_get_int_value(config, "GRADO_MAX_MULTIPROGRAMACION");	
+
+	char** recursos_array = config_get_array_value(config, "RECURSOS");
+	char** instancias_array = config_get_array_value(config, "INSTANCIAS_RECURSOS");
+	size_t cantidad_recursos = contarCadenas(recursos_array);
+	Recurso* recurso[cantidad_recursos];
+	Recurso* temp;
+	
+	printf("LA CANTIDAD DE RECURSOS SON: %zu \n",cantidad_recursos);
+	for(int i = 0; i < cantidad_recursos; i++){
+		recurso[i] = malloc(sizeof(Recurso));
+		recurso[i]->recurso = malloc(sizeof(recursos_array[i]));
+		recurso[i]->recurso = recursos_array[i];
+		recurso[i]->instancias = atoi(instancias_array[i]);
+		recurso[i]->cola_de_bloqueados = queue_create();
+		list_add(recursos, recurso[i]);
+		
+		temp = list_get(recursos, i);
+		printf("LOS RECURSOS SON %s \n", temp->recurso);
+		printf("SU CANTIDAD DE INSTANCIAS ES %d \n",  temp->instancias);
+	}
 	
 
 	sem_init(&semaforo_multiprogramacion, 0, multiprogramacion);
@@ -45,6 +69,7 @@ int main(void)
 
 	sem_init(&mutex_cola_new, 0, 1);
 	sem_init(&mutex_cola_ready, 0, 1);
+	sem_init(&mutex_cola_blocked, 0, 1);
 
 
 	ip = config_get_string_value(config, "IP");
@@ -219,11 +244,13 @@ t_pcb* salida_HRRN(){
 			indice = i;
 		}
 	}
+	
 	// list_sort(cola_ready->elements, (tiempo_esperando_en_ready + pcb->estimado_rafaga) / pcb->estimado_rafaga > highest_response_ratio) DEBERIA FUNCIONAR
 	// queue_pop(cola_ready) DEBERIA FUNCIONAR
 	list_remove(cola_ready->elements,indice);
 	return pcb_hrr;
 }
+
 
 
 void administrar_procesos_de_ready(int cliente_cpu){
@@ -234,15 +261,17 @@ void administrar_procesos_de_ready(int cliente_cpu){
 		printf("PASE EL SEMAFORO DE READY\n");
 
 		t_pcb* proceso_en_ejecucion;
-
 		char* planificador = config_get_string_value(config, "ALGORITMO_PLANIFICACION");
 		
 		if(strcmp(planificador, "HRRN") == 0){
 		proceso_en_ejecucion = salida_HRRN();
+		printf("EL PID DE PROCESO EN EJECUCION EN HRRN ES %i", proceso_en_ejecucion->pid);
 		}
 
 		if(strcmp(planificador, "FIFO") == 0){
 		proceso_en_ejecucion = salida_FIFO();
+		printf("EL PID DE PROCESO EN EJECUCION EN FIFO ES %i", proceso_en_ejecucion->pid);
+
 		}
 
 		proceso_en_ejecucion->inicio_de_uso_de_cpu = clock();//ACA SE INICIALIZA EL TIEMPO EN EJECUCION
@@ -292,7 +321,24 @@ void administrar_procesos_de_ready(int cliente_cpu){
 				break;
 			case INTERRUPCION_BLOQUEANTE: //Caso I/O, tengo que recibir el tiempo que se bloquea el proceso
 				parametros_retorno = recibir_mensaje(cliente_cpu);
+				pthread_t hilo_procesos_IO[50];
+				int i = 0;	
+
+				Parametros_de_hilo parametros_IO;
+				parametros_IO.mensaje = parametros_retorno;
+				parametros_IO.conexion = proceso_en_ejecucion->pid;
+				
+				sem_wait(&mutex_cola_blocked);
+				proceso_en_ejecucion->fin_de_uso_de_cpu = clock();
+				calcular_estimado_de_rafaga(proceso_en_ejecucion);
+				queue_push(cola_blocked, proceso_en_ejecucion);
+				sem_post(&mutex_cola_blocked);
+				
+				pthread_create(&hilo_procesos_IO[i], NULL, manipulador_de_IO_wrapper, (void*)&parametros_IO);
+				pthread_detach(hilo_procesos_IO[i]);
+				i++;
 				break;
+				
 			case PETICION_RECURSO: //Caso WAIT, proceso pide un recurso
 				parametros_retorno = recibir_mensaje(cliente_cpu);
 				break;
@@ -304,4 +350,62 @@ void administrar_procesos_de_ready(int cliente_cpu){
 		}
 		
 	}
+}
+
+void manipulador_de_IO(char* tiempo_en_blocked, int pid){
+	int tiempo = atoi(tiempo_en_blocked);
+	time_t tiempo_de_inicio,tiempo_de_salida;
+	time(&tiempo_de_inicio);
+	printf("EMPIEZO A DORMIR\n");
+	sleep(tiempo);
+	time(&tiempo_de_salida);
+	double tiempo_final = difftime(tiempo_de_salida, tiempo_de_inicio);
+	printf("TERMINO DE DORMIR, TARDE %f\n", tiempo_final);
+
+	t_pcb* pcb;
+
+	bool buscar_proceso(void* elemento){
+		return buscar_pid(elemento, pid);
+	}
+	
+	sem_wait(&mutex_cola_blocked);	
+	pcb = list_get(list_filter(cola_blocked->elements, buscar_proceso),0);
+	list_remove_by_condition(cola_blocked->elements, buscar_proceso);	
+	sem_post(&mutex_cola_blocked);
+
+	sem_wait(&mutex_cola_ready);
+	queue_push(cola_ready, pcb);
+	sem_post(&mutex_cola_ready);
+
+	sem_post(&semaforo_procesos_en_ready);
+}
+
+bool buscar_pid(void* pcb, int pid){
+	return ((t_pcb* )pcb)->pid == pid;
+}
+
+void* manipulador_de_IO_wrapper(void* arg){
+	Parametros_de_hilo *args = (Parametros_de_hilo *)arg;
+    char* tiempo = args->mensaje;
+	int pid = args->conexion;
+    manipulador_de_IO(tiempo, pid);
+    return NULL;
+}
+
+
+
+// void wait_recurso(char* recurso){
+// 	for(int i = 0, i < cantidad_recursos, i++){
+// 		if(recursos[i].recurso == recurso)
+// 	}
+// }
+
+size_t contarCadenas(char** array) {
+    size_t contador = 0;
+
+    while (array[contador] != NULL) {
+        contador++;
+    }
+
+    return contador;
 }

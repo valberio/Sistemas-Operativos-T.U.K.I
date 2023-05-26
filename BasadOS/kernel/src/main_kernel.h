@@ -17,16 +17,20 @@ extern t_queue* cola_exit;
 extern t_log* logger;
 extern t_config* config;
 
-int conectarse_a_memoria(t_log* logger);
-int conexion_a_kernel(t_log* logger);
-void terminar_programa(t_log* logger, t_config* config);
-void recibir_de_consolas(int server_consola);
-void* recibir_de_consolas_wrapper(void* arg);
-void crear_proceso(char* mensaje, int conexion, double estimado);
-void* crear_proceso_wrapper(void* arg);
-void administrar_procesos_de_ready(int cliente_cpu);
-void administrar_procesos_de_new(int cliente_cpu);
-void* administrar_procesos_de_new_wrapper(void* arg);
+int conectarse_a_memoria(t_log*);
+int conexion_a_kernel(t_log* );
+void terminar_programa(t_log* , t_config* );
+void recibir_de_consolas(int );
+void* recibir_de_consolas_wrapper(void* );
+void crear_proceso(char*, int, double);
+void* crear_proceso_wrapper(void* );
+void administrar_procesos_de_ready(int );
+void administrar_procesos_de_new(int );
+void* administrar_procesos_de_new_wrapper(void* );
+bool buscar_pid(void* , int );
+void manipulador_de_IO(char* , int );
+void* manipulador_de_IO_wrapper(void* );
+size_t contarCadenas(char** array); 
 
 t_pcb* salida_FIFO();
 t_pcb* salida_HRRN();
@@ -36,6 +40,10 @@ typedef struct {
     double estimacion;
 } Parametros_de_hilo;
 
-
+typedef struct{
+    char* recurso;
+    int instancias;
+    t_queue* cola_de_bloqueados;
+} Recurso;
 
 #endif /* KERNEL_H_ */

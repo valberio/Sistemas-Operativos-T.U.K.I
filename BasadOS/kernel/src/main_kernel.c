@@ -132,19 +132,23 @@ int main(void)
 }
 
 void* administrar_procesos_de_exit(){
-	t_pcb* proceso_a_finalizar;
-	t_paquete* paquete = crear_paquete();
-	crear_buffer(paquete);
-	paquete->codigo_operacion = 1;
+	while(1){
+		sem_wait(&semaforo_procesos_en_exit);
+		
+		t_pcb* proceso_a_finalizar;
+		t_paquete* paquete = crear_paquete();
+		crear_buffer(paquete);
+		paquete->codigo_operacion = 1;
 
-	sem_wait(&semaforo_procesos_en_exit);
-	sem_wait(&mutex_cola_exit);
-	proceso_a_finalizar = queue_pop(cola_exit);	
-	sem_post(&mutex_cola_exit);		
-	enviar_paquete(paquete, proceso_a_finalizar->socket_consola);
-	log_info(logger, "Envio el mensaje de finalizacion a consola \n");
-	sem_post(&semaforo_multiprogramacion);
-	return NULL;
+		
+		sem_wait(&mutex_cola_exit);
+		proceso_a_finalizar = queue_pop(cola_exit);	
+		sem_post(&mutex_cola_exit);		
+		enviar_paquete(paquete, proceso_a_finalizar->socket_consola);
+		log_info(logger, "Envio el mensaje de finalizacion a consola \n");
+		sem_post(&semaforo_multiprogramacion);
+		return NULL;
+	}
 }
 
 void terminar_programa(t_log* logger, t_config* config)
@@ -483,7 +487,7 @@ int signal_recurso(char* recurso,t_pcb* proceso){
 	} 
 	recurso_solicitado = list_get(lista_con_recurso, 0);
 	recurso_solicitado->instancias += 1;
-	if(	recurso_solicitado->instancias > 0 ){
+	if(	recurso_solicitado->instancias <= 0 ){
 		t_pcb* proceso_bloqueado_por_recurso;
 		proceso_bloqueado_por_recurso = queue_pop(recurso_solicitado->cola_de_bloqueados);
 		

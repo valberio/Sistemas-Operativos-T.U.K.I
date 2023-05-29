@@ -4,6 +4,9 @@
 #include <string.h>
 #include<loggers/loggers_utils.h>
 #include<pcb/pcb.h>
+#include<sockets/client_utils.h>
+#include<sockets/server_utils.h>
+
 
 
 int set(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto);

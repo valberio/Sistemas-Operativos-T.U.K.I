@@ -20,8 +20,9 @@ int main(void)
 	t_log *logger = iniciar_logger("log_cpu.log", "LOG_CPU");
 	t_config *config = iniciar_config("configs/cpu.config");
 	int retardo_instruccion = config_get_int_value(config, "RETARDO_INSTRUCCION");
+
 	// CPU como cliente para memoria
-	// int conexion_memoria_cpu = conectarse_a_memoria(logger);
+	int conexion_memoria_cpu = conectarse_a_memoria(config, logger);
 
 	// CPU como server del Kernel
 	int conexion_cpu_kernel = conexion_a_kernel(config, logger);
@@ -58,7 +59,7 @@ int main(void)
 
 					contexto->program_counter++;
 
-					int resultado = execute(logger, instruccion_array, contexto, conexion_cpu_kernel); // El envio del contexto de ejecucion al kernel pasa en execute
+					int resultado = execute(logger, instruccion_array, contexto, conexion_cpu_kernel, conexion_memoria_cpu); // El envio del contexto de ejecucion al kernel pasa en execute
 
 					// Si execute devuelve un 1, desalojo. Si devuelve un 0, no. Desalojo sacando del while
 					switch (resultado)

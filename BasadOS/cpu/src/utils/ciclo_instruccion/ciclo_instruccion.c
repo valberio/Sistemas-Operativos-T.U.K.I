@@ -23,7 +23,7 @@ char** decode(char* instruccion, int retardo_instruccion)
 	return array;
 }
 
-int execute(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel)
+int execute(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel, int conexion_memoria_cpu)
 {
 	//Switcheo sobre el primer elemento del array de instrucciones
 	enum Instrucciones instruccion = string_a_instruccion(instrucciones[0]);
@@ -33,8 +33,10 @@ int execute(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contex
 			resultado = set(logger, instrucciones, contexto);
 			break;
 		case MOV_IN:
+			resultado = mov_in(logger, instrucciones, contexto, conexion_memoria_cpu);
 			break;
 		case MOV_OUT:
+			resultado = mov_out(logger, instrucciones, contexto, conexion_memoria_cpu);
 			break;
 		case I_O:
 			resultado = i_o(logger, contexto, conexion_cpu_kernel, instrucciones);

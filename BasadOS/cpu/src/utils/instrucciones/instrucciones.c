@@ -7,7 +7,7 @@
 int set(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto) {
     //Guardo en el registro de registros.c el valor
 
-    log_info(logger, "PID: %i EJECUTANDO: %s", contexto->pid, instrucciones[0]);
+    log_info(logger, "PID: %i EJECUTANDO: %s PARAMETROS: %s, %s", contexto->pid, instrucciones[0], instrucciones[1], instrucciones[2]);
     
     enum Registros registro = string_a_registro(instrucciones[1]);
     char* valor = instrucciones[2];
@@ -77,7 +77,7 @@ int set(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto) 
 
 int yield(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel) {
     //Tengo que armar el paquete con codigo de operacion 1
-    log_info(logger, "Entré en la ejecución de YIELD");
+    log_info(logger, "PID: %i EJECUTANDO: YIELD PARAMETROS: -", contexto->pid);
     t_paquete* paquete = crear_paquete();
     paquete->codigo_operacion = INTERRUPCION_A_READY;
     paquete->buffer = serializar_contexto(contexto);
@@ -89,7 +89,7 @@ int yield(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_cpu_ker
 }
 
 int exit_instruccion(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel) {
-    log_info(logger, "Entré en la ejecución de EXIT");
+    log_info(logger, "PID: %i EJECUTANDO: EXIT PARAMETROS: -", contexto->pid);
     //Tengo que armar el paquete con codigo de operacion 1
     t_paquete* paquete = crear_paquete();
     paquete->codigo_operacion = FINALIZACION;
@@ -103,7 +103,7 @@ int exit_instruccion(t_log* logger, t_contexto_de_ejecucion* contexto, int conex
 
 int wait(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel, char** instrucciones)
 {
-    log_info(logger, "Entre en la ejecución de WAIT");
+    log_info(logger, "PID: %i EJECUTANDO: %s PARAMETROS: %s", contexto->pid, instrucciones[0], instrucciones[1]);
     t_paquete* paquete = crear_paquete();
     paquete->codigo_operacion = PETICION_RECURSO;
     paquete->buffer = serializar_contexto(contexto);
@@ -124,7 +124,7 @@ int wait(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_cpu_kern
 
 int signal_instruccion(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel, char** instrucciones)
 {
-    log_info(logger, "Entre en la ejecución de SIGNAL");
+    log_info(logger, "PID: %i EJECUTANDO: %s PARAMETROS: %s", contexto->pid, instrucciones[0], instrucciones[1]);
     t_paquete* paquete = crear_paquete();
     paquete->codigo_operacion = LIBERACION_RECURSO;
     paquete->buffer = serializar_contexto(contexto);
@@ -146,7 +146,7 @@ int signal_instruccion(t_log* logger, t_contexto_de_ejecucion* contexto, int con
 
 int i_o(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel, char** instrucciones)
 {
-    log_info(logger, "Entre en la ejecución de I/O");
+    log_info(logger, "PID: %i EJECUTANDO: %s PARAMETROS: %s", contexto->pid, instrucciones[0], instrucciones[1]);
     t_paquete* paquete = crear_paquete();
     paquete->codigo_operacion = INTERRUPCION_BLOQUEANTE;
     paquete->buffer = serializar_contexto(contexto);

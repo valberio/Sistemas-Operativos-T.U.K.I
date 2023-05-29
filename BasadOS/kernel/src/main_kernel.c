@@ -13,9 +13,11 @@
 //ready, habria que fijarse de resolver con una mejor solucion como semaforos o etc.
 sem_t semaforo_de_procesos_para_ejecutar;
 sem_t semaforo_procesos_en_ready;
+sem_t semaforo_procesos_en_exit;
 sem_t mutex_cola_new;
 sem_t mutex_cola_ready;
 sem_t mutex_cola_blocked;
+sem_t mutex_cola_exit;
 sem_t semaforo_multiprogramacion;
 
 t_queue* cola_new;
@@ -41,36 +43,33 @@ int main(void)
 	cola_exit = queue_create();
 	
 	int multiprogramacion = config_get_int_value(config, "GRADO_MAX_MULTIPROGRAMACION");	
-/*
+
 	char** recursos_array = config_get_array_value(config, "RECURSOS");
 	char** instancias_array = config_get_array_value(config, "INSTANCIAS_RECURSOS");
 	size_t cantidad_recursos = contarCadenas(recursos_array);
 	Recurso* recurso[cantidad_recursos];
-	Recurso* temp;
-	
+	recursos = list_create();
+
 	printf("LA CANTIDAD DE RECURSOS SON: %zu \n",cantidad_recursos);
 	for(int i = 0; i < cantidad_recursos; i++){
 		recurso[i] = malloc(sizeof(Recurso));
-		recurso[i]->recurso = malloc(sizeof(recursos_array[i]));
-		recurso[i]->recurso = recursos_array[i];
+		recurso[i]->recurso = malloc(sizeof(recursos_array[i])+1);
+		strcpy(recurso[i]->recurso,recursos_array[i]);
 		recurso[i]->instancias = atoi(instancias_array[i]);
 		recurso[i]->cola_de_bloqueados = queue_create();
 		list_add(recursos, recurso[i]);
-		
-		temp = list_get(recursos, i);
-		printf("LOS RECURSOS SON %s \n", temp->recurso);
-		printf("SU CANTIDAD DE INSTANCIAS ES %d \n",  temp->instancias);
 	}
-	*/
+	
 
 	sem_init(&semaforo_multiprogramacion, 0, multiprogramacion);
 	sem_init(&semaforo_de_procesos_para_ejecutar, 0, 0);
 	sem_init(&semaforo_procesos_en_ready, 0, 0);
+	sem_init(&semaforo_procesos_en_exit, 0, 0);
 
 	sem_init(&mutex_cola_new, 0, 1);
 	sem_init(&mutex_cola_ready, 0, 1);
 	sem_init(&mutex_cola_blocked, 0, 1);
-
+	sem_init(&mutex_cola_exit, 0, 1);
 
 	ip = config_get_string_value(config, "IP");
 	
@@ -120,14 +119,37 @@ int main(void)
 	pthread_create(&hilo_administrador_de_new, NULL, administrar_procesos_de_new_wrapper , (void *)&parametros_hilo_procesos_new);
 	pthread_detach(hilo_administrador_de_new);
 	
+	
+	//HILO 4: ADMINISTRA PROCESOS EN EXIT
+	pthread_t hilo_administrador_de_exit;
+	pthread_create(&hilo_administrador_de_exit, NULL, administrar_procesos_de_exit, NULL);
+	pthread_detach(hilo_administrador_de_exit);
+
 	administrar_procesos_de_ready(cliente_cpu);
-	
-	
+
 	terminar_programa(logger, config);
 	return EXIT_SUCCESS;
 }
 
+void* administrar_procesos_de_exit(){
+	while(1){
+		sem_wait(&semaforo_procesos_en_exit);
+		
+		t_pcb* proceso_a_finalizar;
+		t_paquete* paquete = crear_paquete();
+		crear_buffer(paquete);
+		paquete->codigo_operacion = 1;
 
+		
+		sem_wait(&mutex_cola_exit);
+		proceso_a_finalizar = queue_pop(cola_exit);	
+		sem_post(&mutex_cola_exit);		
+		enviar_paquete(paquete, proceso_a_finalizar->socket_consola);
+		log_info(logger, "Envio el mensaje de finalizacion a consola \n");
+		sem_post(&semaforo_multiprogramacion);
+		return NULL;
+	}
+}
 
 void terminar_programa(t_log* logger, t_config* config)
 {
@@ -266,13 +288,12 @@ void administrar_procesos_de_ready(int cliente_cpu){
 		
 		if(strcmp(planificador, "HRRN") == 0){
 		proceso_en_ejecucion = salida_HRRN();
-		printf("EL PID DE PROCESO EN EJECUCION EN HRRN ES %i", proceso_en_ejecucion->pid);
-		printf("EL PID DE PROCESO EN EJECUCION EN HRRN ES %i", proceso_en_ejecucion->contexto_de_ejecucion->pid);
+		printf("EL PID DE PROCESO EN EJECUCION EN HRRN ES %i\n", proceso_en_ejecucion->pid);
 		}
 
 		if(strcmp(planificador, "FIFO") == 0){
 		proceso_en_ejecucion = salida_FIFO();
-		printf("EL PID DE PROCESO EN EJECUCION EN FIFO ES %i", proceso_en_ejecucion->pid);
+		printf("EL PID DE PROCESO EN EJECUCION EN FIFO ES %i\n", proceso_en_ejecucion->pid);
 
 		}
 
@@ -283,6 +304,9 @@ void administrar_procesos_de_ready(int cliente_cpu){
 		printf("EL ESTIMADO DE RAFAGA %f\n", proceso_en_ejecucion->estimado_rafaga);
 		enviar_contexto_de_ejecucion(proceso_en_ejecucion->contexto_de_ejecucion, cliente_cpu);
 
+		int ejecucion = 1;
+
+		while(ejecucion){
 		t_paquete* paquete = recibir_contexto_de_ejecucion(cliente_cpu);
 		
 
@@ -306,22 +330,22 @@ void administrar_procesos_de_ready(int cliente_cpu){
 				sem_post(&mutex_cola_ready);
 				printf("EL ESTIMADO NUEVO ES %f\n", proceso_en_ejecucion->estimado_rafaga);
 				sem_post(&semaforo_procesos_en_ready);
-				
+				ejecucion = 0;
 				break;
 
 			case FINALIZACION: //Caso EXIT
+				sem_wait(&mutex_cola_exit);
 				queue_push(cola_exit, proceso_en_ejecucion);
+				sem_post(&mutex_cola_exit);
+
+				sem_post(&semaforo_procesos_en_exit);
+				ejecucion = 0;
 				//Actualizo el Proceso_en_ejecucion y lo mando a exit
 				//Mando un mensaje a la consola del proceso avisándole que completó la ejecución
 				//Mando un paquete con buffer vacio y código de operación EXIT
-				t_paquete* paquete = crear_paquete();
-				crear_buffer(paquete);
-				paquete->codigo_operacion = 1;
 				
-				enviar_paquete(paquete, proceso_en_ejecucion->socket_consola);
-				log_info(logger, "Envio el mensaje de finalizacion a consola \n");
-				sem_post(&semaforo_multiprogramacion);
 				break;
+
 			case INTERRUPCION_BLOQUEANTE: //Caso I/O, tengo que recibir el tiempo que se bloquea el proceso
 				parametros_retorno = recibir_mensaje(cliente_cpu);
 				pthread_t hilo_procesos_IO[50];
@@ -340,20 +364,35 @@ void administrar_procesos_de_ready(int cliente_cpu){
 				pthread_create(&hilo_procesos_IO[i], NULL, manipulador_de_IO_wrapper, (void*)&parametros_IO);
 				pthread_detach(hilo_procesos_IO[i]);
 				i++;
+				ejecucion = 0;
 				break;
 				
 			case PETICION_RECURSO: //Caso WAIT, proceso pide un recurso
 				parametros_retorno = recibir_mensaje(cliente_cpu);
-				break;
+				if(wait_recurso(parametros_retorno, proceso_en_ejecucion) == 0){
+					enviar_mensaje("0", cliente_cpu);
+				} else {
+					enviar_mensaje("1", cliente_cpu);
+					ejecucion = 0;		
+				} break;
+
+
 			case LIBERACION_RECURSO: //Caso SIGNAL, proceso libera un recurso
 				parametros_retorno = recibir_mensaje(cliente_cpu);
+				if(signal_recurso(parametros_retorno, proceso_en_ejecucion) == 0){
+					enviar_mensaje("0", cliente_cpu);
+				} else {
+					enviar_mensaje("1", cliente_cpu);
+					ejecucion = 0;
+				}
 				break;
+
 			default:
 				break; 
 		}
 		
 	}
-}
+}}
 
 void manipulador_de_IO(char* tiempo_en_blocked, int pid){
 	int tiempo = atoi(tiempo_en_blocked);
@@ -397,11 +436,69 @@ void* manipulador_de_IO_wrapper(void* arg){
 
 
 
-// void wait_recurso(char* recurso){
-// 	for(int i = 0, i < cantidad_recursos, i++){
-// 		if(recursos[i].recurso == recurso)
-// 	}
-// }
+ int wait_recurso(char* recurso, t_pcb* proceso){
+	Recurso* recurso_solicitado;
+	printf("EL RECURSO ES %s\n", recurso);
+	t_list* lista_con_recurso = list_create();
+	bool obtenerRecurso(void* elemento){
+		Recurso* recurso_a_obtener;
+		recurso_a_obtener = elemento;
+		printf("EL RECURSO EN RECURSO A OBTENER ES: %s \n", recurso_a_obtener->recurso);
+
+		return strcmp(recurso_a_obtener->recurso,recurso) == 0;
+	}
+	lista_con_recurso = list_filter(recursos,obtenerRecurso);
+	if(list_size(lista_con_recurso) == 0){
+		log_info(logger, "El recurso solicitado no existe");
+		sem_wait(&mutex_cola_exit);
+		queue_push(cola_exit,proceso);
+		sem_post(&mutex_cola_exit);
+
+		sem_post(&semaforo_procesos_en_exit);
+
+		return 1;
+	} 
+	recurso_solicitado = list_get(lista_con_recurso,0);
+	recurso_solicitado->instancias -= 1;
+	if(recurso_solicitado->instancias < 0){
+		queue_push(recurso_solicitado->cola_de_bloqueados,proceso);
+		printf("LA CANTIDAD DE PROCESOS BLOQUEADOS POR %s ES %d", recurso, queue_size(recurso_solicitado->cola_de_bloqueados));
+		return 1;
+	}
+	return 0;
+ }
+
+int signal_recurso(char* recurso,t_pcb* proceso){
+	Recurso* recurso_solicitado;
+	t_list* lista_con_recurso = list_create();
+	bool obtenerRecurso(void* elemento){
+		Recurso* recurso_a_obtener;
+		recurso_a_obtener = elemento;
+		return strcmp(recurso_a_obtener->recurso,recurso) == 0;
+	}
+	lista_con_recurso = list_filter(recursos,obtenerRecurso);
+	if(list_size(lista_con_recurso) == 0){
+		log_info(logger, "El recurso mencionado no existe");
+		sem_wait(&mutex_cola_exit);
+		queue_push(cola_exit,proceso);
+		sem_post(&mutex_cola_exit);
+		sem_post(&semaforo_procesos_en_exit);
+		return 1;
+	} 
+	recurso_solicitado = list_get(lista_con_recurso, 0);
+	recurso_solicitado->instancias += 1;
+	if(	recurso_solicitado->instancias <= 0 ){
+		t_pcb* proceso_bloqueado_por_recurso;
+		proceso_bloqueado_por_recurso = queue_pop(recurso_solicitado->cola_de_bloqueados);
+		
+		sem_wait(&mutex_cola_ready);
+		queue_push(cola_ready, proceso_bloqueado_por_recurso);
+		sem_post(&mutex_cola_ready);
+
+		sem_post(&semaforo_procesos_en_ready);
+	}
+	return 0;
+ }
 
 size_t contarCadenas(char** array) {
     size_t contador = 0;

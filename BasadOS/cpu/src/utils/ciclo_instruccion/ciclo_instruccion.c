@@ -121,7 +121,7 @@ enum Instrucciones string_a_instruccion(char* instruccion)
 		return WAIT;
 	}
 
-	if (strcmp(instruccion, "SINGAL") == 0)
+	if (strcmp(instruccion, "SIGNAL") == 0)
 	{
 		return SIGNAL;
 	}

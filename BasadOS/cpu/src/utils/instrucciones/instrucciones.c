@@ -114,7 +114,12 @@ int wait(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_cpu_kern
     //Envio el parámetro
     enviar_mensaje(instrucciones[1], conexion_cpu_kernel);
 
-    return 1;
+    //Espero la respuesta de kernel sobre el recurso
+    char* respuesta = recibir_mensaje(conexion_cpu_kernel);
+
+    if (strcmp(respuesta, "0") == 0) {return 0;}
+
+    return 1; //Si el recurso existe, sigue ejecutando; si no, desalojo
 }
 
 int signal_instruccion(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel, char** instrucciones)
@@ -130,7 +135,13 @@ int signal_instruccion(t_log* logger, t_contexto_de_ejecucion* contexto, int con
     //Envio el parámetro
     enviar_mensaje(instrucciones[1], conexion_cpu_kernel);
 
-    return 1;
+    //Espero la respuesta de kernel sobre el recurso
+    char* respuesta = recibir_mensaje(conexion_cpu_kernel);
+
+    if (strcmp(respuesta, "0") == 0) {return 0;}
+
+    return 1; //Si el recurso existe, sigue ejecutando; si no, desalojo
+
 }
 
 int i_o(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel, char** instrucciones)

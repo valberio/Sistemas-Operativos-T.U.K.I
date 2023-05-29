@@ -7,12 +7,19 @@ char * fetch(t_contexto_de_ejecucion * contexto)
 	return list_get(contexto->instrucciones, program_counter);
 }
 
-char** decode(char* instruccion)
+char** decode(char* instruccion, int retardo_instruccion)
 {
 	//Todavia no hay que hacer traducciones de memoria, asi que retorna
 	//el string de la instruccion en un array de chars, para facilitar
 	//el acceso a los datos en execute()
 	char ** array = string_split(instruccion, " ");
+
+	if (strcmp(array[0], "SET") == 0)
+	{
+		printf("Entre en la ejecucion de DECODE- SET con %i segundos de retraso de instruccion\n", retardo_instruccion);
+		sleep(retardo_instruccion);
+	}
+
 	return array;
 }
 

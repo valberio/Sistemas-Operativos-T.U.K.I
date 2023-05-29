@@ -163,6 +163,7 @@ void recibir_de_consolas(int server_consola) {
 
 void crear_proceso(char* codigo_recibido, int socket_consola, double estimado_inicial) {
 	t_pcb* pcb = crear_pcb(codigo_recibido, socket_consola, estimado_inicial);
+	log_info(logger, "Cant instr en creacion del pcb %i",  pcb->contexto_de_ejecucion->cant_instrucciones);
 	sem_wait(&mutex_cola_new);
 	queue_push(cola_new, pcb);
 	sem_post(&mutex_cola_new);
@@ -266,6 +267,7 @@ void administrar_procesos_de_ready(int cliente_cpu){
 		if(strcmp(planificador, "HRRN") == 0){
 		proceso_en_ejecucion = salida_HRRN();
 		printf("EL PID DE PROCESO EN EJECUCION EN HRRN ES %i", proceso_en_ejecucion->pid);
+		printf("EL PID DE PROCESO EN EJECUCION EN HRRN ES %i", proceso_en_ejecucion->contexto_de_ejecucion->pid);
 		}
 
 		if(strcmp(planificador, "FIFO") == 0){
@@ -282,6 +284,7 @@ void administrar_procesos_de_ready(int cliente_cpu){
 		enviar_contexto_de_ejecucion(proceso_en_ejecucion->contexto_de_ejecucion, cliente_cpu);
 
 		t_paquete* paquete = recibir_contexto_de_ejecucion(cliente_cpu);
+		
 
 		t_contexto_de_ejecucion* contexto_actualizado = malloc(sizeof(t_contexto_de_ejecucion));
 		contexto_actualizado = deserializar_contexto_de_ejecucion(paquete->buffer);

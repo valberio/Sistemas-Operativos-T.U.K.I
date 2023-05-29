@@ -9,6 +9,7 @@ t_pcb * crear_pcb( char* instrucciones, int socket, double estimado_rafaga)
 	pcb->estado = 1;
 	pcb->pid = contador;
     pcb->contexto_de_ejecucion = crear_contexto_de_ejecucion(instrucciones);
+    pcb->contexto_de_ejecucion->pid = contador;
 	pcb->tabla_archivos_abiertos = list_create();
 	pcb->tabla_segmentos = list_create();
 
@@ -156,6 +157,9 @@ t_buffer* serializar_contexto(t_contexto_de_ejecucion* contexto)
     //Calculo el tamaño que necesito darle al buffer.
     uint32_t tamano = 0;
 
+    //0 Tamaño del PID
+    tamano += sizeof(uint32_t);
+
     //0.1 Tamaño del PROGRAM COUNTER
     tamano += sizeof(uint32_t);
 
@@ -185,6 +189,9 @@ t_buffer* serializar_contexto(t_contexto_de_ejecucion* contexto)
     buffer->size = tamano;
     void* stream = malloc(buffer->size);
     int offset = 0;
+
+    memcpy(stream + offset, &(contexto->pid), sizeof(uint32_t));
+    offset += sizeof(uint32_t);
 
     memcpy(stream + offset, &(contexto->program_counter), sizeof(uint32_t));
     offset += sizeof(uint32_t);
@@ -234,7 +241,10 @@ t_contexto_de_ejecucion* deserializar_contexto_de_ejecucion(t_buffer* buffer){
 
     void* stream = buffer->stream;
 
-    //0. Deserializo PROGRAM COUNTER y REGISTROS
+    //0. Deserializo el PID, PROGRAM COUNTER y REGISTROS
+    memcpy(&contexto->pid, stream, sizeof(uint32_t));
+    stream += sizeof(uint32_t);
+
     memcpy(&contexto->program_counter, stream, sizeof(uint32_t));
     stream += sizeof(uint32_t);
 

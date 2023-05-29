@@ -26,6 +26,7 @@ typedef struct{
 }t_registros;
 
 typedef struct{
+    uint32_t pid;
     uint32_t program_counter;
     t_registros* registros;
     uint32_t cant_instrucciones;
@@ -39,7 +40,7 @@ typedef struct{
 
 typedef struct{
     int estado;
-    int pid;
+    uint32_t pid;
     int socket_consola;
     t_contexto_de_ejecucion* contexto_de_ejecucion;
     t_list* tabla_segmentos;

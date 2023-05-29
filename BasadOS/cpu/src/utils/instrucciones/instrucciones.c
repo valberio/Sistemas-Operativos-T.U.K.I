@@ -6,7 +6,8 @@
 
 int set(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto) {
     //Guardo en el registro de registros.c el valor
-    log_info(logger, "Entré en la ejecución de SET");
+
+    log_info(logger, "PID: %i EJECUTANDO: %s", contexto->program_counter, instrucciones[0]);
     
     enum Registros registro = string_a_registro(instrucciones[1]);
     char* valor = instrucciones[2];

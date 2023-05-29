@@ -41,7 +41,7 @@ int main(void)
 	cola_exit = queue_create();
 	
 	int multiprogramacion = config_get_int_value(config, "GRADO_MAX_MULTIPROGRAMACION");	
-
+/*
 	char** recursos_array = config_get_array_value(config, "RECURSOS");
 	char** instancias_array = config_get_array_value(config, "INSTANCIAS_RECURSOS");
 	size_t cantidad_recursos = contarCadenas(recursos_array);
@@ -61,7 +61,7 @@ int main(void)
 		printf("LOS RECURSOS SON %s \n", temp->recurso);
 		printf("SU CANTIDAD DE INSTANCIAS ES %d \n",  temp->instancias);
 	}
-	
+	*/
 
 	sem_init(&semaforo_multiprogramacion, 0, multiprogramacion);
 	sem_init(&semaforo_de_procesos_para_ejecutar, 0, 0);

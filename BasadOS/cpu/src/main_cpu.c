@@ -34,31 +34,32 @@ int main(void)
 	if(conexion_cpu_kernel) 
 	{
 		log_info(logger, "CPU recibió al kernel");
+		
 		while(conexion_cpu_kernel) {
+
 			t_contexto_de_ejecucion* contexto = malloc(sizeof(t_contexto_de_ejecucion));
 			t_paquete* paquete = malloc(sizeof(t_paquete));
 			paquete = recibir_contexto_de_ejecucion(conexion_cpu_kernel); 
 			contexto = deserializar_contexto_de_ejecucion(paquete->buffer);
 
-			printf("Recibi %i\n", paquete->codigo_operacion);
+	
 			if(contexto == NULL) {
 				log_info(logger, "No recibi mas procesos del kernel");
 				close(conexion_cpu_kernel);
 				conexion_cpu_kernel = 0;
 				}
 			else{
-				printf("\n");
-				log_info(logger, "Recibi un nuevo proceso");
+
 				int cant_instrucciones = list_size(contexto->instrucciones);
-				log_info(logger, "Cantidad instrucciones: %i", cant_instrucciones);
 
 				while (contexto->program_counter < cant_instrucciones) //Itero sobre todas las instrucciones, ejecutando
 				{
 					char * instruccion = fetch(contexto);
-					log_info(logger, "La instruccion a ejecutar es %s", instruccion);
 				
 					char* *instruccion_array = decode(instruccion);
+
 					contexto->program_counter++;
+
 					int resultado = execute(logger, instruccion_array, contexto, conexion_cpu_kernel); //El envio del contexto de ejecucion al kernel pasa en execute
 
 					//Si execute devuelve un 1, desalojo. Si devuelve un 0, no. Desalojo sacando del while

@@ -217,3 +217,40 @@ enum Registros string_a_registro(char* registro)
 	}
 	return EXIT_FAILURE;
 }
+
+
+int mov_in(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_memoria_cpu)
+{
+    log_info(logger, "PID: %i EJECUTANDO: %s PARAMETROS: %s, %s", contexto->pid, instrucciones[0], instrucciones[1], instrucciones[2]);
+    //Envio a memoria un paquete que indique con su código de operación que quiero LEER
+    t_paquete* paquete = crear_paquete();
+    paquete->codigo_operacion = 0; //Tengo que poder serializar la direccion de la que quiero leer
+    
+    enviar_paquete(paquete, conexion_memoria_cpu);
+
+    //Espero la respuesta con el valor que se encontraba en la direccion
+    t_paquete* paquete_respuesta = recibir_paquete(conexion_memoria_cpu);
+    //Guardo ese valor en el registro correspondiente
+    log_info(logger, "PID: %i EJECUTANDO: %s - PARAMETROS: %s, %s - RTA RECIBIDA: %i", contexto->pid, instrucciones[0], instrucciones[1], instrucciones[2], paquete_respuesta->codigo_operacion);
+
+    return 0;
+}
+
+int mov_out(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_memoria_cpu)
+{
+    log_info(logger, "PID: %i EJECUTANDO: %s PARAMETROS: %s, %s", contexto->pid, instrucciones[0], instrucciones[1], instrucciones[2]);
+    //Envio a memoria un paquete que indique con su código de operación que quiero ESCRIBIR
+    t_paquete* paquete = crear_paquete();
+    paquete->codigo_operacion = 1; //Tengo que poder serializar la direccion de la que quiero leer
+    
+    enviar_paquete(paquete, conexion_memoria_cpu);
+
+    //Memoria responde con un OK confirmado que escribió lo que debía
+
+    t_paquete* paquete_respuesta  = recibir_paquete(conexion_memoria_cpu);
+
+    log_info(logger, "PID: %i EJECUTANDO: %s - PARAMETROS: %s, %s - RTA RECIBIDA: %i", contexto->pid, instrucciones[0], instrucciones[1], instrucciones[2], paquete_respuesta->codigo_operacion);
+
+    return 0;
+}
+

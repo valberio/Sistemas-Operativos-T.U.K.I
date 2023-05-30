@@ -52,4 +52,41 @@ int main(void)
 	}
 }*/
 
-void* 
+int abrir_archivo(char* nombre_archivo, t_superbloque* superbloque, t_bitarray* bitmap){
+	char* temp_nombre;
+	strcpy(temp_nombre, "../files/");
+	strcat(temp_nombre, nombre_archivo);
+	FILE* archivo = fopen(temp_nombre,"r");
+	if(archivo != NULL){
+		return 0;
+	}
+	else{
+		log_info(logger, "No existe el archivo al que se intenta acceder.");
+	}
+}
+
+int crear_archivo(char* nombre_archivo, t_superbloque* superbloque, t_bitarray* bitmap){
+	char* ruta;
+	strcpy(ruta, "../files/");
+	strcat(ruta, nombre_archivo);
+	FILE* archivo = fopen(ruta,"w");
+	if(archivo == NULL){
+		log_info(logger, "Error al crear el archivo.");
+	}
+	crear_fcb(nombre_archivo);
+	free(ruta);
+	return 0;
+}
+void* crear_fcb(char* nombre_archivo){
+	char* ruta;
+	strcpy(ruta, "../files/");
+	strcat(ruta, nombre_archivo);
+	t_config* fcb = config_create(ruta);
+	config_set_value(fcb, "NOMBRE_ARCHIVO", nombre_archivo);
+	config_set_value(fcb, "TAMANIO_ARCHIVO", "0");
+	config_set_value(fcb, "PUNTERO_DIRECTO", "0");
+	config_set_value(fcb, "PUNTERO_INDIRECTO", "0");
+	config_save(fcb);
+	free(ruta);
+	return 0;
+}

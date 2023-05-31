@@ -83,7 +83,9 @@ int main(void)
 		log_destroy(logger);
 	}
 
-	// liberar_conexion(&conexion_cpu_kernel);
+	// liberar_conexion(conexion_cpu_kernel);
+	// liberar_conexion(conexion_memoria_cpu);
+
 	return 0;
 }
 

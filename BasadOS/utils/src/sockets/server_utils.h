@@ -10,6 +10,7 @@
 #include<commons/config.h>
 #include<commons/collections/list.h>
 #include<string.h>
+#include <errno.h>
 #include<assert.h>
 #include<sockets/client_utils.h>
 

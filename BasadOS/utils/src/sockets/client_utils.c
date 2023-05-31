@@ -39,10 +39,9 @@ int crear_conexion_al_server(t_log *logger, char *ip, char *puerto)
 	return socket_cliente;
 }
 
-void liberar_conexion(int *socket_cliente)
+void liberar_conexion(int socket_cliente)
 {
-	close(*socket_cliente);
-	*socket_cliente = -1;
+	close(socket_cliente);
 }
 
 void *serializar_paquete(t_paquete *paquete, int bytes)

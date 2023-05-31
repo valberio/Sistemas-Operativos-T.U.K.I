@@ -45,19 +45,10 @@ int main(void)
 
 	char** recursos_array = config_get_array_value(config, "RECURSOS");
 	char** instancias_array = config_get_array_value(config, "INSTANCIAS_RECURSOS");
-	size_t cantidad_recursos = contarCadenas(recursos_array);
-	Recurso* recurso[cantidad_recursos];
+	
 	recursos = list_create();
-
-	printf("LA CANTIDAD DE RECURSOS SON: %zu \n",cantidad_recursos);
-	for(int i = 0; i < cantidad_recursos; i++){
-		recurso[i] = malloc(sizeof(Recurso));
-		recurso[i]->recurso = malloc(sizeof(recursos_array[i])+1);
-		strcpy(recurso[i]->recurso,recursos_array[i]);
-		recurso[i]->instancias = atoi(instancias_array[i]);
-		recurso[i]->cola_de_bloqueados = queue_create();
-		list_add(recursos, recurso[i]);
-	}
+	crear_lista_de_recursos(recursos,recursos_array,instancias_array);
+	
 	
 
 	sem_init(&semaforo_multiprogramacion, 0, multiprogramacion);
@@ -131,17 +122,10 @@ int main(void)
 	administrar_procesos_de_ready(cliente_cpu);
 
 	terminar_programa(logger, config);
+	liberar_conexion(cliente_cpu);
+	liberar_conexion(server_consola);
+
 	return EXIT_SUCCESS;
 }
 
 
-
-size_t contarCadenas(char** array) {
-    size_t contador = 0;
-
-    while (array[contador] != NULL) {
-        contador++;
-    }
-
-    return contador;
-}

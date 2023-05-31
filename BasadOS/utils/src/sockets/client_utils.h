@@ -38,7 +38,7 @@ typedef struct
 
 
 int crear_conexion_al_server(t_log* , char* , char* );
-void liberar_conexion(int* );
+void liberar_conexion(int);
 void enviar_mensaje(char* mensaje, int socket_cliente);
 t_paquete* crear_paquete();
 t_paquete* crear_super_paquete(void);

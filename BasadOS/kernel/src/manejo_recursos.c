@@ -1,4 +1,18 @@
 #include"manejo_recursos.h" 
+void crear_lista_de_recursos(t_list* recursos, char** recursos_array,char** instancias_array){
+	size_t cantidad_recursos = contarCadenas(recursos_array);
+	Recurso* recurso[cantidad_recursos];
+	for(int i = 0; i < cantidad_recursos; i++){
+		recurso[i] = malloc(sizeof(Recurso));
+		recurso[i]->recurso = malloc(sizeof(recursos_array[i])+1);
+		strcpy(recurso[i]->recurso,recursos_array[i]);
+		recurso[i]->instancias = atoi(instancias_array[i]);
+		recurso[i]->cola_de_bloqueados = queue_create();
+		list_add(recursos, recurso[i]);
+	}
+}
+
+
  int wait_recurso(char* recurso, t_pcb* proceso){
 	Recurso* recurso_solicitado;
 	log_info(logger, "El recurso solicitado es %s\n", recurso);
@@ -22,9 +36,9 @@
 	} 
 	recurso_solicitado = list_get(lista_con_recurso,0);
 	recurso_solicitado->instancias -= 1;
+	log_info(logger,"PID: %i - Wait: %s - Instancias: %i",proceso->pid,recurso_solicitado->recurso,recurso_solicitado->instancias );
 	if(recurso_solicitado->instancias < 0){
 		queue_push(recurso_solicitado->cola_de_bloqueados,proceso);
-		printf("LA CANTIDAD DE PROCESOS BLOQUEADOS POR %s ES %d", recurso, queue_size(recurso_solicitado->cola_de_bloqueados));
 		return 1;
 	}
 	return 0;
@@ -49,16 +63,29 @@ int signal_recurso(char* recurso,t_pcb* proceso){
 	} 
 	recurso_solicitado = list_get(lista_con_recurso, 0);
 	recurso_solicitado->instancias += 1;
+	log_info(logger,"PID: %i - Signal: %s - Instancias: %i",proceso->pid,recurso_solicitado->recurso,recurso_solicitado->instancias );
 	if(	recurso_solicitado->instancias <= 0 ){
 		t_pcb* proceso_bloqueado_por_recurso;
 		proceso_bloqueado_por_recurso = queue_pop(recurso_solicitado->cola_de_bloqueados);
 		
 		sem_wait(&mutex_cola_ready);
 		queue_push(cola_ready, proceso_bloqueado_por_recurso);
+		//log_info(logger,"Cola Ready Hola: [%s]",obtener_pids_en_ready());
 		sem_post(&mutex_cola_ready);
+	
 
 		sem_post(&semaforo_procesos_en_ready);
 	}
 	return 0;
  }
  
+
+size_t contarCadenas(char** array) {
+    size_t contador = 0;
+
+    while (array[contador] != NULL) {
+        contador++;
+    }
+
+    return contador;
+}

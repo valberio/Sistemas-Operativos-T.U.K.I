@@ -1,9 +1,7 @@
 #include"administracion_colas.h"
 void* administrar_procesos_de_exit(){
 	while(1){
-		printf("ESPERANDO A UN PROCESO EN EXIT\n");
 		sem_wait(&semaforo_procesos_en_exit);
-		printf("LLEGO UN PROCESO A EXIT\n");
 		t_pcb* proceso_a_finalizar;
 		t_paquete* paquete = crear_paquete();
 		crear_buffer(paquete);
@@ -42,12 +40,9 @@ void administrar_procesos_de_new(int cliente_cpu){
 }
 
 
-
-
 void administrar_procesos_de_ready(int cliente_cpu){
 	while(cliente_cpu){
 		//ESPERA A QUE HAYA POR LO MENOS 1 PROCESO EN READY	
-		printf("ESPERANDO A QUE LLEGUE UN PROCESO A READY\n");
 		sem_wait(&semaforo_procesos_en_ready);
 
 		t_pcb* proceso_en_ejecucion;
@@ -55,13 +50,10 @@ void administrar_procesos_de_ready(int cliente_cpu){
 		
 		if(strcmp(planificador, "HRRN") == 0){
 		proceso_en_ejecucion = salida_HRRN();
-		printf("EL PID DE PROCESO EN EJECUCION EN HRRN ES %i\n", proceso_en_ejecucion->pid);
 		}
 
 		if(strcmp(planificador, "FIFO") == 0){
 		proceso_en_ejecucion = salida_FIFO();
-		printf("EL PID DE PROCESO EN EJECUCION EN FIFO ES %i\n", proceso_en_ejecucion->pid);
-
 		}
 
 		proceso_en_ejecucion->inicio_de_uso_de_cpu = clock();//ACA SE INICIALIZA EL TIEMPO EN EJECUCION
@@ -92,7 +84,6 @@ void administrar_procesos_de_ready(int cliente_cpu){
 				calcular_estimado_de_rafaga(proceso_en_ejecucion);
 				queue_push(cola_ready, proceso_en_ejecucion);
 				sem_post(&mutex_cola_ready);
-				printf("EL ESTIMADO NUEVO ES %f\n", proceso_en_ejecucion->estimado_rafaga);
 				sem_post(&semaforo_procesos_en_ready);
 				ejecucion = 0;
 				break;

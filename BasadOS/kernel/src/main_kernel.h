@@ -22,8 +22,6 @@ extern t_list* recursos;
 extern t_log* logger;
 extern t_config* config;
 
-size_t contarCadenas(char** array); 
-
 
 
 #endif /* KERNEL_H_ */

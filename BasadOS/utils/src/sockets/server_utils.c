@@ -3,7 +3,6 @@
 int iniciar_servidor(t_log* logger, char* ip, char* puerto)
 {
     int socket_servidor;
-
     struct addrinfo hints, *servinfo;
 
     memset(&hints, 0, sizeof(hints));
@@ -19,7 +18,7 @@ int iniciar_servidor(t_log* logger, char* ip, char* puerto)
 
     if(bind(socket_servidor, servinfo->ai_addr, servinfo->ai_addrlen) == -1)
     {
-        log_info(logger, "El server no se pudo bindear al puerto\n");
+        log_info(logger, "El server no se pudo bindear al puerto, la razon es: %s", strerror((errno)));
     }
 
     listen(socket_servidor, SOMAXCONN);

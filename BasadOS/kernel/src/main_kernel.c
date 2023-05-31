@@ -6,7 +6,7 @@
 /*			Planificación FIFO---YA TAAAAA
 			Planificación HRRN--- Ya estaaa
 			LECTURA DE I/O---- YA ESTA
-			Manejo de recursos compartidos							*/
+			Manejo de recursos compartidos -- listoooo							*/
 /*------------------------------------------------------------------*/
 
 //Esta variable se fija que haya por lo menos un elemento en la cola de new antes de pasar a mandarlos a 
@@ -133,22 +133,23 @@ int main(void)
 
 void* administrar_procesos_de_exit(){
 	while(1){
+		printf("ESPERANDO A UN PROCESO EN EXIT\n");
 		sem_wait(&semaforo_procesos_en_exit);
-		
+		printf("LLEGO UN PROCESO A EXIT\n");
 		t_pcb* proceso_a_finalizar;
 		t_paquete* paquete = crear_paquete();
 		crear_buffer(paquete);
 		paquete->codigo_operacion = 1;
 
-		
 		sem_wait(&mutex_cola_exit);
 		proceso_a_finalizar = queue_pop(cola_exit);	
 		sem_post(&mutex_cola_exit);		
+
 		enviar_paquete(paquete, proceso_a_finalizar->socket_consola);
 		log_info(logger, "Envio el mensaje de finalizacion a consola \n");
 		sem_post(&semaforo_multiprogramacion);
-		return NULL;
 	}
+	return NULL;
 }
 
 void terminar_programa(t_log* logger, t_config* config)
@@ -190,6 +191,7 @@ void crear_proceso(char* codigo_recibido, int socket_consola, double estimado_in
 	queue_push(cola_new, pcb);
 	sem_post(&mutex_cola_new);
 	sem_post(&semaforo_de_procesos_para_ejecutar);
+	log_info(logger, "Se crea el proceso %i en NEW", pcb->pid);
 }
 
 void* crear_proceso_wrapper(void* arg) {
@@ -211,10 +213,9 @@ void *recibir_de_consolas_wrapper(void *arg) {
 
 void administrar_procesos_de_new(int cliente_cpu){
 	while(cliente_cpu){
-		printf("ESPERANDO A QUE LLEGUE UN PROCESO A NEW\n");
+		
 		sem_wait(&semaforo_de_procesos_para_ejecutar);
-		printf("PASE EL SEMAFORO DE NEW\n");
-
+		
 		sem_wait(&semaforo_multiprogramacion);
 
 		sem_wait(&mutex_cola_new);
@@ -281,7 +282,6 @@ void administrar_procesos_de_ready(int cliente_cpu){
 		//ESPERA A QUE HAYA POR LO MENOS 1 PROCESO EN READY	
 		printf("ESPERANDO A QUE LLEGUE UN PROCESO A READY\n");
 		sem_wait(&semaforo_procesos_en_ready);
-		printf("PASE EL SEMAFORO DE READY\n");
 
 		t_pcb* proceso_en_ejecucion;
 		char* planificador = config_get_string_value(config, "ALGORITMO_PLANIFICACION");
@@ -300,8 +300,7 @@ void administrar_procesos_de_ready(int cliente_cpu){
 		proceso_en_ejecucion->inicio_de_uso_de_cpu = clock();//ACA SE INICIALIZA EL TIEMPO EN EJECUCION
 		
 		//PLANIFICACION
-		log_info(logger, "Saque de la cola de ready el proceso %i\n", proceso_en_ejecucion->pid);
-		printf("EL ESTIMADO DE RAFAGA %f\n", proceso_en_ejecucion->estimado_rafaga);
+		log_info(logger, "EL ESTIMADO DE RAFAGA %f\n", proceso_en_ejecucion->estimado_rafaga);
 		enviar_contexto_de_ejecucion(proceso_en_ejecucion->contexto_de_ejecucion, cliente_cpu);
 
 		int ejecucion = 1;
@@ -313,8 +312,6 @@ void administrar_procesos_de_ready(int cliente_cpu){
 		t_contexto_de_ejecucion* contexto_actualizado = malloc(sizeof(t_contexto_de_ejecucion));
 		contexto_actualizado = deserializar_contexto_de_ejecucion(paquete->buffer);
 		proceso_en_ejecucion->contexto_de_ejecucion = contexto_actualizado;
-
-		log_info(logger, "Voy a ejecutar lo que recibi %i", paquete->codigo_operacion);
 
 		char* parametros_retorno;
 		
@@ -339,6 +336,7 @@ void administrar_procesos_de_ready(int cliente_cpu){
 				sem_post(&mutex_cola_exit);
 
 				sem_post(&semaforo_procesos_en_exit);
+
 				ejecucion = 0;
 				//Actualizo el Proceso_en_ejecucion y lo mando a exit
 				//Mando un mensaje a la consola del proceso avisándole que completó la ejecución
@@ -396,14 +394,8 @@ void administrar_procesos_de_ready(int cliente_cpu){
 
 void manipulador_de_IO(char* tiempo_en_blocked, int pid){
 	int tiempo = atoi(tiempo_en_blocked);
-	time_t tiempo_de_inicio,tiempo_de_salida;
-	time(&tiempo_de_inicio);
 	printf("EMPIEZO A DORMIR\n");
 	sleep(tiempo);
-	time(&tiempo_de_salida);
-	double tiempo_final = difftime(tiempo_de_salida, tiempo_de_inicio);
-	printf("TERMINO DE DORMIR, TARDE %f\n", tiempo_final);
-
 	t_pcb* pcb;
 
 	bool buscar_proceso(void* elemento){
@@ -438,12 +430,11 @@ void* manipulador_de_IO_wrapper(void* arg){
 
  int wait_recurso(char* recurso, t_pcb* proceso){
 	Recurso* recurso_solicitado;
-	printf("EL RECURSO ES %s\n", recurso);
+	log_info(logger, "El recurso solicitado es %s\n", recurso);
 	t_list* lista_con_recurso = list_create();
 	bool obtenerRecurso(void* elemento){
 		Recurso* recurso_a_obtener;
 		recurso_a_obtener = elemento;
-		printf("EL RECURSO EN RECURSO A OBTENER ES: %s \n", recurso_a_obtener->recurso);
 
 		return strcmp(recurso_a_obtener->recurso,recurso) == 0;
 	}

@@ -1,0 +1,64 @@
+#include"manejo_recursos.h" 
+ int wait_recurso(char* recurso, t_pcb* proceso){
+	Recurso* recurso_solicitado;
+	log_info(logger, "El recurso solicitado es %s\n", recurso);
+	t_list* lista_con_recurso = list_create();
+	bool obtenerRecurso(void* elemento){
+		Recurso* recurso_a_obtener;
+		recurso_a_obtener = elemento;
+
+		return strcmp(recurso_a_obtener->recurso,recurso) == 0;
+	}
+	lista_con_recurso = list_filter(recursos,obtenerRecurso);
+	if(list_size(lista_con_recurso) == 0){
+		log_info(logger, "El recurso solicitado no existe");
+		sem_wait(&mutex_cola_exit);
+		queue_push(cola_exit,proceso);
+		sem_post(&mutex_cola_exit);
+
+		sem_post(&semaforo_procesos_en_exit);
+
+		return 1;
+	} 
+	recurso_solicitado = list_get(lista_con_recurso,0);
+	recurso_solicitado->instancias -= 1;
+	if(recurso_solicitado->instancias < 0){
+		queue_push(recurso_solicitado->cola_de_bloqueados,proceso);
+		printf("LA CANTIDAD DE PROCESOS BLOQUEADOS POR %s ES %d", recurso, queue_size(recurso_solicitado->cola_de_bloqueados));
+		return 1;
+	}
+	return 0;
+ }
+
+int signal_recurso(char* recurso,t_pcb* proceso){
+	Recurso* recurso_solicitado;
+	t_list* lista_con_recurso = list_create();
+	bool obtenerRecurso(void* elemento){
+		Recurso* recurso_a_obtener;
+		recurso_a_obtener = elemento;
+		return strcmp(recurso_a_obtener->recurso,recurso) == 0;
+	}
+	lista_con_recurso = list_filter(recursos,obtenerRecurso);
+	if(list_size(lista_con_recurso) == 0){
+		log_info(logger, "El recurso mencionado no existe");
+		sem_wait(&mutex_cola_exit);
+		queue_push(cola_exit,proceso);
+		sem_post(&mutex_cola_exit);
+		sem_post(&semaforo_procesos_en_exit);
+		return 1;
+	} 
+	recurso_solicitado = list_get(lista_con_recurso, 0);
+	recurso_solicitado->instancias += 1;
+	if(	recurso_solicitado->instancias <= 0 ){
+		t_pcb* proceso_bloqueado_por_recurso;
+		proceso_bloqueado_por_recurso = queue_pop(recurso_solicitado->cola_de_bloqueados);
+		
+		sem_wait(&mutex_cola_ready);
+		queue_push(cola_ready, proceso_bloqueado_por_recurso);
+		sem_post(&mutex_cola_ready);
+
+		sem_post(&semaforo_procesos_en_ready);
+	}
+	return 0;
+ }
+ 

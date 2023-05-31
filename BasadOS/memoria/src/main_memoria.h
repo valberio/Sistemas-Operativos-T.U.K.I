@@ -8,7 +8,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 
-
+#define IP "127.0.0.1"
 void* comunicacion_con_cpu();
 
 

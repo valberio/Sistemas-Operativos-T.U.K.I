@@ -36,7 +36,7 @@ int main(void)
 	logger = iniciar_logger("log_kernel.log", "LOG_KERNEL");
 	config = iniciar_config("configs/config_kernel.config");
 
-	char* ip;
+
 	cola_new = queue_create();
 	cola_ready = queue_create();
 	cola_blocked = queue_create();
@@ -71,11 +71,13 @@ int main(void)
 	sem_init(&mutex_cola_blocked, 0, 1);
 	sem_init(&mutex_cola_exit, 0, 1);
 
-	ip = config_get_string_value(config, "IP");
 	
-	/*char* puerto_memoria_kernel = config_get_string_value(config, "PUERTO_MEMORIA");
+	
+	/*
+	char* ip_memoria = config_get_string_value(config, "IP_MEMORIA");
+	char* puerto_memoria_kernel = config_get_string_value(config, "PUERTO_MEMORIA");
 
-	int cliente_kernel = crear_conexion_al_server(logger, ip, puerto_memoria_kernel);
+	int cliente_kernel = crear_conexion_al_server(logger, ip_memoria, puerto_memoria_kernel);
 
 	 if (cliente_kernel)
 	 {
@@ -83,12 +85,14 @@ int main(void)
 	 }
 */
 	//Conecto el kernel como cliente a la CPU
+	char* ip_cpu = config_get_string_value(config, "IP_CPU");
 	char* puerto_cpu_kernel = config_get_string_value(config, "PUERTO_CPU");
-	int cliente_cpu = crear_conexion_al_server(logger, ip, puerto_cpu_kernel);
+	int cliente_cpu = crear_conexion_al_server(logger, ip_cpu, puerto_cpu_kernel);
 	
 	// //Conecto el kernel como cliente del filesystem
+	// char* ip_filesystem = config_get_string_value(config, "IP_FILESYSTEM");
 	// char* puerto_filesystem_kernel = config_get_string_value(config, "PUERTO_FILESYSTEM");;
-	// //int cliente_filesystem = crear_conexion_al_server(logger, ip, puerto_filesystem_kernel);
+	// //int cliente_filesystem = crear_conexion_al_server(logger, ip_filesystem, puerto_filesystem_kernel);
 	// if (cliente_filesystem)
 	// {
 	// 	log_info(logger, "El kernel envió su conexión al filesystem!");
@@ -97,9 +101,9 @@ int main(void)
 	//Abro el server del kernel para recibir conexiones de la consola
 	
 	//CODIGO DE ESCUCHA
-
-	char* puerto_kernel_consola = config_get_string_value(config, "PUERTO_CONSOLA");
-	int server_consola = iniciar_servidor(logger, ip, puerto_kernel_consola);
+	char* ip_consola = config_get_string_value(config, "IP_CPU");//HARCODEADO
+	char* puerto_kernel_consola = config_get_string_value(config, "PUERTO_ESCUCHA");
+	int server_consola = iniciar_servidor(logger, ip_consola, puerto_kernel_consola);
 	if (server_consola != -1)
 	{
 		log_info(logger, "El servidor del kernel se inició");

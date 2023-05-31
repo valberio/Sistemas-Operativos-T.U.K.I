@@ -1,4 +1,4 @@
-#include "main.h"
+#include "main_memoria.h"
 
 /*------------------------------------------------------------------*/
 /*						CHECKPOINT 2								*/
@@ -18,16 +18,16 @@ int main(int argc, char* argv[]) {
 	//La memoria tiene en paralelo 3 conexiones: con kernel, cpu, y fileSystem
 
 
-	//Creo el server de la memoria en esta ip y puerto
+	//Creo el server de la memoria en esta IP y puerto
 
-	char* ip = config_get_string_value(config, "IP");
-	char* puerto_kernel = config_get_string_value(config, "PUERTO_KERNEL");
+	//char* IP = config_get_string_value(config,  IP");
+	char* puerto_escucha = config_get_string_value(config, "PUERTO_ESCUCHA");
+    int servidor = iniciar_servidor(logger, IP, puerto_escucha);
 
-    char* puerto_filesystem = config_get_string_value(config, "PUERTO_FILESYSTEM");
-
-	int servidor_memoria_kernel = iniciar_servidor(logger, ip, puerto_kernel);
+    int conexion_cpu = esperar_cliente(servidor);
+	
     
-    //int servidor_memoria_filesystem = iniciar_servidor(logger, ip, puerto_filesystem);
+    //int servidor_memoria_filesystem = iniciar_servidor(logger, IP, puerto_escucha);
 	//Guardo las conexiones con cada modulo en un socket distinto,
 	//cada módulo se conecta a través de un puerto diferente.
    
@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
     pthread_create(&hilo_comunicacion_cpu, NULL, comunicacion_con_cpu, NULL);
     
 
-   int conexion_kernel = esperar_cliente(servidor_memoria_kernel);
+   int conexion_kernel = esperar_cliente(servidor);
    if (conexion_kernel)
    {
 		log_info(logger, "Se conecto el kernel");
@@ -60,11 +60,7 @@ int main(int argc, char* argv[]) {
 
 void* comunicacion_con_cpu()
 {
-	char* ip = config_get_string_value(config, "IP");
-    char* puerto_cpu = config_get_string_value(config, "PUERTO_CPU");
-    int servidor_memoria_cpu = iniciar_servidor(logger, ip, puerto_cpu);
-    int conexion_cpu = esperar_cliente(servidor_memoria_cpu);
-    while(conexion_cpu)
+   while(conexion_cpu)
     {
         t_paquete* peticion = recibir_paquete(conexion_cpu);
         t_paquete* paquete_respuesta = crear_paquete();

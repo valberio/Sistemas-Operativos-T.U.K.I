@@ -19,7 +19,7 @@ int main(void)
 
 	t_log *logger = iniciar_logger("log_cpu.log", "LOG_CPU");
 	t_config *config = iniciar_config("configs/cpu.config");
-	int retardo_instruccion = config_get_int_value(config, "RETARDO_INSTRUCCION");
+	int retardo_instruccion = config_get_int_value(config, "RETARDO_INSTRUCCION") / 1000;
 
 	// CPU como cliente para memoria
 	int conexion_memoria_cpu = conectarse_a_memoria(config, logger);
@@ -89,7 +89,7 @@ int main(void)
 
 int conectarse_a_memoria(t_config *config, t_log *logger)
 {
-	char *ip = config_get_string_value(config, "IP");
+	char *ip = config_get_string_value(config, "IP_MEMORIA");
 	char *puerto_memoria_cpu = config_get_string_value(config, "PUERTO_MEMORIA");
 
 	int conexion_memoria_cpu = crear_conexion_al_server(logger, ip, puerto_memoria_cpu);
@@ -104,8 +104,8 @@ int conectarse_a_memoria(t_config *config, t_log *logger)
 
 int conexion_a_kernel(t_config *config, t_log *logger)
 {
-	char *puerto_cpu_kernel = config_get_string_value(config, "PUERTO_KERNEL");
-	char *ip = config_get_string_value(config, "IP");
+	char *puerto_cpu_kernel = config_get_string_value(config, "PUERTO_ESCUCHA");
+	char *ip = config_get_string_value(config, "IP_MEMORIA");//HARCODEADOO
 
 	int server_para_kernel = iniciar_servidor(logger, ip, puerto_cpu_kernel);
 

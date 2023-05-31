@@ -36,7 +36,9 @@ int iniciar_servidor(t_log* logger, char* ip, char* puerto)
 int esperar_cliente(int socket_servidor)
 {
 	int socket_cliente = accept(socket_servidor, NULL, NULL);
+	printf("SE CONECTO UN NUEVO CLIENTE\n");
 	return socket_cliente;
+	
 }
 
 int recibir_operacion(int socket_cliente)

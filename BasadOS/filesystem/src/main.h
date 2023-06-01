@@ -14,14 +14,14 @@ typedef struct {
 }t_superbloque;
 
 typedef struct {
-
+    char* data;
 }t_bloque;
 
 typedef struct {
     char* name;
-    uint32_t size;
-    uint32_t* direct_pointer;
-    uint32_t* indirect_pointer
+    uint32_t size; //En bytes
+    uint32_t* direct_pointer; //Apunta al primer bloque de datos del archivo.
+    uint32_t* indirect_pointer //Apunta a un bloque que contendrá los punteros a los siguientes bloques del archivo.
 }t_fcb; 
 
 #endif /* FILESYSTEM_H_ */

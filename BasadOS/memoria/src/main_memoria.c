@@ -34,15 +34,44 @@ int main(int argc, char* argv[]) {
      //Lanzo el hilo que espera pedidos de la CPU
     int conexion_cpu = esperar_cliente(servidor);
 
+    int conexion_kernel = esperar_cliente(servidor);
+
     parametros_de_hilo parametros_cpu;
     parametros_cpu.conexion = conexion_cpu;
 
     pthread_t hilo_comunicacion_cpu;
     pthread_create(&hilo_comunicacion_cpu, NULL, comunicacion_con_cpu, (void*)&parametros_cpu);
     
-    pthread_join(hilo_comunicacion_cpu, NULL);
+
+    parametros_de_hilo parametros_kernel;
+    parametros_kernel.conexion = conexion_kernel;
+
+    pthread_t hilo_comunicacion_kernel;
+    pthread_create(&hilo_comunicacion_kernel, NULL, comunicacion_con_kernel, (void*)&parametros_kernel);
+
+    //pthread_join(hilo_comunicacion_cpu, NULL);
+    pthread_join(hilo_comunicacion_kernel, NULL);
 }
 
+
+void* comunicacion_con_kernel(void* arg)
+{
+    parametros_de_hilo* parametros = (parametros_de_hilo*)arg;
+
+    int conexion_kernel = parametros->conexion;
+
+    if (conexion_kernel == -1) {log_info(logger, "Error con la conexión al kernel"); return NULL;}
+
+    while(conexion_kernel >= 0)
+    {
+        char* mensaje = recibir_mensaje(conexion_kernel);
+        log_info(logger, "Recibí de kernel: %s", mensaje);
+    }
+
+    return  NULL;   
+
+
+}
 
 void* comunicacion_con_cpu(void* arg)
 {
@@ -82,3 +111,4 @@ void* comunicacion_con_cpu(void* arg)
     }
     return NULL;
 }
+

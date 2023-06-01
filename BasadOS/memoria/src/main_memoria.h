@@ -9,7 +9,8 @@
 #include <semaphore.h>
 
 #define IP "127.0.0.1"
-void* comunicacion_con_cpu();
+void* comunicacion_con_cpu(void* );
+void* comunicacion_con_kernel(void* arg);
 
 
 #endif /* MEMORIA_H_ */

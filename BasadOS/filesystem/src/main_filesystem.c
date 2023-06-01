@@ -114,14 +114,75 @@ int truncar_archivo(char* nombre_archivo, int nro_bloques, t_superbloque superbl
 Ampliar el tamaño del archivo: Al momento de ampliar el tamaño del archivo deberá actualizar el tamaño del archivo en el FCB y se le deberán asignar tantos bloques como sea necesario para poder direccionar el nuevo tamaño.
 Reducir el tamaño del archivo: Se deberá asignar el nuevo tamaño del archivo en el FCB y se deberán marcar como libres todos los bloques que ya no sean necesarios para direccionar el tamaño del archivo (descartando desde el final del archivo hacia el principio).
 */
+	char* ruta;
+	strcpy(ruta, "../files/");
+	strcat(ruta, nombre_archivo);
+	strcat(ruta, ".config");
+	FILE* archivo_fcb
 	if(abrir_archivo(nombre_archivo, superbloque, bitarray)){
 		t_fcb fcb = leer_fcb(nombre_archivo);
 		if(fcb.direct_pointer == NULL && bloques <= 0){
 			log_info(logger, "No se puede truncvar el archivo.");
 		}
 		else if (fcb.direct_pointer == NULL && bloques >= 0){ //Ampliar el tamaño del archivo
-		
+			for(int i = 0; i < bloques; i++){
+				asignar_bloque(fcb, bitarray, archivo_de_bloques);
+			}
 		}
+	}
+	//guardar fcb
+}
+
+int buscar_bloque_disponible(t_bitarray* bitarray, t_superbloque superbloque){
+	int i = 0;
+	bool bit = bitarray_test_bit(bitarray, i);
+	while(i < superbloque.block_count && bit != 0){
+		i++;
+	}
+	return i;
+}
+
+void agregar_bloque_a_lista(FILE* archivo_de_bloques, t_bitarray* bitarray, t_superbloque superbloque, int indirect_pointer){
+	int nuevo_bloque = buscar_bloque_disponible(bitarray, superbloque);
+	bitarray_set_bit(bitarray, nuevo_bloque);
+	t_bloque bloque = leer_bloque(archivo_de_bloques, superbloque, indirect_pointer);
+	strcat(bloque.data, (char*) nuevo_bloque);
+	escribir_bloque(archivo_de_bloques, indirect_pointer, superbloque);
+}
+
+void asignar_bloque(t_fcb* fcb, t_bitarray* bitarray, FILE* archivo_de_bloques){
+	if(fcb->direct_pointer == NULL){
+		fcb->direct_pointer = buscar_bloque_disponible(bitarray, superbloque);
+		bitarray_set_bit(bitarray, fcb->direct_pointer);
+	}
+	else if (fcb->direct_pointer != NULL && fcb->indirect_pointer == NULL){
+		fcb->indirect_pointer = buscar_bloque_disponible(bitarray, superbloque);
+		bitarray_set_bit(bitarray, fcb->indirect_pointer);
+		agregar_bloque_a_lista()
+	}
+}
+
+t_bitarray* leer_bitmap(FILE* bitmap t_bitarray* bitarray, t_superbloque t_superbloque){
+	bool temp_value;
+	fseek(bitmap, 0, seek_set);
+	for(int i = 0; i < t_superbloque.block_count; i++){
+		fread(temp_value, size, 1, *bitarray);
+		if(temp_value){
+			bitarray_set_bit(bitarray, i);
+		}
+		else{
+			bitarray_clean_bit(bitarray, i);
+		}
+	}
+	return bitarray;
+}
+
+void escribir_bitmap(FILE* bitmap t_bitarray* bitarray, t_superbloque t_superbloque){
+	bool temp_value;
+	fseek(bitmap, 0, seek_set);
+	for(int i = 0; i < t_superbloque.block_count; i++){
+		temp_value = bitarray_test_bit(bitarray, i);
+		fwrite(temp_value, size, 1, *bitarray);
 	}
 }
 

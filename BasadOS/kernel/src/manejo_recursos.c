@@ -70,7 +70,7 @@ int signal_recurso(char* recurso,t_pcb* proceso){
 		
 		sem_wait(&mutex_cola_ready);
 		queue_push(cola_ready, proceso_bloqueado_por_recurso);
-		//log_info(logger,"Cola Ready Hola: [%s]",obtener_pids_en_ready());
+		//log_info(logger,"Cola Ready %i: [%s]");
 		sem_post(&mutex_cola_ready);
 	
 

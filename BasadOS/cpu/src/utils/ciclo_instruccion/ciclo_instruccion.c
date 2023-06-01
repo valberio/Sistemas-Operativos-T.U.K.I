@@ -60,8 +60,10 @@ int execute(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contex
 			resultado = signal_instruccion(logger, contexto, conexion_cpu_kernel, instrucciones);
 			break;
 		case CREATE_SEGMENT:
+			resultado = create_segment(logger, instrucciones, contexto, conexion_cpu_kernel);
 			break;
 		case DELETE_SEGMENT:
+			resultado = delete_segment(logger, instrucciones, contexto, conexion_cpu_kernel);
 			break;			
 		case YIELD:
 			resultado = yield(logger, contexto, conexion_cpu_kernel);

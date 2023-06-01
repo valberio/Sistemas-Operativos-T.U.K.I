@@ -34,7 +34,7 @@ extern t_list* recursos;
 extern t_log* logger;
 extern t_config* config;
 
-void administrar_procesos_de_ready(int );
+void administrar_procesos_de_ready(int , int);
 void administrar_procesos_de_new(int );
 void* administrar_procesos_de_exit();
 

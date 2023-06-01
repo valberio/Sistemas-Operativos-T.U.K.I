@@ -254,3 +254,28 @@ int mov_out(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contex
     return 0;
 }
 
+int create_segment(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_kernel_cpu)
+{
+    //Le digo a KERNEL que le diga a MEMORIA que tiene que crear un segmento
+    log_info(logger, "PID: %i EJECUTANDO: %s PARAMETROS: %s, %s", contexto->pid, instrucciones[0], instrucciones[1], instrucciones[2]);
+
+    t_paquete* paquete = crear_paquete();
+    paquete->codigo_operacion = CREAR_SEGMENTO;
+
+    enviar_paquete(paquete, conexion_kernel_cpu);
+
+    return 0;
+}
+
+int delete_segment(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_kernel_cpu)
+{
+    //Le digo a KERNEL que le diga a MEMORIA que tiene que crear un segmento
+    log_info(logger, "PID: %i EJECUTANDO: %s PARAMETROS: %s", contexto->pid, instrucciones[0], instrucciones[1]);
+
+    t_paquete* paquete = crear_paquete();
+    paquete->codigo_operacion = ELIMINAR_SEGMENTO;
+
+    enviar_paquete(paquete, conexion_kernel_cpu);
+
+    return 0;
+}

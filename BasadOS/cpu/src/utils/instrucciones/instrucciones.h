@@ -23,7 +23,7 @@ int exit_instruccion(t_log* logger, t_contexto_de_ejecucion* contexto, int conex
 int wait(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel, char** instrucciones);
 int signal_instruccion(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel, char** instrucciones);
 int i_o(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel, char** instrucciones);
-int create_segment(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int id_segmento, int tamano);
+int create_segment(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_kernel_cpu);
 int delete_segment(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int id_segmento);
 
 enum Registros string_a_registro(char* registro);

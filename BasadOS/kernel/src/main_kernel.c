@@ -77,7 +77,9 @@ int main(void)
 	//Conecto el kernel como cliente a la CPU
 	char* ip_cpu = config_get_string_value(config, "IP_CPU");
 	char* puerto_cpu_kernel = config_get_string_value(config, "PUERTO_CPU");
+	char* puerto_kernel_memoria = config_get_string_value(config, "PUERTO_MEMORIA");
 	int cliente_cpu = crear_conexion_al_server(logger, ip_cpu, puerto_cpu_kernel);
+	int cliente_memoria = crear_conexion_al_server(logger, ip_cpu, puerto_kernel_memoria);
 	
 	// //Conecto el kernel como cliente del filesystem
 	// char* ip_filesystem = config_get_string_value(config, "IP_FILESYSTEM");
@@ -119,7 +121,7 @@ int main(void)
 	pthread_create(&hilo_administrador_de_exit, NULL, administrar_procesos_de_exit, NULL);
 	pthread_detach(hilo_administrador_de_exit);
 
-	administrar_procesos_de_ready(cliente_cpu);
+	administrar_procesos_de_ready(cliente_cpu, cliente_memoria);
 
 	terminar_programa(logger, config);
 	liberar_conexion(cliente_cpu);

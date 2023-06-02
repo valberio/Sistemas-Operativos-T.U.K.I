@@ -39,6 +39,7 @@ void *recibir_de_consolas_wrapper(void *arg) {
 
 void recibir_de_consolas(int server_consola) {
 	int i = 0;
+
 	while(true){
 		int conexion_consola = esperar_cliente(server_consola);
 		char* codigo_recibido = recibir_mensaje(conexion_consola);

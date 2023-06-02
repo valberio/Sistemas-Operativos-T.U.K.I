@@ -1,4 +1,17 @@
 #! /usr/bin/bash
+cd ../memoria
+> ./log_memoria.log
+echo "PUERTO_ESCUCHA=8002
+TAM_MEMORIA=4096
+TAM_SEGMENTO_0=128
+CANT_SEGMENTOS=16
+RETARDO_MEMORIA=1000
+RETARDO_COMPACTACION=60000
+ALGORITMO_ASIGNACION=BEST" > ./configs/memoria.config
+make
+./bin/memoria.out > /dev/null & 
+processmemoria=$!
+sleep 2
 cd ../cpu
 > ./log_cpu.log
 echo "RETARDO_INSTRUCCION=1000
@@ -8,6 +21,7 @@ PUERTO_ESCUCHA=8001
 TAM_MAX_SEGMENTO=128" > ./configs/cpu.config
 make
 ./bin/cpu.out > /dev/null & 
+processcpu=$!
 sleep 2
 cd ../kernel
 > ./log_kernel.log
@@ -26,6 +40,7 @@ RECURSOS=[DISCO]
 INSTANCIAS_RECURSOS=[1]" > ./configs/config_kernel.config
 make
 ./bin/kernel.out > /dev/null &
+processkernel=$!
 sleep 2
 cd ../consola
 > ./log_consola.log
@@ -45,8 +60,11 @@ wait $process3
 opcion="sas"
 while [ $opcion != "exit" ]
 do
-read -p "Imprimir resultados (consola,kernel,cpu) o exit: " opcion
+read -p "Imprimir resultados (consola,kernel,cpu,memoria) o exit: " opcion
 case $opcion in 
+    memoria)
+        clear && cat ../memoria/log_memoria.log
+        ;;
     consola)
         clear && cat ../consola/log_consola.log
         ;;
@@ -58,9 +76,14 @@ case $opcion in
         ;;
     exit)
         echo "Cerrando script."
+        kill -9 $processkernel
+        kill -9 $processcpu
+        kill -9 $processmemoria
         ;;
     *)
         echo "No es una opcion."
         ;;
 esac
 done
+
+

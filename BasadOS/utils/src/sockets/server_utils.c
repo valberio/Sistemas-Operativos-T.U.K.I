@@ -19,6 +19,7 @@ int iniciar_servidor(t_log* logger, char* ip, char* puerto)
     if(bind(socket_servidor, servinfo->ai_addr, servinfo->ai_addrlen) == -1)
     {
         log_info(logger, "El server no se pudo bindear al puerto, la razon es: %s", strerror((errno)));
+		return -1;
     }
 
     listen(socket_servidor, SOMAXCONN);
@@ -35,7 +36,7 @@ int iniciar_servidor(t_log* logger, char* ip, char* puerto)
 int esperar_cliente(int socket_servidor)
 {
 	int socket_cliente = accept(socket_servidor, NULL, NULL);
-	printf("SE CONECTO UN NUEVO CLIENTE\n");
+
 	return socket_cliente;
 	
 }

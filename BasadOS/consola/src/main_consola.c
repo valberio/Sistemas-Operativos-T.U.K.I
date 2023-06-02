@@ -15,16 +15,15 @@ int main(int argc, char* argv[]) {
 
     // Lectura e impresion de pseudocodigo
     t_config* config = iniciar_config(argv[1]);
+    t_log* logger_consola = iniciar_logger("log_consola.log","LOG_CONSOLA");   
 
     // Lectura de config
-    char* pseudocodigo = leer_Pseudocodigo(argv[2]);
-    printf("Este es el pseudocodigo \n%s", pseudocodigo);
-
+    char* pseudocodigo = leer_Pseudocodigo(logger_consola, argv[2]);
 
     char* ip = config_get_string_value(config, "IP");
     char* puerto_kernel_consola = config_get_string_value(config, "PUERTO_KERNEL");
 
-    int conexion_con_kernel = levantar_conexion(ip, puerto_kernel_consola);
+    int conexion_con_kernel = levantar_conexion(logger_consola, ip, puerto_kernel_consola);
     
     enviar_mensaje(pseudocodigo,conexion_con_kernel);    
     free(pseudocodigo);
@@ -33,38 +32,38 @@ int main(int argc, char* argv[]) {
     //Acá espero la respuesta de kernel
     t_paquete* paquete = crear_paquete();
     paquete = recibir_paquete(conexion_con_kernel);
-    printf("Recibo paquete\n");
+
     if (paquete->codigo_operacion)
     {
-        printf("Recibi la finalizacion de kernel %i\n", paquete->codigo_operacion);
+        log_info(logger_consola, "Recibi la finalizacion de kernel\n");
     }
 
     return 0;
 }
 
-int levantar_conexion(char* ip, char* puerto_kernel_consola) {
+int levantar_conexion(t_log* logger_consola, char* ip, char* puerto_kernel_consola) {
  
-    t_log* logger_consola = iniciar_logger("log_consola.log","LOG_CONSOLA");
+
     
     int conexion_kernel = crear_conexion_al_server(logger_consola, ip, puerto_kernel_consola);
     if (conexion_kernel)
     {
         log_info(logger_consola, "Consola envió su conexión al kernel");
-        log_destroy(logger_consola);
+
 
         return conexion_kernel;
     }
     if ((conexion_kernel == -1))
     {
         log_info(logger_consola, "Error conectando la consola con el kernel");
-        log_destroy(logger_consola);
+
         return -1;
     }
-   log_destroy(logger_consola);
+
    return 0;
 }
 
-char* leer_Pseudocodigo(char *archivo_path) {
+char* leer_Pseudocodigo(t_log* logger, char *archivo_path) {
     char* buffer = NULL;
     int string_size, read_size;
     FILE *handler = fopen(archivo_path, "r");
@@ -99,11 +98,11 @@ char* leer_Pseudocodigo(char *archivo_path) {
         fclose(handler);
     }
     else{
-        printf("No se puedo abrir el archivo \n");
+        log_info(logger, "No se puedo abrir el archivo \n");
     }
     if (buffer == NULL)
     {
-        printf("El buffer es nulo, abortando");
+        log_info(logger, "El buffer es nulo, abortando");
         EXIT_FAILURE;
     }
     return buffer;

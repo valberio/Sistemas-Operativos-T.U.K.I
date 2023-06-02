@@ -7,6 +7,7 @@
 #include "../../memoria/src/main.h"
 #include <commons/bitarray.h>
 #include <math.h>
+#include <libgen.h>
 
 typedef struct {
     unsigned block_size;

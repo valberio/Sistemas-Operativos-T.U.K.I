@@ -57,7 +57,7 @@ int abrir_archivo(char* nombre_archivo, t_superbloque* superbloque, t_bitarray* 
 	strcpy(ruta, "../files/");
 	strcat(ruta, nombre_archivo);
 	strcat(ruta, ".config");
-	FILE* archivo = fopen(ruta,"r");
+	FILE* archivo = fopen(ruta,"rb");
 	if(archivo != NULL){
 		fclose(archivo);
 		return 0;
@@ -72,7 +72,7 @@ int crear_archivo(char* nombre_archivo, t_superbloque* superbloque, t_bitarray* 
 	strcpy(ruta, "../files/");
 	strcat(ruta, nombre_archivo);
 	strcat(ruta, ".config");
-	FILE* archivo = fopen(ruta,"w");
+	FILE* archivo = fopen(ruta,"wb");
 	if(archivo == NULL){
 		log_info(logger, "Error al crear el archivo.");
 	}
@@ -116,6 +116,7 @@ Reducir el tamaño del archivo: Se deberá asignar el nuevo tamaño del archivo 
 */
 	char* ruta;
 	t_fcb fcb;
+	unsigned bloques_restantes;
 	strcpy(ruta, "../files/");
 	strcat(ruta, nombre_archivo);
 	strcat(ruta, ".config");
@@ -135,16 +136,37 @@ Reducir el tamaño del archivo: Se deberá asignar el nuevo tamaño del archivo 
 				fcb.direct_pointer = 0;
 		}
 		else if(fcb.direct_pointer != 0 && fcb.indirect_pointer != 0 && bloques > 0){
-			//liberar_bloques
+			bloques_restantes = liberar_bloques(archivo_de_bloques, fcb, bitarray, nro_bloques, superbloque);
+			if(bloques_restantes){
+				bitarray_clean_bit(bitarray, direct_pointer);
+				bitarray_clean_bit(bitarray, fcb.direct_pointer);
+				fcb.direct_pointer = 0;
+				bloques_restantes--;
+				if(bloques_restantes){
+					log_info(logger, "No se puede truncar el archivo.");
+				}
+			}
 		}
 	}
-	//guardar fcb
+	guardar_fcb(archivo_fcb, fcb);
+	fclose(archivo_fcb);
 }
 
-void liberar_bloques(t_fcb fcb, t_bitarray bitarray, int nro_bloques){
+void guardar_fcb(FILE* archivo_fcb, t_fcb fcb){
+	t_config* fcb_config;
+	config_set_value(fcb_config, "NOMBRE_ARCHIVO", fcb.name);
+	config_set_value(fcb_config, "TAMANIO_ARCHIVO", fcb.size);
+	config_set_value(fcb_config, "PUNTERO_DIRECTO", fcb.direct_pointer);
+	config_set_value(fcb_config, "PUNTERO_INDIRECTO", fcb.indirect_pointer);
+	config_save_in_file(fcb_config, dirname(archivo_fcb));
+	config_destroy(fcb_config);
+}
+
+int liberar_bloques(FILE* archivo_de_bloques, t_fcb fcb, t_bitarray bitarray, int nro_bloques, t_superbloque superbloque){
 	while(nro_bloques != 0 && fcb.indirect_pointer != 0){
-		//--
+		quitar_bloque_de_lista(archivo_de_bloques, bitarray, superbloque, fcb.indirect_pointer);
 	}
+	return int;
 }
 
 int buscar_bloque_disponible(t_bitarray* bitarray, t_superbloque superbloque){
@@ -165,7 +187,22 @@ void agregar_bloque_a_lista(FILE* archivo_de_bloques, t_bitarray* bitarray, t_su
 }
 
 void quitar_bloque_de_lista(FILE* archivo_de_bloques, t_bitarray* bitarray, t_superbloque superbloque, int indirect_pointer){
-
+	t_bloque bloque;
+	char read;
+	unint31_t eliminado = 0;
+	int i = 0;
+	char* ruta = dirname(archivo_de_bloques);
+	fseek(archivo_de_bloques, superbloque.block_size * indirect_pointer,SEEK_SET);
+	fread(bloque, superbloque.block_size, 1, archivo_de_bloques);
+	while(read != '\0'){
+		read = bloque.data[i];
+		i++
+	}
+	eliminado = bloque.data[i-4];
+	bitarray_clean_bit(bitarray, eliminado);
+	bloque.data[i-4] = '\0';
+	fseek(archivo_de_bloques, superbloque.block_size * indirect_pointer,SEEK_SET);
+	frwite(bloque, superbloque.block_size, 1, archivo_de_bloques);
 }
 
 

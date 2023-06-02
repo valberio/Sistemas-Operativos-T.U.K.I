@@ -2,6 +2,7 @@
     "files.associations": {
         "semaphore.h": "c",
         "server_utils.h": "c",
-        "bitarray.h": "c"
+        "bitarray.h": "c",
+        "loggers_utils.h": "c"
     }
 }

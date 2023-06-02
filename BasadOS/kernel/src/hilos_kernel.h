@@ -16,11 +16,12 @@ typedef struct{
 
 void crear_hilo(pthread_t,int ,void*(*)(void*));
 void crear_proceso(char* codigo_recibido, int socket_consola, double estimado_inicial);
+void* crear_proceso_wrapper(void* );
 void recibir_de_consolas(int server_consola);
 void* recibir_de_consolas_wrapper(void* );
-void* crear_proceso_wrapper(void* );
-void* administrar_procesos_de_new_wrapper(void* );
 void* manipulador_de_IO_wrapper(void* );
+void manipulador_de_IO(char*, int);
+
 
 
 #endif /* HILOS_KERNEL_H_ */

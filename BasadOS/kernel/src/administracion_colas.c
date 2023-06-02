@@ -12,12 +12,18 @@ void* administrar_procesos_de_exit(){
 		sem_post(&mutex_cola_exit);		
 
 		enviar_paquete(paquete, proceso_a_finalizar->socket_consola);
-		log_info(logger, "Envio el mensaje de finalizacion a consola \n");
+
 		sem_post(&semaforo_multiprogramacion);
 	}
 	return NULL;
 }
 
+void* administrar_procesos_de_new_wrapper(void* arg){
+	Parametros_de_hilo *args = (Parametros_de_hilo *)arg;
+    int parametro = args->conexion;
+    administrar_procesos_de_new(parametro);
+    return NULL;
+}
 
 void administrar_procesos_de_new(int cliente_cpu){
 	while(cliente_cpu){
@@ -34,6 +40,8 @@ void administrar_procesos_de_new(int cliente_cpu){
 		time(&(nuevo_pcb->tiempo_de_llegada_a_ready)); //ACA EMPIEZA A CORRER SU TIEMPO EN READY
 		queue_push(cola_ready, nuevo_pcb);
 		sem_post(&mutex_cola_ready);
+
+		log_info(logger, "PID: %i - Estado anterior: NEW - Estado actual: READY", nuevo_pcb->pid);
 
 		sem_post(&semaforo_procesos_en_ready);
 	}
@@ -56,6 +64,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria){
 		proceso_en_ejecucion = salida_FIFO();
 		}
 
+		log_info(logger, "PID: %i - Estado anterior: READY - Estado actual: RUNNING", proceso_en_ejecucion->pid);
 		proceso_en_ejecucion->inicio_de_uso_de_cpu = clock();//ACA SE INICIALIZA EL TIEMPO EN EJECUCION
 		
 		//PLANIFICACION
@@ -85,16 +94,19 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria){
 				queue_push(cola_ready, proceso_en_ejecucion);
 				sem_post(&mutex_cola_ready);
 				sem_post(&semaforo_procesos_en_ready);
+				log_info(logger, "PID: %i - Estado anterior: RUNNING - Estado actual: READY", proceso_en_ejecucion->pid);
 				ejecucion = 0;
 				break;
 
 			case FINALIZACION: //Caso EXIT
+
 				sem_wait(&mutex_cola_exit);
 				queue_push(cola_exit, proceso_en_ejecucion);
 				sem_post(&mutex_cola_exit);
 
 				sem_post(&semaforo_procesos_en_exit);
-
+				log_info(logger, "PID: %i - Estado anterior: RUNNING - Estado actual: EXIT", proceso_en_ejecucion->pid);
+				log_info(logger, "Finaliza el proceso %i - Motivo: SUCCES", proceso_en_ejecucion->pid);
 				ejecucion = 0;
 				//Actualizo el Proceso_en_ejecucion y lo mando a exit
 				//Mando un mensaje a la consola del proceso avisándole que completó la ejecución
@@ -119,6 +131,10 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria){
 				
 				pthread_create(&hilo_procesos_IO[i], NULL, manipulador_de_IO_wrapper, (void*)&parametros_IO);
 				pthread_detach(hilo_procesos_IO[i]);
+
+				log_info(logger, "PID: %i - Ejecuta IO: %s", proceso_en_ejecucion->pid, parametros_retorno);
+				log_info(logger, "PID: %i - Estado anterior: RUNNING - Estado actual: BLOCKED", proceso_en_ejecucion->pid);
+				log_info(logger, "PID: %i - Bloqueado por: IO", proceso_en_ejecucion->pid);
 				i++;
 				ejecucion = 0;
 				break;

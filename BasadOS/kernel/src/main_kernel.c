@@ -100,7 +100,7 @@ int main(void)
 	{
 		log_info(logger, "El servidor del kernel se inició");
 	}
-	//crear_hilo(hilo_receptor_de_consolas,parametros_hilo,server_consola,recibir_de_consolas_wrapper);
+	
 	//HILO 1: ESPERA CONEXIONES DE CONSOLA
 	Parametros_de_hilo parametros_hilo_consola_kernel;
 	parametros_hilo_consola_kernel.conexion = server_consola;

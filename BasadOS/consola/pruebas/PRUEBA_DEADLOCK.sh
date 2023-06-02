@@ -3,11 +3,11 @@ cd ../cpu
 > ./log_cpu.log
 echo "RETARDO_INSTRUCCION=1000
 IP_MEMORIA=127.0.0.1
-PUERTO_MEMORIA=8002
-PUERTO_ESCUCHA=8001
+PUERTO_MEMORIA=80002
+PUERTO_ESCUCHA=80001
 TAM_MAX_SEGMENTO=128" > ./configs/cpu.config
 make
-./bin/cpu.out &
+./bin/cpu.out > /dev/null &
 sleep 2
 cd ../kernel
 > ./log_kernel.log
@@ -16,32 +16,32 @@ PUERTO_MEMORIA=8002
 IP_FILESYSTEM=127.0.0.1
 PUERTO_FILESYSTEM=8003
 IP_CPU=127.0.0.1
-PUERTO_CPU=8001
-PUERTO_ESCUCHA=8000
+PUERTO_CPU=80001
+PUERTO_ESCUCHA=80000
 ALGORITMO_PLANIFICACION=FIFO
 ESTIMACION_INICIAL=10000
 HRRN_ALFA=0.5
 GRADO_MAX_MULTIPROGRAMACION=3
-RECURSOS=[DISCO,IMPRESORA,SCANNER]
+RECURSOS=[IMPRESORA, DISCO,SCANNER]
 INSTANCIAS_RECURSOS=[1,1,1]" > ./configs/config_kernel.config
 make
-./bin/kernel.out &
+./bin/kernel.out > /dev/null &
 sleep 2
 cd ../consola
 > ./log_cpu.log
 make
-./bin/consola.out "configs/consola.config" "pruebas/DEADLOCK_1.txt" &
+./bin/consola.out "configs/consola.config" "pruebas/DEADLOCK_1.txt" > /dev/null &
 process1=$?
 sleep 1
-./bin/consola.out "configs/consola.config" "pruebas/DEADLOCK_2.txt" & 
+./bin/consola.out "configs/consola.config" "pruebas/DEADLOCK_2.txt" > /dev/null & 
 process2=$?
 sleep 1
-./bin/consola.out "configs/consola.config" "pruebas/DEADLOCK_3.txt" &
+./bin/consola.out "configs/consola.config" "pruebas/DEADLOCK_3.txt" > /dev/null &
 process3=$?
-sleep 20
-./bin/consola.out "configs/consola.config" "pruebas/DEADLOCK_4.txt" &
+sleep 5
+./bin/consola.out "configs/consola.config" "pruebas/DEADLOCK_4.txt" > /dev/null &
 process4=$?
-read -p "Imprimir resultados (consola,kernel,cpu,proceso1,proceso2,proceso3,proceso4) o exit: " opcion
+opcion="sas"
 while [ $opcion != "exit" ]
 do
 read -p "Imprimir resultados (consola,kernel,cpu) o exit: " opcion

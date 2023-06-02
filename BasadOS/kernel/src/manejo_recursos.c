@@ -29,6 +29,9 @@ void crear_lista_de_recursos(t_list* recursos, char** recursos_array,char** inst
 		sem_wait(&mutex_cola_exit);
 		queue_push(cola_exit,proceso);
 		sem_post(&mutex_cola_exit);
+		
+		log_info(logger, "PID: %i - Estado Anterior: RUNNING - Estado Actual: EXIT", proceso->pid);
+		log_info(logger, "Finaliza el proceso %i - Motivo: SEG_FAULT", proceso->pid);
 
 		sem_post(&semaforo_procesos_en_exit);
 
@@ -39,6 +42,7 @@ void crear_lista_de_recursos(t_list* recursos, char** recursos_array,char** inst
 	log_info(logger,"PID: %i - Wait: %s - Instancias: %i",proceso->pid,recurso_solicitado->recurso,recurso_solicitado->instancias );
 	if(recurso_solicitado->instancias < 0){
 		queue_push(recurso_solicitado->cola_de_bloqueados,proceso);
+		log_info(logger, "PID: %i - Bloqueado por: %s", proceso->pid, recurso_solicitado->recurso);
 		return 1;
 	}
 	return 0;
@@ -58,6 +62,8 @@ int signal_recurso(char* recurso,t_pcb* proceso){
 		sem_wait(&mutex_cola_exit);
 		queue_push(cola_exit,proceso);
 		sem_post(&mutex_cola_exit);
+		log_info(logger, "PID: %i - Estado Anterior: RUNNING - Estado Actual: EXIT", proceso->pid);
+		log_info(logger, "Finaliza el proceso %i - Motivo: SEG_FAULT", proceso->pid);
 		sem_post(&semaforo_procesos_en_exit);
 		return 1;
 	} 
@@ -72,7 +78,7 @@ int signal_recurso(char* recurso,t_pcb* proceso){
 		queue_push(cola_ready, proceso_bloqueado_por_recurso);
 		//log_info(logger,"Cola Ready %i: [%s]");
 		sem_post(&mutex_cola_ready);
-	
+		log_info(logger, "PID: %i - Estado Anterior: BLOCKED - Estado Actual: READY", proceso->pid);
 
 		sem_post(&semaforo_procesos_en_ready);
 	}
@@ -88,4 +94,8 @@ size_t contarCadenas(char** array) {
     }
 
     return contador;
+}
+
+bool buscar_pid(void* pcb, int pid){
+	return ((t_pcb* )pcb)->pid == pid;
 }

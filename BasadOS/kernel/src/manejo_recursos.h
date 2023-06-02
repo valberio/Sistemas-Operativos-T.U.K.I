@@ -22,7 +22,6 @@ extern t_list* recursos;
 
 void crear_lista_de_recursos(t_list* , char** ,char**);
 bool buscar_pid(void* , int );
-void manipulador_de_IO(char* , int );
 int wait_recurso(char* , t_pcb* );
 size_t contarCadenas(char** array); 
 int signal_recurso(char* , t_pcb* );

@@ -23,7 +23,6 @@ extern t_config* config;
 t_pcb* salida_FIFO();
 t_pcb* salida_HRRN();
 void calcular_estimado_de_rafaga(t_pcb*);
-bool buscar_pid(void* , int );
 bool el_mayor_hrr_entre(t_pcb* , t_pcb* , time_t );
 
 

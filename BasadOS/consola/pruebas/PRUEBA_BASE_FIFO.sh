@@ -4,7 +4,7 @@ cd ../cpu
 echo "RETARDO_INSTRUCCION=1000
 IP_MEMORIA=127.0.0.1
 PUERTO_MEMORIA=8002
-PUERTO_ESCUCHA=8001
+PUERTO_ESCUCHA=80001
 TAM_MAX_SEGMENTO=128" > ./configs/cpu.config
 make
 ./bin/cpu.out > /dev/null & 
@@ -16,8 +16,8 @@ PUERTO_MEMORIA=8002
 IP_FILESYSTEM=127.0.0.1
 PUERTO_FILESYSTEM=8003
 IP_CPU=127.0.0.1
-PUERTO_CPU=8001
-PUERTO_ESCUCHA=8000
+PUERTO_CPU=80001
+PUERTO_ESCUCHA=80000
 ALGORITMO_PLANIFICACION=FIFO
 ESTIMACION_INICIAL=8000
 HRRN_ALFA=0.5
@@ -42,7 +42,7 @@ echo "Corriendo tests..."
 wait $process1
 wait $process2
 wait $process3
-read -p "Imprimir resultados (consola,kernel,cpu) o exit: " opcion
+opcion="sas"
 while [ $opcion != "exit" ]
 do
 read -p "Imprimir resultados (consola,kernel,cpu) o exit: " opcion

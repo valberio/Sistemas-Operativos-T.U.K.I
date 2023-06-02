@@ -42,7 +42,7 @@ echo "Corriendo tests..."
 wait $process1
 wait $process2
 wait $process3
-read -p "Imprimir resultados (consola,kernel,cpu) o exit: " opcion
+opcion="sas"
 while [ $opcion != "exit" ]
 do
 read -p "Imprimir resultados (consola,kernel,cpu) o exit: " opcion

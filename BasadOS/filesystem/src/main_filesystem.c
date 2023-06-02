@@ -88,8 +88,8 @@ void* crear_fcb(char* nombre_archivo){
 	t_config* fcb = config_create(ruta);
 	config_set_value(fcb, "NOMBRE_ARCHIVO", nombre_archivo);
 	config_set_value(fcb, "TAMANIO_ARCHIVO", "0");
-	config_set_value(fcb, "PUNTERO_DIRECTO", "NULL");
-	config_set_value(fcb, "PUNTERO_INDIRECTO", "NULL");
+	config_set_value(fcb, "PUNTERO_DIRECTO", "0");
+	config_set_value(fcb, "PUNTERO_INDIRECTO", "0");
 	config_save(fcb);
 	free(ruta);
 	return 0;
@@ -115,22 +115,36 @@ Ampliar el tamaño del archivo: Al momento de ampliar el tamaño del archivo deb
 Reducir el tamaño del archivo: Se deberá asignar el nuevo tamaño del archivo en el FCB y se deberán marcar como libres todos los bloques que ya no sean necesarios para direccionar el tamaño del archivo (descartando desde el final del archivo hacia el principio).
 */
 	char* ruta;
+	t_fcb fcb;
 	strcpy(ruta, "../files/");
 	strcat(ruta, nombre_archivo);
 	strcat(ruta, ".config");
 	FILE* archivo_fcb
 	if(abrir_archivo(nombre_archivo, superbloque, bitarray)){
-		t_fcb fcb = leer_fcb(nombre_archivo);
-		if(fcb.direct_pointer == NULL && bloques <= 0){
-			log_info(logger, "No se puede truncvar el archivo.");
+		fcb = leer_fcb(nombre_archivo);
+		if(fcb.direct_pointer == 0 && bloques <= 0){
+			log_info(logger, "No se puede truncar el archivo.");
 		}
-		else if (fcb.direct_pointer == NULL && bloques >= 0){ //Ampliar el tamaño del archivo
+		else if (bloques >= 0){ //Ampliar el tamaño del archivo
 			for(int i = 0; i < bloques; i++){
 				asignar_bloque(fcb, bitarray, archivo_de_bloques);
 			}
 		}
+		else if(fcb.direct_pointer != 0 && fcb.indirect_pointer == 0 && bloques == 1){
+				bitarray_clean_bit(bitarray, direct_pointer);
+				fcb.direct_pointer = 0;
+		}
+		else if(fcb.direct_pointer != 0 && fcb.indirect_pointer != 0 && bloques > 0){
+			//liberar_bloques
+		}
 	}
 	//guardar fcb
+}
+
+void liberar_bloques(t_fcb fcb, t_bitarray bitarray, int nro_bloques){
+	while(nro_bloques != 0 && fcb.indirect_pointer != 0){
+		//--
+	}
 }
 
 int buscar_bloque_disponible(t_bitarray* bitarray, t_superbloque superbloque){
@@ -150,12 +164,17 @@ void agregar_bloque_a_lista(FILE* archivo_de_bloques, t_bitarray* bitarray, t_su
 	escribir_bloque(archivo_de_bloques, indirect_pointer, superbloque);
 }
 
+void quitar_bloque_de_lista(FILE* archivo_de_bloques, t_bitarray* bitarray, t_superbloque superbloque, int indirect_pointer){
+
+}
+
+
 void asignar_bloque(t_fcb* fcb, t_bitarray* bitarray, FILE* archivo_de_bloques){
-	if(fcb->direct_pointer == NULL){
+	if(fcb->direct_pointer == 0){
 		fcb->direct_pointer = buscar_bloque_disponible(bitarray, superbloque);
 		bitarray_set_bit(bitarray, fcb->direct_pointer);
 	}
-	else if (fcb->direct_pointer != NULL && fcb->indirect_pointer == NULL){
+	else if (fcb->direct_pointer != 0 && fcb->indirect_pointer == 0){
 		fcb->indirect_pointer = buscar_bloque_disponible(bitarray, superbloque);
 		bitarray_set_bit(bitarray, fcb->indirect_pointer);
 		agregar_bloque_a_lista()

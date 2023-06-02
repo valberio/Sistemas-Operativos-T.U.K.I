@@ -15,7 +15,7 @@ typedef struct {
 }t_superbloque;
 
 typedef struct {
-    char* data;
+    uint32_t* data;
 }t_bloque;
 
 typedef struct {

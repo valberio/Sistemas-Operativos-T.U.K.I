@@ -180,21 +180,26 @@ int buscar_bloque_disponible(t_bitarray* bitarray, t_superbloque superbloque){
 
 void agregar_bloque_a_lista(FILE* archivo_de_bloques, t_bitarray* bitarray, t_superbloque superbloque, int indirect_pointer){
 	int nuevo_bloque = buscar_bloque_disponible(bitarray, superbloque);
+	unint31_t read;
+	unsigned i = 0;
 	bitarray_set_bit(bitarray, nuevo_bloque);
 	t_bloque bloque = leer_bloque(archivo_de_bloques, superbloque, indirect_pointer);
-	strcat(bloque.data, (char*) nuevo_bloque);
+	while(read != 0){
+		i++;
+	}
+	bloque.data[i] = (unint31_t) nuevo_bloque;
 	escribir_bloque(archivo_de_bloques, indirect_pointer, superbloque);
 }
 
 void quitar_bloque_de_lista(FILE* archivo_de_bloques, t_bitarray* bitarray, t_superbloque superbloque, int indirect_pointer){
 	t_bloque bloque;
-	char read;
+	unint31_t* read;
 	unint31_t eliminado = 0;
 	int i = 0;
 	char* ruta = dirname(archivo_de_bloques);
 	fseek(archivo_de_bloques, superbloque.block_size * indirect_pointer,SEEK_SET);
 	fread(bloque, superbloque.block_size, 1, archivo_de_bloques);
-	while(read != '\0'){
+	while(read != 0){
 		read = bloque.data[i];
 		i++
 	}
@@ -242,8 +247,8 @@ void escribir_bitmap(FILE* bitmap t_bitarray* bitarray, t_superbloque t_superblo
 	}
 }
 
-void escribir_bloque(FILE* archivo_de_bloques, t_bloque bloque, unsigned bloque, t_superbloque superbloque){
-	fwrite(bloque, superbloque.block_size, 1, archivo_de_bloques);
+void escribir_bloque(FILE* archivo_de_bloques, t_bloque bloque, unsigned nro_bloque, t_superbloque superbloque){
+	fwrite(bloque, superbloque.block_size * nro_bloque, 1, archivo_de_bloques);
 }
 
 t_bloque leer_bloque(FILE* archivo_de_bloques, t_superbloque superbloque, unsigned nro_bloque){
@@ -251,4 +256,59 @@ t_bloque leer_bloque(FILE* archivo_de_bloques, t_superbloque superbloque, unsign
 	fseek(archivo_superbloque, superbloque.block_size * nro_bloque, seek_set);
 	fread(bloque, superbloque.block_size, 1, archivo_de_bloques);
 	return bloque;
+}
+
+t_list* leer_archivo(FILE* archivo_de_bloques, char* nombre_archivo, t_superbloque superbloque){
+	t_fcb fcb = leer_fcb(nombre_archivo);
+	t_list* bloques = list_create();
+	t_bloque* bloque;
+	t_bloque bloque_aux;
+	int32_t nro_bloque;
+	fseek(archivo_de_bloques, superbloque.block_size * fcb.direct_pointer, SEEK_SET);
+	fread(bloque, superbloque.block_size, 1, archivo_de_bloques);
+	list_add(bloques, bloque);
+	fseek(archivo_de_bloques, superbloque.block_size * fcb.indirect_pointer, SEEK_SET);
+	fread(bloque, superbloque.block_size, 1, archivo_de_bloques);
+	nro_bloque = bloque->data[i];
+	fseek(archivo_de_bloques, superbloque.block_size * nro_bloque , SEEK_SET);
+	read(&bloque_aux, superbloque.block_size, 1, archivo_de_bloques);
+	list_add(bloques, &bloque_aux);
+	while(nro_bloque != 0){
+		nro_bloque = bloque->data[i];
+		fseek(archivo_de_bloques, superbloque.block_size * nro_bloque , SEEK_SET);
+		read(&bloque_aux, superbloque.block_size, 1, archivo_de_bloques);
+		list_add(bloques, &bloque_aux);
+	}
+	return bloques;
+}
+
+void escribir_archivo(FILE* archivo_de_bloques, char* nombre_archivo, uint32_t* data){
+	t_fcb fcb = leer_fcb(nombre_archivo);
+	t_list* bloques = list_create();
+	t_list* leidos = list_create();
+	uint31_t* direcciones, leido;
+	t_bloque bloque;
+	int i = 0, j = 0;
+	fseek(archivo_de_bloques, superbloque.block_size * fcb.direct_pointer, SEEK_SET);
+	bloque.data = data[i];
+	fwrite(&bloque, superbloque.block_size * fcb.direct_pointer, 1, archivo_de_bloques);
+	i +;
+	int32_t nro_bloque;
+	while(i < bloques->elements_count){
+		bloque.data = data[i];
+		list_add(bloques,bloque)
+		i++;;
+	}
+	fread(leido, sizeof(uint31_t) * superbloque.block_size ,1,fcb.indirect_pointer);
+	while(j < superbloque.block_size / sizeof(uint31_t)){
+		list_add(leidos,leido[j])
+	}
+	while(bloques != NULL){
+		
+		fwrite(&bloque, superbloque.block_size * fcb.indirect_pointer, 1, archivo_de_bloques);
+	}
+	while(j < leidos->elements_count){
+		bloque = list_get(bloques, j);
+		escribir_bloque(archivo_de_bloques,bloque, j, superbloque);
+	}
 }

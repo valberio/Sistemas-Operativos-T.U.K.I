@@ -43,7 +43,7 @@ int main(void)
 
 	//Conecto el filesystem como servidor del kernel
 	/*char* puerto_a_kernel = config_get_string_value(config, "PUERTO_KERNEL");
-	int servidor_filesystem = iniciar_servidor(logger, ip, puerto_a_kernel);
+	int servidor_filesystem = iniciar_servidor(logger, puerto_a_kernel);
 	int conexion_filesystem_kernel = esperar_cliente(logger, servidor_filesystem);
 
 	if (conexion_filesystem_kernel)

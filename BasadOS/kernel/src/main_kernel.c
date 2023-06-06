@@ -93,9 +93,8 @@ int main(void)
 	//Abro el server del kernel para recibir conexiones de la consola
 	
 	//CODIGO DE ESCUCHA
-	char* ip_kernel = config_get_string_value(config, "IP");//HARCODEADO
 	char* puerto_kernel_consola = config_get_string_value(config, "PUERTO_ESCUCHA");
-	int server_consola = iniciar_servidor(logger, ip_kernel, puerto_kernel_consola);
+	int server_consola = iniciar_servidor(logger, puerto_kernel_consola);
 	if (server_consola != -1)
 	{
 		log_info(logger, "El servidor del kernel se inició");

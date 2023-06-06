@@ -1,6 +1,6 @@
 #include"server_utils.h"
 
-int iniciar_servidor(t_log* logger, char* ip, char* puerto)
+int iniciar_servidor(t_log* logger, char* puerto)
 {
     int socket_servidor;
     struct addrinfo hints, *servinfo;
@@ -10,7 +10,7 @@ int iniciar_servidor(t_log* logger, char* ip, char* puerto)
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
 
-    getaddrinfo(ip, puerto, &hints, &servinfo);
+    getaddrinfo(IP, puerto, &hints, &servinfo);
 
     socket_servidor = socket(servinfo->ai_family,
                          servinfo->ai_socktype,

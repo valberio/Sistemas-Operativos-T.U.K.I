@@ -107,9 +107,8 @@ int conectarse_a_memoria(t_config *config, t_log *logger)
 int conexion_a_kernel(t_config *config, t_log *logger)
 {
 	char *puerto_cpu_kernel = config_get_string_value(config, "PUERTO_ESCUCHA");
-	char *ip = config_get_string_value(config, "IP");//HARCODEADOO
 
-	int server_para_kernel = iniciar_servidor(logger, ip, puerto_cpu_kernel);
+	int server_para_kernel = iniciar_servidor(logger, puerto_cpu_kernel);
 
 	int conexion_kernel = esperar_cliente(server_para_kernel);
 	return conexion_kernel;

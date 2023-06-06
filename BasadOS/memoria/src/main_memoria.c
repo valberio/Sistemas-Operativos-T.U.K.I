@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
 
 	//char* IP = config_get_string_value(config,  IP");
 	char* puerto_escucha = config_get_string_value(config, "PUERTO_ESCUCHA");
-    int servidor = iniciar_servidor(logger, IP, puerto_escucha);
+    int servidor = iniciar_servidor(logger, puerto_escucha);
 
     
      //Lanzo el hilo que espera pedidos de la CPU

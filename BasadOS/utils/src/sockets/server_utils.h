@@ -13,13 +13,14 @@
 #include <errno.h>
 #include<assert.h>
 #include<sockets/client_utils.h>
+#define IP "127.0.0.1"
 
 extern t_log* logger;
 
 
 void* recibir_buffer(int*, int);
 
-int iniciar_servidor(t_log* , char* , char* );
+int iniciar_servidor(t_log* , char* );
 int esperar_cliente(int);
 t_paquete* recibir_paquete(int);
 char* recibir_mensaje(int);

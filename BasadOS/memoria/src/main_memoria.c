@@ -11,11 +11,15 @@
 t_log* logger;
 t_config* config;
 
-typedef struct 
-{
-    int conexion;
-}parametros_de_hilo;
+t_list* lista_de_memoria;
 
+
+void* espacio_de_memoria;
+
+//Levantar algoritmo de config
+//Conectar con kernel
+//Conectar con cpu
+//Serializar lista de segmentos
 
 int main(int argc, char* argv[]) {
 
@@ -27,7 +31,7 @@ int main(int argc, char* argv[]) {
 	//Creo el server de la memoria en esta IP y puerto
 
 	//char* IP = config_get_string_value(config,  IP");
-	char* puerto_escucha = config_get_string_value(config, "PUERTO_ESCUCHA");
+	/*char* puerto_escucha = config_get_string_value(config, "PUERTO_ESCUCHA");
     int servidor = iniciar_servidor(logger, puerto_escucha);
 
     
@@ -50,65 +54,28 @@ int main(int argc, char* argv[]) {
     pthread_create(&hilo_comunicacion_kernel, NULL, comunicacion_con_kernel, (void*)&parametros_kernel);
 
     //pthread_join(hilo_comunicacion_cpu, NULL);
-    pthread_join(hilo_comunicacion_kernel, NULL);
-}
+    pthread_join(hilo_comunicacion_kernel, NULL);*/
+
+    int tamano = config_get_int_value(config,"TAM_MEMORIA");
+    int tamano_segmento_0 = config_get_int_value(config,"TAM_SEGMENTO_0");
+    
 
 
-void* comunicacion_con_kernel(void* arg)
-{
-    parametros_de_hilo* parametros = (parametros_de_hilo*)arg;
 
-    int conexion_kernel = parametros->conexion;
+    reservar_espacio_de_memoria(tamano,tamano_segmento_0);
+    crear_segmento(1, 10);
+    crear_segmento(2, 10);
+    eliminar_segmento(1);
+    crear_segmento(4, 10);
+   
 
-    if (conexion_kernel == -1) {log_info(logger, "Error con la conexión al kernel"); return NULL;}
 
-    while(conexion_kernel >= 0)
+    
+
+    for (int i = 0; i < list_size(lista_de_memoria); i++)
     {
-        char* mensaje = recibir_mensaje(conexion_kernel);
-        log_info(logger, "Recibí de kernel: %s", mensaje);
+        Segmento* seg = list_get(lista_de_memoria,i);
+        printf("Saque en la posicion %i el seg de id %i con un tamano de %i \n", i, seg->id, seg->tamano);
     }
-
-    return  NULL;   
-
-
-}
-
-void* comunicacion_con_cpu(void* arg)
-{
-
-    parametros_de_hilo* parametros = (parametros_de_hilo*)arg;
-
-    int conexion_cpu = parametros->conexion;
-
-    if(conexion_cpu == -1)
-    {
-        log_info(logger, "Error conectandose con la CPU");
-        return NULL;
-    } 
-
-
-    while(conexion_cpu >= 0)
-    {
-        t_paquete* peticion = recibir_paquete(conexion_cpu);
-        t_paquete* paquete_respuesta = crear_paquete();
-
-        log_info(logger, "MEMORIA recibió una petición del CPU");
-
-        switch(peticion->codigo_operacion)
-        {
-            case 0: //Caso lectura
-                
-                paquete_respuesta->codigo_operacion = 0; 
-                enviar_paquete(paquete_respuesta, conexion_cpu);
-                log_info(logger, "MEMORIA respondió una petición de lectura del CPU");
-                break;
-            case 1: //Caso escritura
-                paquete_respuesta->codigo_operacion = 1;
-                enviar_paquete(paquete_respuesta, conexion_cpu);
-                log_info(logger, "MEMORIA respondió una petición de escritura del CPU");
-                break;
-        }
-    }
-    return NULL;
 }
 

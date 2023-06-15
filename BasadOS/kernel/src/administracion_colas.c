@@ -148,7 +148,6 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria){
 					ejecucion = 0;		
 				} break;
 
-
 			case LIBERACION_RECURSO: //Caso SIGNAL, proceso libera un recurso
 				parametros_retorno = recibir_mensaje(cliente_cpu);
 				if(signal_recurso(parametros_retorno, proceso_en_ejecucion) == 0){
@@ -158,6 +157,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria){
 					ejecucion = 0;
 				}
 				break;
+
 			case CREAR_SEGMENTO:
 				//CPU me pide que le pida a memoria que cree un segmento
 				enviar_mensaje("Creame un segmento", cliente_memoria);

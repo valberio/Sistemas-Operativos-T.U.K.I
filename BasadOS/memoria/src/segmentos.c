@@ -56,7 +56,7 @@ int obtener_espacio_libre_total(){
 Segmento* crear_segmento(int id, int tamano){
     bool hay_hueco_libre(void* un_segmento){
         Segmento* hueco_libre = un_segmento;
-        return hueco_libre->tamano >= tamano && hueco_libre->id == -1;
+        return (hueco_libre->tamano >= tamano) && (hueco_libre->id < 0);
     }
     
     if(list_any_satisfy(lista_de_memoria,hay_hueco_libre)){
@@ -86,7 +86,7 @@ Segmento* crear_segmento(int id, int tamano){
         return nuevo_segmento;
        
     }
-    if(obtener_espacio_libre_total() > tamano){
+    if(obtener_espacio_libre_total() > tamano){ //Que hacia esto??
         Segmento* nuevo_segmento = inicializar_segmento(-1);
         return nuevo_segmento;
     }
@@ -103,7 +103,7 @@ void eliminar_segmento(int id){
     }
     Segmento* segmento = list_find(lista_de_memoria,obtener_segmento);
     huecos_libres--;
-    segmento->id = huecos_libres; //TODO: Unificarlo con el hueco anterior
+    segmento->id = huecos_libres; 
     
     unificacion_de_huecos_libres();
 }
@@ -166,9 +166,9 @@ Segmento* best_fit(int id, int tamano){
 }
 
 
-void* peticion_de_lectura(void* direccion_a_leer){
+/*void* peticion_de_lectura(void* direccion_a_leer){
     char* leido = (char*)*direccion_a_leer; 
-}
+}*/
 
 
 

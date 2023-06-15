@@ -60,17 +60,12 @@ int main(int argc, char* argv[]) {
     int tamano_segmento_0 = config_get_int_value(config,"TAM_SEGMENTO_0");
     
 
-
-
     reservar_espacio_de_memoria(tamano,tamano_segmento_0);
     crear_segmento(1, 10);
     crear_segmento(2, 10);
     eliminar_segmento(1);
     crear_segmento(4, 10);
    
-
-
-    
 
     for (int i = 0; i < list_size(lista_de_memoria); i++)
     {

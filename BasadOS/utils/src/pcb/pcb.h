@@ -7,6 +7,8 @@
 #include<stdlib.h>
 #include<sys/time.h>
 #include<sockets/client_utils.h>
+//#include<../../../memoria/src/segmentos.h>
+
 
 typedef struct{
     char AX[5];
@@ -36,6 +38,7 @@ typedef struct{
                                 //struct, lo aloco y lleno con los datos que preciso en
                                 //el constructor del contexto
     t_list* instrucciones;
+    t_list* tabla_segmentos;
 }t_contexto_de_ejecucion;
 
 typedef struct{
@@ -43,13 +46,15 @@ typedef struct{
     uint32_t pid;
     int socket_consola;
     t_contexto_de_ejecucion* contexto_de_ejecucion;
-    t_list* tabla_segmentos;
-    t_list* tabla_archivos_abiertos;
+    
     time_t tiempo_de_llegada_a_ready;
     clock_t inicio_de_uso_de_cpu;
     clock_t fin_de_uso_de_cpu;
     double estimado_rafaga;
     double tiempo_de_la_ultima_rafaga;
+
+    t_list* tabla_segmentos;
+    t_list* tabla_archivos_abiertos;
 } t_pcb;
 
 t_contexto_de_ejecucion* crear_contexto_de_ejecucion(char* instrucciones);

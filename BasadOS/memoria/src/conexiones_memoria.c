@@ -1,5 +1,5 @@
 #include "conexiones_memoria.h"
-//el que hace memoria es puto
+
 void* comunicacion_con_kernel(void* arg)
 {
     parametros_de_hilo* parametros = (parametros_de_hilo*)arg;
@@ -40,7 +40,6 @@ void* comunicacion_con_cpu(void* arg)
         switch(peticion->codigo_operacion)
         {
             case 0: //Caso lectura
-                
                 paquete_respuesta->codigo_operacion = 0; 
                 enviar_paquete(paquete_respuesta, conexion_cpu);
                 log_info(logger, "MEMORIA respondió una petición de lectura del CPU");

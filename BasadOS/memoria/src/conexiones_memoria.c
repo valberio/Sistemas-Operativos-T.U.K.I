@@ -1,5 +1,5 @@
 #include "conexiones_memoria.h"
-
+//el que hace memoria es puto
 void* comunicacion_con_kernel(void* arg)
 {
     parametros_de_hilo* parametros = (parametros_de_hilo*)arg;

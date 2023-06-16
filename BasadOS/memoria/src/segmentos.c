@@ -1,4 +1,4 @@
-#include "segmentos.h"
+ #include "segmentos.h"
 
 Segmento* segmento_0;
 int huecos_libres = -1;
@@ -172,3 +172,13 @@ Segmento* best_fit(int id, int tamano){
 
 
 
+// prueba serializacion tabla de segmentos
+//int sas(void){
+// t_contexto_de_ejecucion* contexto_prueba = crear_contexto_de_ejecucion("SET MOV CREATE")
+//
+// crear_segmento(1,4);
+// crear_segmento(2,4);
+// crear_segmento(3,4);
+// crear_segmento(4,4);
+// list_add()
+//}

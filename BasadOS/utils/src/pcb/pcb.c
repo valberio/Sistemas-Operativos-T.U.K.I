@@ -184,12 +184,14 @@ t_buffer* serializar_contexto(t_contexto_de_ejecucion* contexto)
     {
         tamano += sizeof(uint32_t);
     }
-    // tamano += list_size(contexto->tabla_segmentos);
-    // for(int i = 0; i < list_size(contexto->tabla_segmentos);i++){
-    //     tamano += 2 * sizeof(int);
-    //     Segmento segmento = list_get(contexto->tabla_segmentos,i);
-    //     tamano += segmento->tamano;  
-    // }
+
+    //5. Tamaño de la TABLA de segmentos
+    tamano += list_size(contexto->tabla_segmentos);
+    for(int i = 0; i < list_size(contexto->tabla_segmentos);i++){
+        tamano += 2 * sizeof(int);
+        Segmento* segmento = list_get(contexto->tabla_segmentos,i);
+        tamano += segmento->tamano;  
+    }
     
     //Aloco la memoria para el buffer.
     buffer->size = tamano;
@@ -229,15 +231,17 @@ t_buffer* serializar_contexto(t_contexto_de_ejecucion* contexto)
         memcpy(stream + offset, list_get(contexto->instrucciones, i), contexto->largo_instruccion[i]); //Puede que aca haya q usar &
         offset += contexto->largo_instruccion[i];
     }
-    // memcpy(stream + offset, list_size(contexto->tabla_segmentos), sizeof(int));
-    // offset += list_size(contexto->tabla_segmentos);
-    // for(int i = 0; i < list_size(contexto->tabla_segmentos);i++){
-    //     Segmento segmento = list_get(contexto->tabla_segmentos,i);
-    //     int tamano_segmento;
-    //     tamano_segmento = 2 * sizeof(int) + segmento->tamano;  
-    //     memcpy(stream + offset, segmento, tamano_segmento); //Puede que aca haya q usar &
-    //     offset += tamano_segmento;
-    // }
+    //Copio la tabla de instrucciones 
+    int tamano_tabla_segmentos = list_size(contexto->tabla_segmentos);
+    memcpy(stream + offset, &(tamano_tabla_segmentos) , sizeof(int));
+    offset += list_size(contexto->tabla_segmentos);
+    for(int i = 0; i < list_size(contexto->tabla_segmentos);i++){
+        Segmento* segmento = list_get(contexto->tabla_segmentos,i);
+        int tamano_segmento;
+        tamano_segmento = 2 * sizeof(int) + segmento->tamano;  
+        memcpy(stream + offset, segmento, tamano_segmento); //Puede que aca haya q usar &
+        offset += tamano_segmento;
+    }
     //Guardo el buffer
     buffer->stream = stream;
     buffer->size = tamano;  
@@ -295,20 +299,22 @@ t_contexto_de_ejecucion* deserializar_contexto_de_ejecucion(t_buffer* buffer){
         stream += contexto->largo_instruccion[i];
 
     }
-    //int cantidad_segmentos;
-    //memcpy(cantidad_segmentos,stream,sizeof(int));
-    //stream += sizeof(int);
-    //for(int i = 0; i < cantidad_segmentos;i++){
-        //Segmento* segmento = malloc(sizeof(Segmento));
-        //memcpy(segmento->tamano,stream,sizeof(int));
-        //stream += sizeof(int);
-        //memcpy(segmento->id,stream,sizeof(int));
-        //stream += sizeof(int);
-        //segmento->inicio = malloc(segmento->tamano);
-        //memcpy(segmento->inicio,stream,sizeof(segmento->tamano));
-        //stream += sizeof(tamano);
-        //list_add(contexto->tabla_segmentos,segmento);
-    // }
+
+    //4. Desearlizo la TABLA de segmentos
+    int cantidad_segmentos;
+    memcpy(&(cantidad_segmentos),stream,sizeof(int));
+    stream += sizeof(int);
+    for(int i = 0; i < cantidad_segmentos;i++){
+        Segmento* segmento = malloc(sizeof(Segmento));
+        memcpy(&(segmento->tamano),stream,sizeof(int));
+        stream += sizeof(int);
+        memcpy(&(segmento->id),stream,sizeof(int));
+        stream += sizeof(int);
+        segmento->inicio = malloc(segmento->tamano);
+        memcpy(segmento->inicio,stream,sizeof(segmento->tamano));
+        stream += sizeof(segmento->tamano);
+        list_add(contexto->tabla_segmentos,segmento);
+    }
 
     return contexto;
 }

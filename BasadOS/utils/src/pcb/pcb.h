@@ -7,7 +7,7 @@
 #include<stdlib.h>
 #include<sys/time.h>
 #include<sockets/client_utils.h>
-//#include<../../../memoria/src/segmentos.h>
+#include"../../../memoria/src/segmentos.h"
 
 
 typedef struct{

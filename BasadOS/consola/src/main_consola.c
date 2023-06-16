@@ -42,9 +42,7 @@ int main(int argc, char* argv[]) {
 }
 
 int levantar_conexion(t_log* logger_consola, char* ip, char* puerto_kernel_consola) {
- 
 
-    
     int conexion_kernel = crear_conexion_al_server(logger_consola, ip, puerto_kernel_consola);
     if (conexion_kernel)
     {

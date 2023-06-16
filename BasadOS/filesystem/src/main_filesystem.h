@@ -37,7 +37,7 @@ void quitar_bloque_de_lista(FILE *archivo_de_bloques, t_bitarray *bitarray, t_su
 int buscar_bloque_disponible(t_bitarray *bitarray, t_superbloque superbloque);
 void agregar_bloque_a_lista(FILE *archivo_de_bloques, t_bitarray *bitarray, t_superbloque superbloque, int indirect_pointer);
 void escribir_bitmap(FILE *bitmap, t_bitarray *bitarray, t_superbloque t_superbloque);
-void asignar_bloque(t_fcb *fcb, t_bitarray *bitarray, FILE *archivo_de_bloques);
+void asignar_bloque(t_fcb *fcb, t_bitarray *bitarray, FILE *archivo_de_bloques, t_superbloque *superbloque);
 t_bitarray *leer_bitmap(FILE *bitmap, t_bitarray *bitarray, t_superbloque t_superbloque);
 void escribir_bloque(FILE *archivo_de_bloques, t_bloque bloque, unsigned nro_bloque, t_superbloque superbloque);
 t_bloque leer_bloque(FILE *archivo_de_bloques, t_superbloque superbloque, unsigned nro_bloque);

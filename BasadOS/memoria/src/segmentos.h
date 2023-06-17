@@ -5,6 +5,7 @@
 #include <commons/config.h>
 #include<stdlib.h>
 #include<stdio.h>
+#include<pcb/pcb.h>
 
 extern t_list* lista_de_memoria;
 extern t_config* config;
@@ -27,5 +28,6 @@ void unificacion_de_huecos_libres();
 Segmento* first_fit(int,int);
 Segmento* worst_fit(int,int);
 Segmento* best_fit(int,int);
+
 
 #endif /* SEGMENTOS_H_ */

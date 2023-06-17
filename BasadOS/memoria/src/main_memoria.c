@@ -61,16 +61,6 @@ int main(int argc, char* argv[]) {
     
 
     reservar_espacio_de_memoria(tamano,tamano_segmento_0);
-    crear_segmento(1, 10);
-    crear_segmento(2, 10);
-    eliminar_segmento(1);
-    crear_segmento(4, 10);
-   
 
-    for (int i = 0; i < list_size(lista_de_memoria); i++)
-    {
-        Segmento* seg = list_get(lista_de_memoria,i);
-        printf("Saque en la posicion %i el seg de id %i con un tamano de %i \n", i, seg->id, seg->tamano);
-    }
 }
 

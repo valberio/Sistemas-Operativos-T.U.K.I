@@ -28,7 +28,7 @@ void reservar_espacio_de_memoria(int tamano_memoria, int tamano_segmento_0){
     lista_de_memoria = list_create();
     Segmento* hueco_libre = inicializar_segmento(tamano_memoria);
     hueco_libre->id = huecos_libres;
-    hueco_libre->inicio = espacio_de_memoria;
+    hueco_libre->inicio = espacio_de_memoria; // aca habria que apuntar al primer byte, no a todo el espacio de memoria creo
     list_add(lista_de_memoria,hueco_libre);
     segmento_0 = crear_segmento(0,tamano_segmento_0);
 }
@@ -172,13 +172,3 @@ Segmento* best_fit(int id, int tamano){
 
 
 
-// prueba serializacion tabla de segmentos
-//int sas(void){
-// t_contexto_de_ejecucion* contexto_prueba = crear_contexto_de_ejecucion("SET MOV CREATE")
-//
-// crear_segmento(1,4);
-// crear_segmento(2,4);
-// crear_segmento(3,4);
-// crear_segmento(4,4);
-// list_add()
-//}

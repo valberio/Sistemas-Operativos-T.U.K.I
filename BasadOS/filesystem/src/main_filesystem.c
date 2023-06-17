@@ -22,7 +22,7 @@ int main()
 	superbloque.block_size = config_get_string_value(superbloque_config, "BLOCK_SIZE");
 	superbloque.block_count = config_get_string_value(superbloque_config, "BLOCK_COUNT");
 
-	void *bitmap = malloc((int)ceil(superbloque.block_count / 8.0));
+	void *bitmap = malloc((int)(ceil(superbloque.block_count / 8.0)));
 	t_bitarray *bitarray = bitarray_create(bitmap, sizeof(bitmap));
 
 	char *ip = config_get_string_value(config, "IP_MEMORIA");
@@ -34,7 +34,7 @@ int main()
 	{
 		log_info(logger, "Filesystem se conectó a memoria!");
 		t_contexto_de_ejecucion *contexto = malloc(sizeof(t_contexto_de_ejecucion));
-		contexto = recibir_contexto(cliente_filesystem_a_memoria);
+		contexto = recibir_contexto_de_ejecucion(cliente_filesystem_a_memoria);
 		printf("Recibi instruccion %s, %s\n", list_get(contexto->instrucciones, 0), list_get(contexto->instrucciones, 1));
 	}
 }

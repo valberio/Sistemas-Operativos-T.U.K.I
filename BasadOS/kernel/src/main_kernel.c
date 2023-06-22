@@ -63,7 +63,7 @@ int main(void)
 
 	
 	
-	/*
+	
 	char* ip_memoria = config_get_string_value(config, "IP_MEMORIA");
 	char* puerto_memoria_kernel = config_get_string_value(config, "PUERTO_MEMORIA");
 
@@ -73,7 +73,7 @@ int main(void)
 	 {
 	 	log_info(logger, "El kernel envió su conexión a la memoria!");
 	 }
-*/
+
 	//Conecto el kernel como cliente a la CPU
 	char* ip_cpu = config_get_string_value(config, "IP_CPU");
 	char* puerto_cpu_kernel = config_get_string_value(config, "PUERTO_CPU");
@@ -81,14 +81,14 @@ int main(void)
 	int cliente_cpu = crear_conexion_al_server(logger, ip_cpu, puerto_cpu_kernel);
 	int cliente_memoria = crear_conexion_al_server(logger, ip_cpu, puerto_kernel_memoria);
 	
-	// //Conecto el kernel como cliente del filesystem
-	// char* ip_filesystem = config_get_string_value(config, "IP_FILESYSTEM");
-	// char* puerto_filesystem_kernel = config_get_string_value(config, "PUERTO_FILESYSTEM");;
-	// //int cliente_filesystem = crear_conexion_al_server(logger, ip_filesystem, puerto_filesystem_kernel);
-	// if (cliente_filesystem)
-	// {
-	// 	log_info(logger, "El kernel envió su conexión al filesystem!");
-	// }
+	// Conecto el kernel como cliente del filesystem
+	char* ip_filesystem = config_get_string_value(config, "IP_FILESYSTEM");
+	char* puerto_filesystem_kernel = config_get_string_value(config, "PUERTO_FILESYSTEM");;
+	int cliente_filesystem = crear_conexion_al_server(logger, ip_filesystem, puerto_filesystem_kernel);
+	if (cliente_filesystem)
+	{
+		log_info(logger, "El kernel envió su conexión al filesystem!");
+	}
 	
 	//Abro el server del kernel para recibir conexiones de la consola
 	

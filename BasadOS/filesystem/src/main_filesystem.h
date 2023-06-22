@@ -8,11 +8,13 @@
 #include <commons/bitarray.h>
 #include <math.h>
 #include <libgen.h>
-
+#include <dirent.h>
+#include <sys/stat.h>
+#include <string.h>
 
 typedef struct {
-    unsigned block_size;
-    unsigned block_count;
+    double block_size;
+    double block_count;
 }t_superbloque;
 
 typedef struct {
@@ -26,8 +28,9 @@ typedef struct {
     uint32_t indirect_pointer; //Apunta a un bloque que contendrá los punteros a los siguientes bloques del archivo.
 }t_fcb; 
 
-void *crear_fcb(char *nombre_archivo);
-t_fcb leer_fcb(char *nombre_archivo);
+//void *crear_fcb(char *nombre_archivo);
+void crear_estructuras_fcb(); 
+void leer_fcb(char *nombre_archivo);
 int crear_archivo(char *nombre_archivo, t_superbloque *superbloque, t_bitarray *bitarray);
 int abrir_archivo(char *nombre_archivo, t_superbloque superbloque, t_bitarray *bitarray);
 int truncar_archivo(char *nombre_archivo, int nro_bloques, t_superbloque superbloque, t_bitarray *bitarray, int bloques, t_log *logger, FILE* archivo_de_bloques);

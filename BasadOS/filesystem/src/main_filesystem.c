@@ -11,25 +11,42 @@
 /*------------------------------------------------------------------*/
 
 t_log* logger;
+t_list* fcb_list;
+t_config *config;
 
 int main()
 {
 	t_log *logger = iniciar_logger("log_filesystem.log", "LOG_FILESYSTEM");
-	t_config *config = iniciar_config("configs/filesystem.config");
-
-	t_superbloque superbloque;
-	t_config *superbloque_config = iniciar_config("configs/superbloque.config");
-	superbloque.block_size = config_get_string_value(superbloque_config, "BLOCK_SIZE");
-	superbloque.block_count = config_get_string_value(superbloque_config, "BLOCK_COUNT");
-
-	void *bitmap = malloc((int)(ceil(superbloque.block_count / 8.0)));
-	t_bitarray *bitarray = bitarray_create(bitmap, sizeof(bitmap));
-
-	char *ip = config_get_string_value(config, "IP_MEMORIA");
-
+	config = iniciar_config("configs/filesystem.config");
+	fcb_list = list_create();
 	// Conecto filesystem como cliente a memoria
 	char *puerto_a_memoria = config_get_string_value(config, "PUERTO_MEMORIA");
+	char *ip = config_get_string_value(config, "IP_MEMORIA");
 	int cliente_filesystem_a_memoria = crear_conexion_al_server(logger, ip, puerto_a_memoria);
+
+	//Levanto el bitmap de bloques
+	t_superbloque superbloque;
+	t_config *superbloque_config = iniciar_config(config_get_string_value(config, "PATH_SUPERBLOQUE"));
+	superbloque.block_size = config_get_double_value(superbloque_config, "BLOCK_SIZE");
+	superbloque.block_count = config_get_double_value(superbloque_config, "BLOCK_COUNT");
+	void *bitmap = malloc((superbloque.block_count / 8));
+	t_bitarray *bitarray = bitarray_create(bitmap, sizeof(bitmap));
+
+	//Recorro el directorio de FCBs y creo estructuras
+	crear_estructuras_fcb();
+	log_info(logger, "La cantidad de FCBs es de %d\n", list_size(fcb_list));
+	log_info(logger, "El nombre del primer archivo FCB es: %s", ((t_fcb*)list_get(fcb_list, 0))->name);
+	
+
+	// Conecto el filesystem como servidor del kernel
+	char* puerto_a_kernel = config_get_string_value(config, "PUERTO_ESCUCHA");
+	int servidor_filesystem = iniciar_servidor(logger, puerto_a_kernel);
+	int conexion_filesystem_kernel = esperar_cliente(servidor_filesystem);
+	if (conexion_filesystem_kernel)
+	{
+	log_info(logger, "Filesystem recibió la conexión del kernel!");
+	}
+	
 	if (cliente_filesystem_a_memoria)
 	{
 		log_info(logger, "Filesystem se conectó a memoria!");
@@ -39,17 +56,53 @@ int main()
 	}
 }
 
-// Conecto el filesystem como servidor del kernel
-/*char* puerto_a_kernel = config_get_string_value(config, "PUERTO_ESCUCHA");
-int servidor_filesystem = iniciar_servidor(logger, puerto_a_kernel);
-int conexion_filesystem_kernel = esperar_cliente(logger, servidor_filesystem);
+void crear_estructuras_fcb() 
+{	
+	char* directorio_fcb = config_get_string_value(config, "PATH_FCB");
+	DIR *dir = opendir(directorio_fcb);
+	struct dirent *ent;
+    struct stat file_info;
+	if(dir != NULL) {
+		while ((ent = readdir(dir)) != NULL) {
+			//omite los directorios . y ..
+			if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0) {
+                continue;
+            }
 
-if (conexion_filesystem_kernel)
-{
-	log_info(logger, "Filesystem recibió la conexión del kernel!");
+			char* ruta_fcb = (char *)malloc(strlen(directorio_fcb) + strlen(ent->d_name) + 2); // +2 para / y \0
+            sprintf(ruta_fcb, "%s/%s", directorio_fcb, ent->d_name);
+            
+            // Obtener información del archivo
+            if (stat(ruta_fcb, &file_info) == -1) {
+                log_info(logger, "Error al obtener información del archivo: %s\n", ent->d_name);
+                free(ruta_fcb);
+                continue;
+            }
+			printf("Archivo: %s\n", ruta_fcb);
+			leer_fcb(ruta_fcb);
+			free(ruta_fcb);
+		}
+		closedir(dir);	
+	} else {
+        // Error al abrir el directorio
+        printf("No se pudo abrir el directorio: %s\n", directorio_fcb);
+	}
 }
-}*/
 
+
+void leer_fcb(char* ruta) //habria que llamarlo crear fcb
+{
+	t_fcb* fcb = malloc(sizeof(t_fcb));
+	t_config *fcb_config = config_create(ruta);
+	fcb->direct_pointer = config_get_int_value(fcb_config, "PUNTERO_DIRECTO");
+	fcb->indirect_pointer = config_get_int_value(fcb_config, "PUNTERO_INDIRECTO");
+	fcb->size = config_get_int_value(fcb_config, "TAMANIO_ARCHIVO");
+	fcb->name = malloc(sizeof(config_get_string_value(fcb_config, "NOMBRE_ARCHIVO")) + 2);
+	strcpy(fcb->name, config_get_string_value(fcb_config, "NOMBRE_ARCHIVO"));
+	list_add(fcb_list, fcb);
+}
+
+/*
 int abrir_archivo(char *nombre_archivo, t_superbloque superbloque, t_bitarray *bitarray)
 {
 	char *ruta;
@@ -99,27 +152,13 @@ void *crear_fcb(char *nombre_archivo)
 	return 0;
 }
 
-t_fcb leer_fcb(char *nombre_archivo)
-{
-	t_fcb fcb;
-	char *ruta;
-	strcpy(ruta, "../files/");
-	strcat(ruta, nombre_archivo);
-	strcat(ruta, ".config");
-	t_config *fcb_config = config_create(ruta);
-	fcb.direct_pointer = config_get_int_value(fcb_config, "PUNTERO_DIRECTO");
-	fcb.indirect_pointer = config_get_int_value(fcb_config, "PUNTERO_INDIRECTO");
-	fcb.size = config_get_int_value(fcb_config, "TAMANIO_ARCHIVO");
-	strcpy(fcb.name, config_get_int_value(fcb_config, "NOMBRE_ARCHIVO"));
-	return fcb;
-}
 
 int truncar_archivo(char *nombre_archivo, int nro_bloques, t_superbloque superbloque, t_bitarray *bitarray, int bloques, t_log *logger, FILE* archivo_de_bloques)
 {
-	/*Al momento de truncar un archivo, pueden ocurrir 2 situaciones:
+Al momento de truncar un archivo, pueden ocurrir 2 situaciones:
 Ampliar el tamaño del archivo: Al momento de ampliar el tamaño del archivo deberá actualizar el tamaño del archivo en el FCB y se le deberán asignar tantos bloques como sea necesario para poder direccionar el nuevo tamaño.
 Reducir el tamaño del archivo: Se deberá asignar el nuevo tamaño del archivo en el FCB y se deberán marcar como libres todos los bloques que ya no sean necesarios para direccionar el tamaño del archivo (descartando desde el final del archivo hacia el principio).
-*/
+
 	char *ruta;
 	t_fcb *fcb = malloc(sizeof(t_fcb));
 	unsigned bloques_restantes;
@@ -293,7 +332,7 @@ t_bloque* leer_bloque(FILE *archivo_de_bloques, t_superbloque superbloque, unsig
 	fread(bloque, superbloque.block_size, 1, archivo_de_bloques);
 	return bloque;
 }
-/*
+
 t_list *leer_archivo(FILE *archivo_de_bloques, char *nombre_archivo, t_superbloque superbloque)
 {
 	t_fcb fcb = leer_fcb(nombre_archivo);

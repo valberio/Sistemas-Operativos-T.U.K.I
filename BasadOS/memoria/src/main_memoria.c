@@ -30,16 +30,27 @@ int main(int argc, char* argv[]) {
 
 	//Creo el server de la memoria en esta IP y puerto
 
-	//char* IP = config_get_string_value(config,  IP");
-	/*char* puerto_escucha = config_get_string_value(config, "PUERTO_ESCUCHA");
+	char* puerto_escucha = config_get_string_value(config, "PUERTO_ESCUCHA");
     int servidor = iniciar_servidor(logger, puerto_escucha);
 
     
      //Lanzo el hilo que espera pedidos de la CPU
-    int conexion_cpu = esperar_cliente(servidor);
+
+    int conexion_filesystem = esperar_cliente(servidor);
+    if(conexion_filesystem != -1){
+        log_info(logger, "Se conecto el filesystem");
+    }
+
+    /*int conexion_cpu = esperar_cliente(servidor);
+    if(conexion_cpu != -1){
+        log_info(logger, "Se conecto el cpu");
+    }
 
     int conexion_kernel = esperar_cliente(servidor);
-
+    if(conexion_kernel != -1){
+        log_info(logger, "Se conecto el kernel");
+    }
+    
     parametros_de_hilo parametros_cpu;
     parametros_cpu.conexion = conexion_cpu;
 
@@ -55,6 +66,7 @@ int main(int argc, char* argv[]) {
 
     //pthread_join(hilo_comunicacion_cpu, NULL);
     pthread_join(hilo_comunicacion_kernel, NULL);*/
+
 
     int tamano = config_get_int_value(config,"TAM_MEMORIA");
     int tamano_segmento_0 = config_get_int_value(config,"TAM_SEGMENTO_0");

@@ -10,9 +10,11 @@
 																	*/
 /*------------------------------------------------------------------*/
 
-t_log* logger;
+
 t_list* fcb_list;
 t_config *config;
+t_log* logger;
+
 
 int main()
 {
@@ -36,7 +38,7 @@ int main()
 	crear_estructuras_fcb();
 	log_info(logger, "La cantidad de FCBs es de %d\n", list_size(fcb_list));
 	log_info(logger, "El nombre del primer archivo FCB es: %s", ((t_fcb*)list_get(fcb_list, 0))->name);
-	
+	abrir_archivo(logger, "Notas1erParcialK9999");
 
 	// Conecto el filesystem como servidor del kernel
 	char* puerto_a_kernel = config_get_string_value(config, "PUERTO_ESCUCHA");
@@ -47,12 +49,23 @@ int main()
 	log_info(logger, "Filesystem recibió la conexión del kernel!");
 	}
 	
-	if (cliente_filesystem_a_memoria)
+	/*if (cliente_filesystem_a_memoria)
 	{
 		log_info(logger, "Filesystem se conectó a memoria!");
 		t_contexto_de_ejecucion *contexto = malloc(sizeof(t_contexto_de_ejecucion));
 		contexto = recibir_contexto_de_ejecucion(cliente_filesystem_a_memoria);
 		printf("Recibi instruccion %s, %s\n", list_get(contexto->instrucciones, 0), list_get(contexto->instrucciones, 1));
+	}*/
+}
+
+void recibir_ordenes_kernel(int conexion_filesystem_kernel, t_log* logger){
+	while(conexion_filesystem_kernel){
+		char* operacion = recibir_mensaje(conexion_filesystem_kernel);
+		if(!strcmp(operacion, "ABRIR_ARCHIVO")){
+			char* nombre_archivo = recibir_mensaje(conexion_filesystem_kernel);
+			abrir_archivo(logger, nombre_archivo);
+		}
+		
 	}
 }
 
@@ -79,7 +92,7 @@ void crear_estructuras_fcb()
                 continue;
             }
 			printf("Archivo: %s\n", ruta_fcb);
-			leer_fcb(ruta_fcb);
+			crear_fcb(ruta_fcb);
 			free(ruta_fcb);
 		}
 		closedir(dir);	
@@ -90,7 +103,7 @@ void crear_estructuras_fcb()
 }
 
 
-void leer_fcb(char* ruta) //habria que llamarlo crear fcb
+void crear_fcb(char* ruta) //habria que llamarlo crear fcb
 {
 	t_fcb* fcb = malloc(sizeof(t_fcb));
 	t_config *fcb_config = config_create(ruta);
@@ -102,25 +115,27 @@ void leer_fcb(char* ruta) //habria que llamarlo crear fcb
 	list_add(fcb_list, fcb);
 }
 
-/*
-int abrir_archivo(char *nombre_archivo, t_superbloque superbloque, t_bitarray *bitarray)
+
+void abrir_archivo(t_log* logger, char *nombre_archivo)
 {
-	char *ruta;
-	strcpy(ruta, "../files/");
-	strcat(ruta, nombre_archivo);
-	strcat(ruta, ".config");
-	FILE *archivo = fopen(ruta, "rb");
-	if (archivo != NULL)
-	{
-		fclose(archivo);
-		return 0;
+	t_list* lista_con_archivo = list_create();
+	bool existe_el_archivo(void* elemento){
+		t_fcb* archivo_a_abrir;
+		archivo_a_abrir = elemento;
+
+		return strcmp(archivo_a_abrir->name, nombre_archivo) == 0;
+	}
+	lista_con_archivo = list_filter(fcb_list, existe_el_archivo);
+	if (list_size(lista_con_archivo) == 1)
+	{	
+		log_info(logger, "OK");
 	}
 	else
 	{
 		log_info(logger, "No existe el archivo al que se intenta acceder.");
 	}
 }
-
+/*
 int crear_archivo(char *nombre_archivo, t_superbloque *superbloque, t_bitarray *bitarray)
 {
 	char *ruta;
@@ -136,6 +151,7 @@ int crear_archivo(char *nombre_archivo, t_superbloque *superbloque, t_bitarray *
 	free(ruta);
 	return 0;
 }
+
 void *crear_fcb(char *nombre_archivo)
 {
 	char *ruta;

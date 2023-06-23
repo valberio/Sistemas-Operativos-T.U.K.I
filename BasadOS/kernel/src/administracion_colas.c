@@ -48,7 +48,7 @@ void administrar_procesos_de_new(int cliente_cpu){
 }
 
 
-void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria){
+void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cliente_filesystem){
 	while(cliente_cpu){
 		//ESPERA A QUE HAYA POR LO MENOS 1 PROCESO EN READY	
 		sem_wait(&semaforo_procesos_en_ready);
@@ -167,6 +167,12 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria){
 				//CPU me pide que le pida a memoria que elimine un segmento
 				enviar_mensaje("Eliminame un segmento", cliente_memoria);
 				break;
+			case ABRIR_ARCHIVO:
+				//hay que agregarlo en cpu
+				parametros_retorno = recibir_mensaje(cliente_cpu);
+				enviar_mensaje("ABRIR_ARCHIVO", cliente_filesystem);
+				enviar_mensaje(parametros_retorno, cliente_filesystem);
+
 			default:
 				break; 
 		}

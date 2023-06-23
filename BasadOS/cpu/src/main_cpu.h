@@ -6,6 +6,7 @@
 #include<loggers/loggers_utils.h>
 #include<pcb/pcb.h>
 #include "utils/ciclo_instruccion/ciclo_instruccion.h"
+#include"../../memoria/src/segmentos.h"
 
 
 

@@ -17,6 +17,7 @@
 int main(void)
 {
 
+	void* dir = traduccion_dir_logica_fisica();
 	t_log *logger = iniciar_logger("log_cpu.log", "LOG_CPU");
 	t_config *config = iniciar_config("configs/cpu.config");
 	int retardo_instruccion = config_get_int_value(config, "RETARDO_INSTRUCCION") / 1000;

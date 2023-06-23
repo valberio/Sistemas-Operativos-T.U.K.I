@@ -1,7 +1,12 @@
  #include "segmentos.h"
 
+
+//TODOS
+//Mejorar codigos de operacion
+
 Segmento* segmento_0;
 int huecos_libres = -1;
+int cantidad_total_de_segmentos_por_proceso;
 char* string_algoritmo ;
 char algoritmo;
 
@@ -22,6 +27,7 @@ Segmento* inicializar_segmento(int tamano){
     return segmento;
 }
 void reservar_espacio_de_memoria(int tamano_memoria, int tamano_segmento_0){
+    cantidad_total_de_segmentos_por_proceso = config_get_int_value(config, "CANT_SEGMENTOS");
     string_algoritmo = config_get_string_value(config,"ALGORITMO_ASIGNACION");
     algoritmo = string_algoritmo[0];
     espacio_de_memoria = malloc(tamano_memoria);
@@ -50,7 +56,6 @@ int obtener_espacio_libre_total(){
     int espacio_libre_total = *(int*)list_fold(lista_de_huecos_libres,list_get(lista_de_huecos_libres,0),calcular_espacio_libre);
     return espacio_libre_total;
 }
-
 
 
 Segmento* crear_segmento(int id, int tamano){
@@ -86,12 +91,12 @@ Segmento* crear_segmento(int id, int tamano){
         return nuevo_segmento;
        
     }
-    if(obtener_espacio_libre_total() > tamano){ //Que hacia esto??
+    if(obtener_espacio_libre_total() > tamano){ //Me dice que tengo que compactar
         Segmento* nuevo_segmento = inicializar_segmento(-1);
         return nuevo_segmento;
     }
     else{
-        Segmento* nuevo_segmento = inicializar_segmento(-2);
+        Segmento* nuevo_segmento = inicializar_segmento(-2); //No tengo espacio
         return nuevo_segmento;
     }
 }
@@ -164,6 +169,41 @@ Segmento* best_fit(int id, int tamano){
         hueco_libre = list_get_minimum(list_filter(lista_de_memoria,huecos_con_tamano_necesario),minimo_tamano);
     return hueco_libre;
 }
+
+void inicializar_proceso(t_contexto_de_ejecucion* contexto_de_ejecucion, int conexion_memoria_kernel){
+    list_add(contexto_de_ejecucion->tabla_segmentos,segmento_0);
+    enviar_contexto_de_ejecucion(contexto_de_ejecucion,conexion_memoria_kernel);
+}
+
+void finalizar_proceso(t_contexto_de_ejecucion* contexto_de_ejecucion ){
+    for(int i = 0; i < list_size(contexto_de_ejecucion->tabla_segmentos);i++){
+        Segmento* segmento = list_get(contexto_de_ejecucion->tabla_segmentos,i);
+        eliminar_segmento(segmento->id);
+        list_remove(contexto_de_ejecucion->tabla_segmentos,i);
+    };
+}
+
+void crear_segmento_para_proceso(t_contexto_de_ejecucion* contexto, int id, int tamano,int conexion_memoria_kernel){
+    
+    if (list_size(contexto->tabla_segmentos) > cantidad_total_de_segmentos_por_proceso){
+        return NULL;
+    }
+    
+    Segmento* segmento = crear_segmento(id, tamano);
+    list_add(contexto->tabla_segmentos, segmento);
+
+    t_paquete* paquete = crear_paquete();
+    paquete->buffer = serializar_contexto(contexto);
+
+    if(segmento->tamano < 0 ){
+    paquete->codigo_operacion = segmento->tamano;
+    }
+    else {
+        paquete->codigo_operacion = 0;
+    }  
+    enviar_paquete(paquete, conexion_memoria_kernel);
+}
+
 
 
 /*void* peticion_de_lectura(void* direccion_a_leer){

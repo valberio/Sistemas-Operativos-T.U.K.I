@@ -15,7 +15,6 @@ typedef struct {
     int tamano;
     int id;
     void* inicio;
-
 } Segmento;
 
 Segmento* inicializar_segmento(int );

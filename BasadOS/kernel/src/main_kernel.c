@@ -120,7 +120,7 @@ int main(void)
 	pthread_create(&hilo_administrador_de_exit, NULL, administrar_procesos_de_exit, NULL);
 	pthread_detach(hilo_administrador_de_exit);
 
-	administrar_procesos_de_ready(cliente_cpu, cliente_memoria);
+	administrar_procesos_de_ready(cliente_cpu, cliente_memoria, cliente_filesystem);
 
 	terminar_programa(logger, config);
 	liberar_conexion(cliente_cpu);

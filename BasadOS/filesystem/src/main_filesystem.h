@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 #include <string.h>
 
+extern t_log* logger;
 
 
 typedef struct {
@@ -32,10 +33,10 @@ typedef struct {
 
 //void *crear_fcb(char *nombre_archivo);
 void crear_estructuras_fcb(); 
-void recibir_ordenes_kernel(int conexion_filesystem_kernel, t_log* logger);
+void recibir_ordenes_kernel(int conexion_filesystem_kernel);
 void crear_fcb(char *nombre_archivo);
 int crear_archivo(char *nombre_archivo, t_superbloque *superbloque, t_bitarray *bitarray);
-void abrir_archivo(t_log*, char *nombre_archivo);
+void abrir_archivo(char *nombre_archivo, int conexion_filesystem_cliente);
 int truncar_archivo(char *nombre_archivo, int nro_bloques, t_superbloque superbloque, t_bitarray *bitarray, int bloques, t_log *logger, FILE* archivo_de_bloques);
 void guardar_fcb(FILE *archivo_fcb, t_fcb fcb);
 int liberar_bloques(FILE *archivo_de_bloques, t_fcb fcb, t_bitarray* bitarray, int nro_bloques, t_superbloque superbloque);

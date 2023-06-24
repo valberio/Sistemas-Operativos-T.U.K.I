@@ -168,11 +168,20 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				enviar_mensaje("Eliminame un segmento", cliente_memoria);
 				break;
 			case ABRIR_ARCHIVO:
-				//hay que agregarlo en cpu
+				//ENVIO EL TIPO DE OPERACION AL FS
 				parametros_retorno = recibir_mensaje(cliente_cpu);
-				enviar_mensaje("ABRIR_ARCHIVO", cliente_filesystem);
+				////
+				/////
+				//HAY QUE HACER QUE CONTROLE QUE NO ESTE EN LOS ARCHIVOS YA ABIERTOS!!!!!!!!!!!!!!1
+				/////
+				///
+				t_paquete* paquete = crear_paquete();
+    			paquete->codigo_operacion = ABRIR_ARCHIVO;
+    			enviar_paquete(paquete, cliente_filesystem);
+				//ENVIO EL NOMBRE DEL ARCHIVO REQUERIDO
 				enviar_mensaje(parametros_retorno, cliente_filesystem);
-
+				enviar_mensaje("0", cliente_cpu);
+				break;
 			default:
 				break; 
 		}

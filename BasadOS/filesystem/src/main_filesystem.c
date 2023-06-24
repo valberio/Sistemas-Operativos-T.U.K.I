@@ -18,7 +18,7 @@ t_log* logger;
 
 int main()
 {
-	t_log *logger = iniciar_logger("log_filesystem.log", "LOG_FILESYSTEM");
+	logger = iniciar_logger("log_filesystem.log", "LOG_FILESYSTEM");
 	config = iniciar_config("configs/filesystem.config");
 	fcb_list = list_create();
 	// Conecto filesystem como cliente a memoria
@@ -38,7 +38,7 @@ int main()
 	crear_estructuras_fcb();
 	log_info(logger, "La cantidad de FCBs es de %d\n", list_size(fcb_list));
 	log_info(logger, "El nombre del primer archivo FCB es: %s", ((t_fcb*)list_get(fcb_list, 0))->name);
-	abrir_archivo(logger, "Notas1erParcialK9999");
+	
 
 	// Conecto el filesystem como servidor del kernel
 	char* puerto_a_kernel = config_get_string_value(config, "PUERTO_ESCUCHA");
@@ -49,6 +49,7 @@ int main()
 	log_info(logger, "Filesystem recibió la conexión del kernel!");
 	}
 	
+	recibir_ordenes_kernel(conexion_filesystem_kernel);
 	/*if (cliente_filesystem_a_memoria)
 	{
 		log_info(logger, "Filesystem se conectó a memoria!");
@@ -58,14 +59,17 @@ int main()
 	}*/
 }
 
-void recibir_ordenes_kernel(int conexion_filesystem_kernel, t_log* logger){
+void recibir_ordenes_kernel(int conexion_filesystem_kernel){
 	while(conexion_filesystem_kernel){
-		char* operacion = recibir_mensaje(conexion_filesystem_kernel);
-		if(!strcmp(operacion, "ABRIR_ARCHIVO")){
-			char* nombre_archivo = recibir_mensaje(conexion_filesystem_kernel);
-			abrir_archivo(logger, nombre_archivo);
+		t_paquete* operacion = recibir_contexto_de_ejecucion(conexion_filesystem_kernel);
+    	switch(operacion->codigo_operacion){
+			case ABRIR_ARCHIVO:
+				char* nombre_archivo = recibir_mensaje(conexion_filesystem_kernel);
+				abrir_archivo(nombre_archivo, conexion_filesystem_kernel);
+				break;
+			default:
+				break;
 		}
-		
 	}
 }
 
@@ -116,7 +120,7 @@ void crear_fcb(char* ruta) //habria que llamarlo crear fcb
 }
 
 
-void abrir_archivo(t_log* logger, char *nombre_archivo)
+void abrir_archivo(char *nombre_archivo, int conexion_filesystem_kernel)
 {
 	t_list* lista_con_archivo = list_create();
 	bool existe_el_archivo(void* elemento){
@@ -128,10 +132,11 @@ void abrir_archivo(t_log* logger, char *nombre_archivo)
 	lista_con_archivo = list_filter(fcb_list, existe_el_archivo);
 	if (list_size(lista_con_archivo) == 1)
 	{	
-		log_info(logger, "OK");
+		log_info(logger, "Abrir Archivo: %s", nombre_archivo);
 	}
 	else
 	{
+		//HAY QUE CREAR EL ARCHIVO COMO LO HABIAS PENSADO NACHITOOO
 		log_info(logger, "No existe el archivo al que se intenta acceder.");
 	}
 }

@@ -14,7 +14,7 @@
 int set(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto);
 int mov_in(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_memoria_cpu);
 int mov_out(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_memoria_cpu);
-int f_open(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, char* nombre_archivo);
+int f_open(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_kernel_cpu,  char** instrucciones);
 int f_close(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, char* nombre_archivo);
 int f_seek(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, char* nombre_archivo, int posicion);
 int f_read(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, char* nombre_archivo, int dir_log, int cant_bytes);

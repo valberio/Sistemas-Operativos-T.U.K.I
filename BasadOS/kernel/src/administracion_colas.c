@@ -160,12 +160,24 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 
 			case CREAR_SEGMENTO:
 				//CPU me pide que le pida a memoria que cree un segmento
-				enviar_mensaje("Creame un segmento", cliente_memoria);
+				log_info(logger, "Kernel entro en crear segmento");
+				/*t_paquete* paquete_a_memoria = crear_paquete();
+				paquete_a_memoria->codigo_operacion = CREAR_SEGMENTO;
+				paquete->buffer = NULL;
+				enviar_paquete(paquete_a_memoria, cliente_memoria);
+				eliminar_paquete(paquete_a_memoria);*/
+				enviar_mensaje("Crea un segmento", cliente_memoria);
 				break;
 
 			case ELIMINAR_SEGMENTO:
 				//CPU me pide que le pida a memoria que elimine un segmento
-				enviar_mensaje("Eliminame un segmento", cliente_memoria);
+				log_info(logger, "Kernel entro en eliminar segmento");
+				/*t_paquete* paquete_a_memoria1 = crear_paquete();
+				paquete_a_memoria1->codigo_operacion = ELIMINAR_SEGMENTO;
+				paquete->buffer = NULL;
+				enviar_paquete(paquete_a_memoria1, cliente_memoria);
+				eliminar_paquete(paquete_a_memoria1);*/
+				enviar_mensaje("Elimina un segmento", cliente_memoria);
 				break;
 			case ABRIR_ARCHIVO:
 				//ENVIO EL TIPO DE OPERACION AL FS

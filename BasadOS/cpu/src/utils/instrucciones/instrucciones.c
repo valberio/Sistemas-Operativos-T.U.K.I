@@ -224,7 +224,7 @@ int mov_in(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* context
     log_info(logger, "PID: %i EJECUTANDO: %s PARAMETROS: %s, %s", contexto->pid, instrucciones[0], instrucciones[1], instrucciones[2]);
     //Envio a memoria un paquete que indique con su código de operación que quiero LEER
     t_paquete* paquete = crear_paquete();
-    paquete->codigo_operacion = 0; //Tengo que poder serializar la direccion de la que quiero leer
+    paquete->codigo_operacion = PETICION_LECTURA; //Tengo que poder serializar la direccion de la que quiero leer
     
     enviar_paquete(paquete, conexion_memoria_cpu);
 
@@ -241,7 +241,7 @@ int mov_out(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contex
     log_info(logger, "PID: %i EJECUTANDO: %s PARAMETROS: %s, %s", contexto->pid, instrucciones[0], instrucciones[1], instrucciones[2]);
     //Envio a memoria un paquete que indique con su código de operación que quiero ESCRIBIR
     t_paquete* paquete = crear_paquete();
-    paquete->codigo_operacion = 1; //Tengo que poder serializar la direccion de la que quiero leer
+    paquete->codigo_operacion = PETICION_ESCRITURA; //Tengo que poder serializar la direccion de la que quiero leer
     
     enviar_paquete(paquete, conexion_memoria_cpu);
 
@@ -273,7 +273,7 @@ int create_segment(t_log* logger, char** instrucciones, t_contexto_de_ejecucion*
 
     t_paquete* paquete = crear_paquete();
     paquete->codigo_operacion = CREAR_SEGMENTO;
-
+    paquete->buffer = serializar_contexto(contexto);
     enviar_paquete(paquete, conexion_kernel_cpu);
 
     return 0;
@@ -286,7 +286,7 @@ int delete_segment(t_log* logger, char** instrucciones, t_contexto_de_ejecucion*
 
     t_paquete* paquete = crear_paquete();
     paquete->codigo_operacion = ELIMINAR_SEGMENTO;
-
+    paquete->buffer = serializar_contexto(contexto);
     enviar_paquete(paquete, conexion_kernel_cpu);
 
     return 0;

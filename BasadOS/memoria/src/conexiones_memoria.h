@@ -1,4 +1,4 @@
-#ifndef MEMORIA_H_
+#ifndef CONEXIONES_MEMORIA_H_
 #define CONEXIONES_MEMORIA_H_
 
 #include<loggers/loggers_utils.h>
@@ -14,4 +14,4 @@ void* comunicacion_con_cpu(void* );
 void* comunicacion_con_kernel(void* arg);
 
 
-#endif /* CONESXIONES_MEMORIA_H_ */
+#endif /* CONEXIONES_MEMORIA_H_ */

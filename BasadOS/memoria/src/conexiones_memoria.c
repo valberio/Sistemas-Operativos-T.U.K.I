@@ -7,11 +7,15 @@ void* comunicacion_con_kernel(void* arg)
     int conexion_kernel = parametros->conexion;
 
     if (conexion_kernel == -1) {log_info(logger, "Error con la conexión al kernel"); return NULL;}
+    else {log_info(logger, "Se conectó el kernel!");}
 
     while(conexion_kernel >= 0)
     {
+        log_info(logger, "entre en el while");
         char* mensaje = recibir_mensaje(conexion_kernel);
-        log_info(logger, "Recibí de kernel: %s", mensaje);
+        log_info(logger, "%s", mensaje);
+        //t_paquete* paquete = recibir_paquete(conexion_kernel);
+        //log_info(logger, "Recibí de kernel: %i", paquete->codigo_operacion);
     }
     return  NULL;   
 }
@@ -27,7 +31,8 @@ void* comunicacion_con_cpu(void* arg)
     {
         log_info(logger, "Error conectandose con la CPU");
         return NULL;
-    } 
+    }
+    else{log_info(logger, "Se conectó el CPU!");}
 
 
     while(conexion_cpu >= 0)
@@ -39,12 +44,12 @@ void* comunicacion_con_cpu(void* arg)
 
         switch(peticion->codigo_operacion)
         {
-            case 0: //Caso lectura
+            case PETICION_LECTURA: //Caso lectura
                 paquete_respuesta->codigo_operacion = 0; 
                 enviar_paquete(paquete_respuesta, conexion_cpu);
                 log_info(logger, "MEMORIA respondió una petición de lectura del CPU");
                 break;
-            case 1: //Caso escritura
+            case PETICION_ESCRITURA: //Caso escritura
                 paquete_respuesta->codigo_operacion = 1;
                 enviar_paquete(paquete_respuesta, conexion_cpu);
                 log_info(logger, "MEMORIA respondió una petición de escritura del CPU");

@@ -1,4 +1,2 @@
-SET AX HOLA
-I/O 5
-F_OPEN Notas1erParcialK9999
+MOV_IN
 EXIT

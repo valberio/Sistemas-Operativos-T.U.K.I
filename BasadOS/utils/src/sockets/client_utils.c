@@ -60,7 +60,7 @@ void *serializar_paquete(t_paquete *paquete, int bytes)
 void enviar_mensaje(char *mensaje, int socket_cliente)
 {
 	t_paquete *paquete = malloc(sizeof(t_paquete));
-	//aquete->codigo_operacion = MENSAJE;
+	//paquete->codigo_operacion = 0;
 	paquete->buffer = malloc(sizeof(t_buffer));
 	paquete->buffer->size = strlen(mensaje) + 1;
 	paquete->buffer->stream = malloc(paquete->buffer->size);

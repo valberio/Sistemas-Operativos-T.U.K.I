@@ -40,12 +40,12 @@ int main(int argc, char* argv[]) {
     
      //Lanzo el hilo que espera pedidos de la CPU
 
-    /*int conexion_filesystem = esperar_cliente(servidor);
+    int conexion_filesystem = esperar_cliente(servidor);
     if(conexion_filesystem != -1){
         log_info(logger, "Se conecto el filesystem");
-    }*/
+    }
 
-  int conexion_cpu = esperar_cliente(servidor);
+    int conexion_cpu = esperar_cliente(servidor);
 
     int conexion_kernel = esperar_cliente(servidor);
 
@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
 
     pthread_t hilo_comunicacion_cpu;
     pthread_create(&hilo_comunicacion_cpu, NULL, comunicacion_con_cpu, (void*)&parametros_cpu);
-    
+    pthread_detach(hilo_comunicacion_cpu);
 
     parametros_de_hilo parametros_kernel;
     parametros_kernel.conexion = conexion_kernel;

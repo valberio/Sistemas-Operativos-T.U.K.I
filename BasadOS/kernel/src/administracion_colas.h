@@ -30,7 +30,7 @@ extern t_queue* cola_exit;
 extern t_queue* cola_blocked;
 
 extern t_list* recursos;
-
+extern t_list* lista_archivos_abiertos;
 extern t_log* logger;
 extern t_config* config;
 

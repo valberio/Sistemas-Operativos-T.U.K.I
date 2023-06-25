@@ -47,6 +47,7 @@ int main(void)
 	char** instancias_array = config_get_array_value(config, "INSTANCIAS_RECURSOS");
 	
 	recursos = list_create();
+	lista_archivos_abiertos = lis_create();
 	crear_lista_de_recursos(recursos,recursos_array,instancias_array);
 	
 	
@@ -61,25 +62,15 @@ int main(void)
 	sem_init(&mutex_cola_blocked, 0, 1);
 	sem_init(&mutex_cola_exit, 0, 1);
 
-	
-	
-	
-	char* ip_memoria = config_get_string_value(config, "IP_MEMORIA");
-	char* puerto_memoria_kernel = config_get_string_value(config, "PUERTO_MEMORIA");
-
-	int cliente_kernel = crear_conexion_al_server(logger, ip_memoria, puerto_memoria_kernel);
-
-	 if (cliente_kernel)
-	 {
-	 	log_info(logger, "El kernel envió su conexión a la memoria!");
-	 }
-
 	//Conecto el kernel como cliente a la CPU
 	char* ip_cpu = config_get_string_value(config, "IP_CPU");
 	char* puerto_cpu_kernel = config_get_string_value(config, "PUERTO_CPU");
-	char* puerto_kernel_memoria = config_get_string_value(config, "PUERTO_MEMORIA");
 	int cliente_cpu = crear_conexion_al_server(logger, ip_cpu, puerto_cpu_kernel);
-	int cliente_memoria = crear_conexion_al_server(logger, ip_cpu, puerto_kernel_memoria);
+
+	//Conecto el kernel como cliente a la MEMORIA
+	char* ip_memoria = config_get_string_value(config, "IP_MEMORIA");
+	char* puerto_memoria_kernel = config_get_string_value(config, "PUERTO_MEMORIA");
+	int cliente_memoria = crear_conexion_al_server(logger, ip_memoria, puerto_memoria_kernel);
 	
 	// Conecto el kernel como cliente del filesystem
 	char* ip_filesystem = config_get_string_value(config, "IP_FILESYSTEM");

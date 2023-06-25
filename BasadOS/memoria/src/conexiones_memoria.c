@@ -11,7 +11,6 @@ void* comunicacion_con_kernel(void* arg)
 
     while(conexion_kernel >= 0)
     {
-        log_info(logger, "entre en el while");
         char* mensaje = recibir_mensaje(conexion_kernel);
         log_info(logger, "%s", mensaje);
         //t_paquete* paquete = recibir_paquete(conexion_kernel);
@@ -53,6 +52,8 @@ void* comunicacion_con_cpu(void* arg)
                 paquete_respuesta->codigo_operacion = 1;
                 enviar_paquete(paquete_respuesta, conexion_cpu);
                 log_info(logger, "MEMORIA respondió una petición de escritura del CPU");
+                break;
+            default:
                 break;
         }
     }

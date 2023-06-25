@@ -182,12 +182,10 @@ t_buffer* serializar_contexto(t_contexto_de_ejecucion* contexto)
     {
         tamano += sizeof(uint32_t);
     }
-    printf("TAMANO: %d \n",tamano);
 
     //5. Tamaño de la TABLA de segmentos
     tamano += sizeof(int) + (2 * sizeof(int) + sizeof(void*)) * list_size(contexto->tabla_segmentos);  
 
-    printf("TAMANO: %d \n",tamano);
 
     //Aloco la memoria para el buffer.
     buffer->size = tamano;

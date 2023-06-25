@@ -254,17 +254,7 @@ int mov_out(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contex
     return 0;
 }
 
-void* traduccion_dir_logica_fisica(int dir_logica, t_contexto_de_ejecucion* contexto){
-    int tam_max_segmento = 10; //HAY QUE SACARLO DEL CONFIG
-    int num_segmento = floor(dir_logica / tam_max_segmento);
-    int desplazamiento_segmento = dir_logica % tam_max_segmento;
 
-    Segmento* segmento = list_get(contexto->tabla_segmentos, num_segmento);
-
-    void* dir_fisica = segmento->inicio;
-    dir_fisica+=desplazamiento_segmento;
-    return dir_fisica;
-}
 
 int create_segment(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_kernel_cpu)
 {
@@ -275,8 +265,9 @@ int create_segment(t_log* logger, char** instrucciones, t_contexto_de_ejecucion*
     paquete->codigo_operacion = CREAR_SEGMENTO;
     paquete->buffer = serializar_contexto(contexto);
     enviar_paquete(paquete, conexion_kernel_cpu);
+    eliminar_paquete(paquete);
 
-    return 0;
+    return 1;
 }
 
 int delete_segment(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_kernel_cpu)
@@ -289,7 +280,7 @@ int delete_segment(t_log* logger, char** instrucciones, t_contexto_de_ejecucion*
     paquete->buffer = serializar_contexto(contexto);
     enviar_paquete(paquete, conexion_kernel_cpu);
 
-    return 0;
+    return 1;
 }
 
 int f_open(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_kernel_cpu,  char** instrucciones){

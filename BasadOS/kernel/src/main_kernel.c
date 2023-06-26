@@ -27,6 +27,7 @@ t_queue* cola_exit;
 
 size_t cantidad_recursos;
 t_list* recursos;
+t_list* lista_archivos_abiertos;
 //Creacion del log
 t_log* logger;
 t_config* config;
@@ -47,7 +48,7 @@ int main(void)
 	char** instancias_array = config_get_array_value(config, "INSTANCIAS_RECURSOS");
 	
 	recursos = list_create();
-	lista_archivos_abiertos = lis_create();
+	lista_archivos_abiertos = list_create();
 	crear_lista_de_recursos(recursos,recursos_array,instancias_array);
 	
 	

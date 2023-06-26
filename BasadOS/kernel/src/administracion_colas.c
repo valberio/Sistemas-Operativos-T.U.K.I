@@ -177,20 +177,28 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				eliminar_paquete(paquete_a_memoria1);*/
 				enviar_mensaje("Eliminame un segmento", cliente_memoria);
 				break;
+
 			case ABRIR_ARCHIVO:
 				//ENVIO EL TIPO DE OPERACION AL FS
 				parametros_retorno = recibir_mensaje(cliente_cpu);
-				////
-				/////
-				//HAY QUE HACER QUE CONTROLE QUE NO ESTE EN LOS ARCHIVOS YA ABIERTOS!!!!!!!!!!!!!!
-				/////
-				///
-				t_paquete* paquete = crear_paquete();
-    			paquete->codigo_operacion = ABRIR_ARCHIVO;
-    			enviar_paquete(paquete, cliente_filesystem);
-				//ENVIO EL NOMBRE DEL ARCHIVO REQUERIDO
-				enviar_mensaje(parametros_retorno, cliente_filesystem);
-				enviar_mensaje("0", cliente_cpu);
+				int buscar_archivo = buscar_archivo_en_tabla_global(parametros_retorno);
+				if(buscar_archivo == 0) {//caso de que el archivo no estuviese abierto
+					//Creo la estructura del archivo
+					Archivo* nuevo_archivo = crear_archivo(parametros_retorno);
+					list_add(lista_archivos_abiertos, nuevo_archivo);
+					//Y la añado a la lista de archivos abiertos global
+					t_paquete* paquete = crear_paquete();
+    				paquete->codigo_operacion = ABRIR_ARCHIVO;
+    				enviar_paquete(paquete, cliente_filesystem);
+					//ENVIO EL NOMBRE DEL ARCHIVO REQUERIDO
+					enviar_mensaje(parametros_retorno, cliente_filesystem);
+					enviar_mensaje("0", cliente_cpu);
+				} else {
+					log_info(logger, "El archivo esta en uso");
+					aniadir_a_bloqueados(proceso_en_ejecucion, parametros_retorno);
+					log_info(logger, "PID: %i - Estado anterior: RUNNING - Estado actual: BLOCKED", proceso_en_ejecucion->pid);
+					ejecucion = 0;
+				}
 				break;
 			default:
 				break; 
@@ -198,3 +206,39 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 		
 	}
 }}
+
+Archivo* crear_archivo(char* nombre_archivo){
+	Archivo* archivo = malloc(sizeof(Archivo));
+	archivo->nombre_archivo = malloc(sizeof(nombre_archivo));
+	strcpy(archivo->nombre_archivo, nombre_archivo);
+	archivo->posicion_puntero = 0;
+	archivo->procesos_bloqueados = queue_create();
+	return archivo;
+}
+
+int buscar_archivo_en_tabla_global(char* nombre_archivo) {
+	t_list* lista_con_archivo = list_create();
+	bool existe_el_archivo(void* elemento){
+		Archivo* archivo_en_tabla;
+		archivo_en_tabla = elemento;
+
+		return strcmp(archivo_en_tabla->nombre_archivo, nombre_archivo) == 0;
+	}
+	lista_con_archivo = list_filter(lista_archivos_abiertos, existe_el_archivo);
+	if (list_size(lista_con_archivo) == 0){
+		return 0;
+	} else {
+		return 1;
+	}
+}
+
+void aniadir_a_bloqueados(t_pcb* proceso, char* nombre_archivo) {
+	bool existe_el_archivo(void* elemento){
+		Archivo* archivo_en_tabla;
+		archivo_en_tabla = elemento;
+
+		return strcmp(archivo_en_tabla->nombre_archivo, nombre_archivo) == 0;
+	}
+	Archivo* archivo = list_find(lista_archivos_abiertos, existe_el_archivo);
+	queue_push(archivo->procesos_bloqueados, proceso);
+}

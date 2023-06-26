@@ -14,6 +14,12 @@
 #include<stdio.h>
 #include<time.h>
 
+typedef struct{
+    char* nombre_archivo;
+    uint32_t posicion_puntero;
+    t_queue* procesos_bloqueados;
+} Archivo;
+
 extern sem_t semaforo_procesos_en_exit;
 extern sem_t semaforo_procesos_en_ready;
 extern sem_t semaforo_multiprogramacion;
@@ -38,6 +44,10 @@ void administrar_procesos_de_ready(int , int, int);
 void* administrar_procesos_de_new_wrapper(void*);
 void administrar_procesos_de_new(int );
 void* administrar_procesos_de_exit();
+Archivo* crear_archivo(char*);
+int buscar_archivo_en_tabla_global(char*);
+void aniadir_a_bloqueados(t_pcb* , char*);
+
 
 
 #endif /* ADMINISTRACION_COLAS_H_ */

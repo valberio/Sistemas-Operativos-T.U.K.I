@@ -16,9 +16,13 @@
 
 typedef struct{
     char* nombre_archivo;
-    uint32_t posicion_puntero;
     t_queue* procesos_bloqueados;
 } Archivo;
+
+typedef struct{
+    char* nombre;
+    uint32_t puntero;
+} Archivo_de_proceso;
 
 extern sem_t semaforo_procesos_en_exit;
 extern sem_t semaforo_procesos_en_ready;
@@ -47,6 +51,8 @@ void* administrar_procesos_de_exit();
 Archivo* crear_archivo(char*);
 int buscar_archivo_en_tabla_global(char*);
 void aniadir_a_bloqueados(t_pcb* , char*);
+Archivo_de_proceso* crear_archivo_para_tabla_proceso(char*);
+void gestionar_cierre_archivo(char* nombre_archivo);
 
 
 

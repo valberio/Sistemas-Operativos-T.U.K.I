@@ -45,6 +45,7 @@ int execute(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contex
 			resultado = f_open(logger, contexto, conexion_cpu_kernel, instrucciones);
 			break;
 		case F_CLOSE:
+			resultado = f_close(logger, instrucciones, contexto, conexion_cpu_kernel);
 			break;
 		case F_SEEK:
 			break;

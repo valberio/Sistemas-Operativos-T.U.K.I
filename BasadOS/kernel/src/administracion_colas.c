@@ -182,8 +182,11 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				//ENVIO EL TIPO DE OPERACION AL FS
 				parametros_retorno = recibir_mensaje(cliente_cpu);
 				int buscar_archivo = buscar_archivo_en_tabla_global(parametros_retorno);
+				//ACA CREO LA ESTRUCTURA DEL ARCHIVO PARA LA TABLA DEL PROCESO
+				Archivo_de_proceso* archivo = crear_archivo_para_tabla_proceso(parametros_retorno);
+				list_add(proceso_en_ejecucion->tabla_archivos_abiertos, archivo);
 				if(buscar_archivo == 0) {//caso de que el archivo no estuviese abierto
-					//Creo la estructura del archivo
+					//Creo la estructura del archivo PARA LA TABLA GLOBAL
 					Archivo* nuevo_archivo = crear_archivo(parametros_retorno);
 					list_add(lista_archivos_abiertos, nuevo_archivo);
 					//Y la añado a la lista de archivos abiertos global
@@ -197,8 +200,17 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 					log_info(logger, "El archivo esta en uso");
 					aniadir_a_bloqueados(proceso_en_ejecucion, parametros_retorno);
 					log_info(logger, "PID: %i - Estado anterior: RUNNING - Estado actual: BLOCKED", proceso_en_ejecucion->pid);
+					log_info(logger, "PID: %i - Bloqueado por: %s", proceso_en_ejecucion->pid, parametros_retorno);
 					ejecucion = 0;
+					enviar_mensaje("Se bloqueo el proceso", cliente_cpu);
 				}
+				log_info(logger, "CANTIDAD DE ARCHIVOS ABIERTOS %d", list_size(lista_archivos_abiertos));
+				break;
+			case CERRAR_ARCHIVO:
+				parametros_retorno = recibir_mensaje(cliente_cpu);
+				
+				gestionar_cierre_archivo(parametros_retorno);
+				log_info(logger, "CANTIDAD DE ARCHIVOS ABIERTOS %d", list_size(lista_archivos_abiertos));
 				break;
 			default:
 				break; 
@@ -211,10 +223,18 @@ Archivo* crear_archivo(char* nombre_archivo){
 	Archivo* archivo = malloc(sizeof(Archivo));
 	archivo->nombre_archivo = malloc(sizeof(nombre_archivo));
 	strcpy(archivo->nombre_archivo, nombre_archivo);
-	archivo->posicion_puntero = 0;
 	archivo->procesos_bloqueados = queue_create();
 	return archivo;
 }
+
+Archivo_de_proceso* crear_archivo_para_tabla_proceso(char* nombre_archivo){
+	Archivo_de_proceso* archivo = malloc(sizeof(Archivo_de_proceso));
+	archivo->nombre = malloc(sizeof(nombre_archivo));
+	strcpy(archivo->nombre, nombre_archivo);
+	archivo->puntero = 0;
+	return archivo;
+}
+
 
 int buscar_archivo_en_tabla_global(char* nombre_archivo) {
 	t_list* lista_con_archivo = list_create();
@@ -242,3 +262,27 @@ void aniadir_a_bloqueados(t_pcb* proceso, char* nombre_archivo) {
 	Archivo* archivo = list_find(lista_archivos_abiertos, existe_el_archivo);
 	queue_push(archivo->procesos_bloqueados, proceso);
 }
+
+void gestionar_cierre_archivo(char* nombre_archivo){
+	bool existe_el_archivo(void* elemento){
+		Archivo* archivo_en_tabla;
+		archivo_en_tabla = elemento;
+
+		return strcmp(archivo_en_tabla->nombre_archivo, nombre_archivo) == 0;
+	}
+	Archivo* archivo = list_find(lista_archivos_abiertos, existe_el_archivo);
+	if (queue_size(archivo->procesos_bloqueados) == 0){
+		list_remove_by_condition(lista_archivos_abiertos, existe_el_archivo);
+		free(archivo->nombre_archivo);
+		free(archivo);
+	} else {
+		t_pcb* proceso_bloqueado = queue_pop(archivo->procesos_bloqueados);
+		sem_wait(&mutex_cola_ready);
+		queue_push(cola_ready, proceso_bloqueado);
+		sem_post(&mutex_cola_ready);
+		sem_post(&semaforo_procesos_en_ready);
+		log_info(logger, "PID: %i - Estado anterior: BLOCKED - Estado actual: READY", proceso_bloqueado->pid);
+	}
+}
+
+

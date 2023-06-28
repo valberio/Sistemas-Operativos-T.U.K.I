@@ -69,7 +69,6 @@ t_buffer* serializar_contexto(t_contexto_de_ejecucion* contexto);
 t_contexto_de_ejecucion* deserializar_contexto_de_ejecucion(t_buffer* buffer);
 
 
-
 enum Estados {
     NEW, 
     READY, 

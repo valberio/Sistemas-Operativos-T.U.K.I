@@ -80,7 +80,6 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 		t_contexto_de_ejecucion* contexto_actualizado = malloc(sizeof(t_contexto_de_ejecucion));
 		contexto_actualizado = deserializar_contexto_de_ejecucion(paquete->buffer);
 		proceso_en_ejecucion->contexto_de_ejecucion = contexto_actualizado;
-
 		char* parametros_retorno;
 		
 		switch(paquete->codigo_operacion)
@@ -190,17 +189,15 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 					Archivo* nuevo_archivo = crear_archivo(parametros_retorno);
 					list_add(lista_archivos_abiertos, nuevo_archivo);
 					//Y la añado a la lista de archivos abiertos global
-					/*t_paquete* paquete = crear_paquete();
+					t_paquete* paquete = crear_paquete();
     				paquete->codigo_operacion = ABRIR_ARCHIVO;
     				enviar_paquete(paquete, cliente_filesystem);
 					//ENVIO EL NOMBRE DEL ARCHIVO REQUERIDO
-					enviar_mensaje(parametros_retorno, cliente_filesystem);*/
+					enviar_mensaje(parametros_retorno, cliente_filesystem);
 					enviar_mensaje("0", cliente_cpu);
 				} else {
 					log_info(logger, "El archivo esta en uso");
 					aniadir_a_bloqueados(proceso_en_ejecucion, parametros_retorno);
-					log_info(logger, "PID: %i - Estado anterior: RUNNING - Estado actual: BLOCKED", proceso_en_ejecucion->pid);
-					log_info(logger, "PID: %i - Bloqueado por: %s", proceso_en_ejecucion->pid, parametros_retorno);
 					ejecucion = 0;
 					enviar_mensaje("Se bloqueo el proceso", cliente_cpu);
 				}
@@ -208,8 +205,8 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				break;
 			case CERRAR_ARCHIVO:
 				parametros_retorno = recibir_mensaje(cliente_cpu);
-				
 				gestionar_cierre_archivo(parametros_retorno);
+				//LOGICA CON FILESYSTEM INTRODUCIR AQUI
 				log_info(logger, "CANTIDAD DE ARCHIVOS ABIERTOS %d", list_size(lista_archivos_abiertos));
 				break;
 			default:
@@ -261,6 +258,8 @@ void aniadir_a_bloqueados(t_pcb* proceso, char* nombre_archivo) {
 	}
 	Archivo* archivo = list_find(lista_archivos_abiertos, existe_el_archivo);
 	queue_push(archivo->procesos_bloqueados, proceso);
+	log_info(logger, "PID: %i - Estado anterior: RUNNING - Estado actual: BLOCKED", proceso->pid);
+	log_info(logger, "PID: %i - Bloqueado por: %s", proceso->pid, nombre_archivo);
 }
 
 void gestionar_cierre_archivo(char* nombre_archivo){

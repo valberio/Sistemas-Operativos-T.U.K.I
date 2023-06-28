@@ -292,7 +292,7 @@ int f_open(t_log *logger, t_contexto_de_ejecucion *contexto, int conexion_kernel
     log_info(logger, "PID: %i EJECUTANDO: %s PARAMETROS: %s", contexto->pid, instrucciones[0], instrucciones[1]);
     t_paquete *paquete = crear_paquete();
     paquete->codigo_operacion = ABRIR_ARCHIVO;
-    
+    paquete->buffer = serializar_contexto(contexto);
     enviar_paquete(paquete, conexion_kernel_cpu);
 
     enviar_mensaje(instrucciones[1], conexion_kernel_cpu);
@@ -311,6 +311,7 @@ int f_close(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contex
     log_info(logger, "PID: %i EJECUTANDO: %s PARAMETROS: %s", contexto->pid, instrucciones[0], instrucciones[1]);
     t_paquete* paquete = crear_paquete();
     paquete->codigo_operacion = CERRAR_ARCHIVO;
+    paquete->buffer = serializar_contexto(contexto);
     enviar_paquete(paquete, conexion_kernel_cpu);
     enviar_mensaje(instrucciones[1], conexion_kernel_cpu);
     return 0;

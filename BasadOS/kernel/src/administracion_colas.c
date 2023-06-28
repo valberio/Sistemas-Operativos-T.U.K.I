@@ -190,11 +190,11 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 					Archivo* nuevo_archivo = crear_archivo(parametros_retorno);
 					list_add(lista_archivos_abiertos, nuevo_archivo);
 					//Y la añado a la lista de archivos abiertos global
-					t_paquete* paquete = crear_paquete();
+					/*t_paquete* paquete = crear_paquete();
     				paquete->codigo_operacion = ABRIR_ARCHIVO;
     				enviar_paquete(paquete, cliente_filesystem);
 					//ENVIO EL NOMBRE DEL ARCHIVO REQUERIDO
-					enviar_mensaje(parametros_retorno, cliente_filesystem);
+					enviar_mensaje(parametros_retorno, cliente_filesystem);*/
 					enviar_mensaje("0", cliente_cpu);
 				} else {
 					log_info(logger, "El archivo esta en uso");

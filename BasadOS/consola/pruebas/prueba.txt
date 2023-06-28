@@ -1,4 +1,4 @@
 F_OPEN Notas1erParcialK9999
-I/O 8
+I/O 9
 F_CLOSE Notas1erParcialK9999
 EXIT

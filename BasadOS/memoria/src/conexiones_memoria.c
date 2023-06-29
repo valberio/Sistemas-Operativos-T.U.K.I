@@ -11,8 +11,27 @@ void* comunicacion_con_kernel(void* arg)
 
     while(conexion_kernel >= 0)
     {
-        char* mensaje = recibir_mensaje(conexion_kernel);
-        log_info(logger, "%s", mensaje);
+        
+        t_paquete* paquete = recibir_paquete(conexion_kernel);
+        t_contexto_de_ejecucion* contexto = deserializar_contexto_de_ejecucion(paquete->buffer);
+
+
+        switch(paquete->codigo_operacion)
+        {
+            case CREAR_SEGMENTO:
+ 
+                //Segmento* segmento_nuevo = crear_segmento(id, tamanio);
+
+                //list_add(contexto->tabla_segmentos, segmento_nuevo);
+
+                enviar_mensaje("OK!", conexion_kernel);
+                log_info(logger, "MEMORIA envio el OK a KERNEL");
+
+                break;
+            case ELIMINAR_SEGMENTO:
+                break;
+        }
+        
         //t_paquete* paquete = recibir_paquete(conexion_kernel);
         //log_info(logger, "Recibí de kernel: %i", paquete->codigo_operacion);
     }
@@ -43,12 +62,20 @@ void* comunicacion_con_cpu(void* arg)
 
         switch(peticion->codigo_operacion)
         {
-            case PETICION_LECTURA: //Caso lectura
-                paquete_respuesta->codigo_operacion = 0; 
+            case PETICION_LECTURA: //Caso lectura, mov_in
+                paquete_respuesta->codigo_operacion = 0;
+
+
+                char* registro = recibir_mensaje(conexion_cpu);
+                void* direccion_fisica = recibir_mensaje(conexion_cpu);
+
+                log_info(logger, "MEMORIA recibió el registro %s", registro);
+                log_info(logger, "MEMORIA recibió la dirección %s", (char*)direccion_fisica);
+
                 enviar_paquete(paquete_respuesta, conexion_cpu);
                 log_info(logger, "MEMORIA respondió una petición de lectura del CPU");
                 break;
-            case PETICION_ESCRITURA: //Caso escritura
+            case PETICION_ESCRITURA: //Caso escritura mov_out
                 paquete_respuesta->codigo_operacion = 1;
                 enviar_paquete(paquete_respuesta, conexion_cpu);
                 log_info(logger, "MEMORIA respondió una petición de escritura del CPU");

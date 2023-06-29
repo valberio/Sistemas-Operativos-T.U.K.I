@@ -159,22 +159,47 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 
 			case CREAR_SEGMENTO:
 				//CPU me pide que le pida a memoria que cree un segmento
-				/*t_paquete* paquete_a_memoria = crear_paquete();
+				t_paquete* paquete_a_memoria = crear_paquete();
 				paquete_a_memoria->codigo_operacion = CREAR_SEGMENTO;
-				paquete->buffer = NULL;
+				paquete_a_memoria->buffer = serializar_contexto(contexto_actualizado);
+
+				//Recibo parámetros de CPU
+				char* id = recibir_mensaje(cliente_cpu);
+				log_info(logger, "Recibi de CPU %s", id);
+				char* tamanio = recibir_mensaje(cliente_cpu);
+				log_info(logger, "Recibi de CPU %s", tamanio);
+
+				//Envio contexto y parametros a memoria
 				enviar_paquete(paquete_a_memoria, cliente_memoria);
-				eliminar_paquete(paquete_a_memoria);*/
-				enviar_mensaje("Creame un segmento", cliente_memoria);
+
+				//Espero el OK de memoria
+				char* respuesta = recibir_mensaje(cliente_memoria);
+				log_info(logger, "Recibi de memoria %s", respuesta);
+				//enviar_mensaje("Creame un segmento", cliente_memoria);
+				ejecucion = 0;
+				
+				sem_wait(&mutex_cola_ready);
+				queue_push(cola_ready, proceso_en_ejecucion);
+				sem_post(&mutex_cola_ready);
+				sem_post(&semaforo_procesos_en_ready);
 				break;
 
 			case ELIMINAR_SEGMENTO:
 				//CPU me pide que le pida a memoria que elimine un segmento
-				/*t_paquete* paquete_a_memoria1 = crear_paquete();
+				t_paquete* paquete_a_memoria1 = crear_paquete();
 				paquete_a_memoria1->codigo_operacion = ELIMINAR_SEGMENTO;
 				paquete->buffer = NULL;
 				enviar_paquete(paquete_a_memoria1, cliente_memoria);
-				eliminar_paquete(paquete_a_memoria1);*/
-				enviar_mensaje("Eliminame un segmento", cliente_memoria);
+				eliminar_paquete(paquete_a_memoria1);
+				recibir_mensaje(cliente_memoria);
+
+				ejecucion = 0;
+
+				sem_wait(&mutex_cola_ready);
+				queue_push(cola_ready, proceso_en_ejecucion);
+				sem_post(&mutex_cola_ready);
+				sem_post(&semaforo_procesos_en_ready);
+				
 				break;
 
 			case ABRIR_ARCHIVO:

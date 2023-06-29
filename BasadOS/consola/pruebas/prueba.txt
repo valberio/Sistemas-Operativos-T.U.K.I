@@ -1,4 +1,2 @@
-F_OPEN Notas1erParcialK9999
-I/O 5
-F_CLOSE Notas1erParcialK9999
+CREATE_SEGMENT 1 128
 EXIT

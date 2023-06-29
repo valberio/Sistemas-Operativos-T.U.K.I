@@ -20,7 +20,7 @@ typedef struct {
 Segmento* inicializar_segmento(int );
 int obtener_espacio_libre_total();
 void reservar_espacio_de_memoria(int,int);
-Segmento* crear_segmento(int ,int);
+Segmento* crear_segmento(int id ,int tamano);
 void eliminar_segmento(int );
 int get_index_of_list(t_list* ,int );
 void unificacion_de_huecos_libres();

@@ -231,8 +231,10 @@ int mov_in(t_log *logger, char **instrucciones, t_contexto_de_ejecucion *context
     // Envio a memoria un paquete que indique con su código de operación que quiero LEER
     t_paquete *paquete = crear_paquete();
     paquete->codigo_operacion = PETICION_LECTURA; // Tengo que poder serializar la direccion de la que quiero leer
-
+    paquete->buffer = serializar_contexto(contexto); //Mando el contexto de ejecucion, necesito acceder a los registros
     enviar_paquete(paquete, conexion_memoria_cpu);
+    enviar_mensaje (instrucciones[1], conexion_memoria_cpu); //Mando el registro
+    enviar_mensaje(traduccion_dir_logica_fisica(instrucciones[2], contexto), conexion_memoria_cpu); //Mando la direccion
 
     // Espero la respuesta con el valor que se encontraba en la direccion
     t_paquete *paquete_respuesta = recibir_paquete(conexion_memoria_cpu);
@@ -269,6 +271,8 @@ int create_segment(t_log *logger, char **instrucciones, t_contexto_de_ejecucion 
     paquete->codigo_operacion = CREAR_SEGMENTO;
     paquete->buffer = serializar_contexto(contexto);
     enviar_paquete(paquete, conexion_kernel_cpu);
+    enviar_mensaje(instrucciones[1], conexion_kernel_cpu); //Envio el id
+    enviar_mensaje(instrucciones[2], conexion_kernel_cpu); //Envio el tamaño
     eliminar_paquete(paquete);
 
     return 1;

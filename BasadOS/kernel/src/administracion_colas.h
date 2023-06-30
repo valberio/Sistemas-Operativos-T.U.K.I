@@ -53,6 +53,7 @@ int buscar_archivo_en_tabla_global(char*);
 void aniadir_a_bloqueados(t_pcb* , char*);
 Archivo_de_proceso* crear_archivo_para_tabla_proceso(char*);
 void gestionar_cierre_archivo(char* nombre_archivo);
+void borrar_de_tabla_de_archivos(t_pcb* proceso, char* nombre_archivo);
 
 
 

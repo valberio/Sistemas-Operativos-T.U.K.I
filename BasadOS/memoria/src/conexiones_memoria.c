@@ -19,16 +19,23 @@ void* comunicacion_con_kernel(void* arg)
         switch(paquete->codigo_operacion)
         {
             case CREAR_SEGMENTO:
- 
-                //Segmento* segmento_nuevo = crear_segmento(id, tamanio);
+                char* id = recibir_mensaje(conexion_kernel);
+                char* tamanio = recibir_mensaje(conexion_kernel);
 
-                //list_add(contexto->tabla_segmentos, segmento_nuevo);
+                int id_int = atoi(id);
+				int tamanio_int = atoi(tamanio);
 
-                enviar_mensaje("OK!", conexion_kernel);
-                log_info(logger, "MEMORIA envio el OK a KERNEL");
+                Segmento* segmento_nuevo = crear_segmento(id_int, tamanio_int);
+                char* respuesta = respuesta_a_kernel(segmento_nuevo, contexto);
+                
+
+                enviar_mensaje(respuesta, conexion_kernel);
+                log_info(logger, "MEMORIA envio el siguiente mensaje a kernel: %s",respuesta);
 
                 break;
             case ELIMINAR_SEGMENTO:
+                break;
+            default:
                 break;
         }
         
@@ -87,3 +94,16 @@ void* comunicacion_con_cpu(void* arg)
     return NULL;
 }
 
+char* respuesta_a_kernel(Segmento* segmento, t_contexto_de_ejecucion* contexto){
+    if(segmento->tamano > 0){
+        list_add(contexto->tabla_segmentos, segmento);
+        return "SEGMENTO CREADO";
+    }
+    else if(segmento->tamano == -1){
+        return "COMPACTAR";
+    }
+    else if(segmento->tamano == -2){
+        return "OUT OF MEMORY";
+    }
+    return "ERROR";
+}

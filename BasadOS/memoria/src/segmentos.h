@@ -9,6 +9,7 @@
 
 extern t_list* lista_de_memoria;
 extern t_config* config;
+extern t_log* logger;
 extern void* espacio_de_memoria;
 
 typedef struct {

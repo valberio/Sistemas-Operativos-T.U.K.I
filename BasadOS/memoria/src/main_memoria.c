@@ -28,6 +28,7 @@ int main(int argc, char* argv[]) {
 	//La memoria tiene en paralelo 3 conexiones: con kernel, cpu, y fileSystem
 
     int tamano = config_get_int_value(config,"TAM_MEMORIA");
+
     int tamano_segmento_0 = config_get_int_value(config,"TAM_SEGMENTO_0");
     
     reservar_espacio_de_memoria(tamano,tamano_segmento_0);

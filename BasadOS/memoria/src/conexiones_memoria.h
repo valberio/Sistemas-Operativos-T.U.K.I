@@ -12,7 +12,7 @@ typedef struct
 }parametros_de_hilo;
 
 void* comunicacion_con_cpu(void* );
-void* comunicacion_con_kernel(void* arg);
-
+void* comunicacion_con_kernel(void*);
+char* respuesta_a_kernel(Segmento*,t_contexto_de_ejecucion*);
 
 #endif /* CONEXIONES_MEMORIA_H_ */

@@ -1,6 +1,5 @@
 F_OPEN Notas1erParcialK9999
-F_OPEN Notas2doParcialK9999
+F_SEEK Notas1erParcialK9999 12
 I/O 5
-F_CLOSE Notas2doParcialK9999
 F_CLOSE Notas1erParcialK9999
 EXIT

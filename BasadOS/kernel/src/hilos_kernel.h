@@ -10,7 +10,9 @@
 typedef struct{
     int conexion;
     char* mensaje;
+    char* valor;
     double estimacion;
+    int pid;
 } Parametros_de_hilo;
 
 

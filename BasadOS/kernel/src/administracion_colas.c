@@ -209,6 +209,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				//ACA CREO LA ESTRUCTURA DEL ARCHIVO PARA LA TABLA DEL PROCESO
 				Archivo_de_proceso* archivo = crear_archivo_para_tabla_proceso(parametros_retorno);
 				list_add(proceso_en_ejecucion->tabla_archivos_abiertos, archivo);
+				log_info(logger, "PID: %i - Abrir Archivo: %s", proceso_en_ejecucion->pid, parametros_retorno);
 				if(buscar_archivo == 0) {//caso de que el archivo no estuviese abierto
 					//Creo la estructura del archivo PARA LA TABLA GLOBAL
 					Archivo* nuevo_archivo = crear_archivo(parametros_retorno);
@@ -221,22 +222,42 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 					enviar_mensaje(parametros_retorno, cliente_filesystem);*/
 					enviar_mensaje("0", cliente_cpu);
 				} else {
-					log_info(logger, "El archivo esta en uso");
 					aniadir_a_bloqueados(proceso_en_ejecucion, parametros_retorno);
 					ejecucion = 0;
-					enviar_mensaje("Se bloqueo el proceso", cliente_cpu);
-				}
-				log_info(logger, "CANTIDAD DE ARCHIVOS ABIERTOS %d", list_size(lista_archivos_abiertos));
-				log_info(logger, "Cantidad de archivos abiertos por PID: %i, total: %d", proceso_en_ejecucion->pid, list_size(proceso_en_ejecucion->tabla_archivos_abiertos));
+					enviar_mensaje("Se bloqueo el proceso", cliente_cpu);				}
 				break;
 			case CERRAR_ARCHIVO:
 				parametros_retorno = recibir_mensaje(cliente_cpu);
+				/*t_paquete* paquete = crear_paquete();
+    			paquete->codigo_operacion = CERRAR_ARCHIVO;
+    			enviar_paquete(paquete, cliente_filesystem);
+				//ENVIO EL NOMBRE DEL ARCHIVO REQUERIDO
+				enviar_mensaje(parametros_retorno, cliente_filesystem);*/
 				gestionar_cierre_archivo(parametros_retorno);
 				borrar_de_tabla_de_archivos(proceso_en_ejecucion, parametros_retorno);
 				//LOGICA CON FILESYSTEM INTRODUCIR AQUI
-				log_info(logger, "CANTIDAD DE ARCHIVOS ABIERTOS %d", list_size(lista_archivos_abiertos));
-				log_info(logger, "Cantidad de archivos abiertos por PID: %i, total: %d", proceso_en_ejecucion->pid, list_size(proceso_en_ejecucion->tabla_archivos_abiertos));
-
+				log_info(logger, "PID: %i - Cerrar Archivo: %s", proceso_en_ejecucion->pid, parametros_retorno);
+				break;
+			case ACTUALIZAR_PUNTERO:
+				parametros_retorno = recibir_mensaje(cliente_cpu);
+				uint32_t valor_puntero = atoi(recibir_mensaje(cliente_cpu));
+				actualizar_puntero(proceso_en_ejecucion, parametros_retorno, valor_puntero);
+				break;
+			case TRUNCAR_ARCHIVO:
+				/*parametros_retorno = recibir_mensaje(cliente_cpu);
+				char* nuevo_tamano = recibir_mensaje(cliente_cpu);
+				Parametros_de_hilo parametros_hilo_kernel_filesystem;
+				parametros_hilo_kernel_filesystem.conexion = cliente_filesystem;
+				parametros_hilo_kernel_filesystem.mensaje = parametros_retorno;
+				parametros_hilo_kernel_filesystem.valor = nuevo_tamano;
+				parametros_hilo_kernel_filesystem.pid = proceso_en_ejecucion->pid;
+				sem_wait(&mutex_cola_blocked);
+				queue_push(cola_blocked, proceso_en_ejecucion);
+				sem_post(&mutex_cola_blocked);
+				pthread_t hilo_truncador_de_archivos;
+				pthread_create(&hilo_truncador_de_archivos, NULL, solicitar_truncamiento, (void *)&parametros_hilo_kernel_filesystem);
+				pthread_detach(hilo_truncador_de_archivos);
+				ejecucion = 0;*/
 				break;
 			default:
 				break; 
@@ -244,6 +265,48 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 		
 	}
 }}
+
+void* solicitar_truncamiento(void* arg){
+	Parametros_de_hilo* args = (Parametros_de_hilo*)arg;
+	int cliente_filesystem = args->conexion;
+	char* nombre_archivo = args->mensaje;
+	char* nuevo_tamano = args->valor;
+	int pid = args->pid;
+	t_paquete* paquete = crear_paquete();
+    paquete->codigo_operacion = TRUNCAR_ARCHIVO;
+    enviar_paquete(paquete, cliente_filesystem);
+	//ENVIO EL NOMBRE DEL ARCHIVO REQUERIDO
+	enviar_mensaje(nombre_archivo, cliente_filesystem);
+	enviar_mensaje(nuevo_tamano, cliente_filesystem);
+	char* respuesta = recibir_mensaje(cliente_filesystem);
+	bool existe_el_archivo(void* elemento){
+		t_pcb* proceso;
+		proceso = elemento;
+
+		return proceso->pid == pid;
+	}
+
+	t_pcb* proceso_a_recuperar = malloc(sizeof(t_pcb*));
+	sem_wait(&mutex_cola_blocked);
+	proceso_a_recuperar = list_find(cola_blocked->elements, existe_el_archivo);
+	list_remove_by_condition(cola_blocked->elements, existe_el_archivo);
+	sem_post(&mutex_cola_blocked);
+
+	sem_wait(&mutex_cola_ready);
+	queue_push(cola_ready, proceso_a_recuperar);
+	sem_post(&mutex_cola_ready);
+	sem_post(&semaforo_procesos_en_ready);
+	
+	return NULL;
+}
+/*void* crear_proceso_wrapper(void* arg) {
+	Parametros_de_hilo* args = (Parametros_de_hilo *)arg;
+    char* parametro = args->mensaje;
+	int conexion = args->conexion;
+	double estimacion = args->estimacion;
+    crear_proceso(parametro, conexion, estimacion);
+    return NULL;
+}*/
 
 Archivo* crear_archivo(char* nombre_archivo){
 	Archivo* archivo = malloc(sizeof(Archivo));
@@ -324,4 +387,16 @@ void borrar_de_tabla_de_archivos(t_pcb* proceso, char* nombre_archivo){
 	list_remove_by_condition(proceso->tabla_archivos_abiertos, existe_el_archivo);
 	free(archivo->nombre);
 	free(archivo);
+}
+
+void actualizar_puntero(t_pcb* proceso, char* nombre_archivo, uint32_t valor_puntero){
+	bool existe_el_archivo(void* elemento){
+		Archivo_de_proceso* archivo_en_tabla;
+		archivo_en_tabla = elemento;
+
+		return strcmp(archivo_en_tabla->nombre, nombre_archivo) == 0;
+	}
+	Archivo_de_proceso* archivo = list_find(proceso->tabla_archivos_abiertos, existe_el_archivo);
+	archivo->puntero = valor_puntero;
+	log_info(logger, "PID: %i - Actualizar puntero Archivo: %s - Puntero %i", proceso->pid, archivo->nombre, archivo->puntero);
 }

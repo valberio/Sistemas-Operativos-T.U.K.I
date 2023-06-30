@@ -310,7 +310,6 @@ int f_open(t_log *logger, t_contexto_de_ejecucion *contexto, int conexion_kernel
     return 1; // Si el archivo esta en uso, corta la ejecucion
 }
 
-
 int f_close(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_kernel_cpu){
     log_info(logger, "PID: %i EJECUTANDO: %s PARAMETROS: %s", contexto->pid, instrucciones[0], instrucciones[1]);
     t_paquete* paquete = crear_paquete();
@@ -318,5 +317,27 @@ int f_close(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contex
     paquete->buffer = serializar_contexto(contexto);
     enviar_paquete(paquete, conexion_kernel_cpu);
     enviar_mensaje(instrucciones[1], conexion_kernel_cpu);
+    return 0;
+}
+
+int f_seek(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_kernel_cpu){
+    log_info(logger, "PID: %i EJECUTANDO: %s PARAMETROS: %s, %s", contexto->pid, instrucciones[0], instrucciones[1], instrucciones[2]);
+    t_paquete* paquete = crear_paquete();
+    paquete->codigo_operacion = ACTUALIZAR_PUNTERO;
+    paquete->buffer = serializar_contexto(contexto);
+    enviar_paquete(paquete, conexion_kernel_cpu);
+    enviar_mensaje(instrucciones[1], conexion_kernel_cpu);
+    enviar_mensaje(instrucciones[2], conexion_kernel_cpu);
+    return 0;
+}
+
+int f_truncate(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_kernel){
+    log_info(logger, "PID: %i EJECUTANDO: %s PARAMETROS: %s, %s", contexto->pid, instrucciones[0], instrucciones[1], instrucciones[2]);
+    t_paquete* paquete = crear_paquete();
+    paquete->codigo_operacion = TRUNCAR_ARCHIVO;
+    paquete->buffer = serializar_contexto(contexto);
+    enviar_paquete(paquete, conexion_kernel_cpu);
+    enviar_mensaje(instrucciones[1], conexion_kernel_cpu);
+    enviar_mensaje(instrucciones[2], conexion_kernel_cpu);
     return 0;
 }

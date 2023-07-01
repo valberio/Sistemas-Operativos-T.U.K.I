@@ -92,11 +92,17 @@ void* comunicacion_con_cpu(void* arg)
                 log_info(logger, "MEMORIA respondió una petición de escritura del CPU");
 
                 direccion_fisica = recibir_mensaje(conexion_cpu);
+                int dir = atoi(direccion_fisica);
                 registro = recibir_mensaje(conexion_cpu);
 
                 char* datos_en_registro = leer_registro(registro, contexto);
                 
+                void* dir_fis = traduccion_dir_logica_fisica(direccion_fisica, contexto);
 
+                memcpy(dir_fis, datos_en_registro, sizeof(datos_en_registro));
+
+                log_info(logger, "Contenido de memoria: %s", (char *)dir_fis); 
+                
                 //Paso 3: informo a CPU que la escritura ocurrió exitosamente
                 log_info(logger, "Lei del registro %s el valor %s", registro, datos_en_registro);
                 paquete_respuesta->codigo_operacion = 0;

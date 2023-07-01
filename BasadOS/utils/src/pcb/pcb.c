@@ -429,3 +429,14 @@ char* leer_registro(char* registro_char, t_contexto_de_ejecucion* contexto)
     return valor_en_registro;
 }
 
+void* traduccion_dir_logica_fisica(int dir_logica, t_contexto_de_ejecucion* contexto){
+    int tam_max_segmento = 10; //HAY QUE SACARLO DEL CONFIG
+    int num_segmento = floor(dir_logica / tam_max_segmento);
+    int desplazamiento_segmento = dir_logica % tam_max_segmento;
+
+    Segmento* segmento = list_get(contexto->tabla_segmentos, num_segmento);
+
+    void* dir_fisica = segmento->inicio;
+    dir_fisica+=desplazamiento_segmento;
+    return dir_fisica;
+}

@@ -34,12 +34,13 @@ typedef struct {
 //void *crear_fcb(char *nombre_archivo);
 void crear_estructuras_fcb(); 
 void recibir_ordenes_kernel(int conexion_filesystem_kernel);
-void crear_fcb(char *nombre_archivo);
-int crear_archivo(char *nombre_archivo, t_superbloque *superbloque, t_bitarray *bitarray);
-void abrir_archivo(char *nombre_archivo, int conexion_filesystem_cliente);
+void crear_estructura_fcb(char *nombre_archivo);
+void* crear_archivo_fcb(char *nombre_archivo);
+void abrir_o_crear_archivo(char *nombre_archivo, int conexion_filesystem_cliente);
+
 int truncar_archivo(char *nombre_archivo, int nro_bloques, t_superbloque superbloque, t_bitarray *bitarray, int bloques, t_log *logger, FILE* archivo_de_bloques);
-void guardar_fcb(FILE *archivo_fcb, t_fcb fcb);
-int liberar_bloques(FILE *archivo_de_bloques, t_fcb fcb, t_bitarray* bitarray, int nro_bloques, t_superbloque superbloque);
+void guardar_fcb(FILE *archivo_fcb, t_fcb* fcb);
+int liberar_bloques(FILE *archivo_de_bloques, t_fcb* fcb, t_bitarray* bitarray, int nro_bloques, t_superbloque superbloque);
 void quitar_bloque_de_lista(FILE *archivo_de_bloques, t_bitarray *bitarray, t_superbloque superbloque, int indirect_pointer);
 int buscar_bloque_disponible(t_bitarray *bitarray, t_superbloque superbloque);
 void agregar_bloque_a_lista(FILE *archivo_de_bloques, t_bitarray *bitarray, t_superbloque superbloque, int indirect_pointer);

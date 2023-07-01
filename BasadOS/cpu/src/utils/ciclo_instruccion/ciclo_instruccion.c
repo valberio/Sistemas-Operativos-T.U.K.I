@@ -51,8 +51,10 @@ int execute(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contex
 			resultado = f_seek(logger, instrucciones, contexto, conexion_cpu_kernel);
 			break;
 		case F_READ:
+			resultado = f_truncate(logger, instrucciones, contexto, conexion_cpu_kernel);
 			break;
 		case F_WRITE:
+			resultado = f_truncate(logger, instrucciones, contexto, conexion_cpu_kernel);
 			break;
 		case F_TRUNCATE:
 			resultado = f_truncate(logger, instrucciones, contexto, conexion_cpu_kernel);

@@ -1,5 +1,4 @@
-F_OPEN Notas1erParcialK9999
-F_SEEK Notas1erParcialK9999 12
+F_OPEN ValenLaMasLinda
 I/O 5
-F_CLOSE Notas1erParcialK9999
+F_CLOSE ValenLaMasLinda
 EXIT

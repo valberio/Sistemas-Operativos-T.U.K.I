@@ -11,6 +11,8 @@ void* administrar_procesos_de_exit(){
 		proceso_a_finalizar = queue_pop(cola_exit);	
 		sem_post(&mutex_cola_exit);		
 
+		//ACA VA TU LOGICA
+
 		enviar_paquete(paquete, proceso_a_finalizar->socket_consola);
 
 		sem_post(&semaforo_multiprogramacion);
@@ -226,16 +228,17 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 					Archivo* nuevo_archivo = crear_archivo(parametros_retorno);
 					list_add(lista_archivos_abiertos, nuevo_archivo);
 					//Y la añado a la lista de archivos abiertos global
-					/*t_paquete* paquete = crear_paquete();
+					t_paquete* paquete = crear_paquete();
     				paquete->codigo_operacion = ABRIR_ARCHIVO;
     				enviar_paquete(paquete, cliente_filesystem);
 					//ENVIO EL NOMBRE DEL ARCHIVO REQUERIDO
-					enviar_mensaje(parametros_retorno, cliente_filesystem);*/
+					enviar_mensaje(parametros_retorno, cliente_filesystem);
 					enviar_mensaje("0", cliente_cpu);
 				} else {
 					aniadir_a_bloqueados(proceso_en_ejecucion, parametros_retorno);
 					ejecucion = 0;
-					enviar_mensaje("Se bloqueo el proceso", cliente_cpu);				}
+					enviar_mensaje("Se bloqueo el proceso", cliente_cpu);
+					}
 				break;
 			case CERRAR_ARCHIVO:
 				parametros_retorno = recibir_mensaje(cliente_cpu);
@@ -255,7 +258,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				actualizar_puntero(proceso_en_ejecucion, parametros_retorno, valor_puntero);
 				break;
 			case TRUNCAR_ARCHIVO:
-				/*parametros_retorno = recibir_mensaje(cliente_cpu);
+				parametros_retorno = recibir_mensaje(cliente_cpu);
 				char* nuevo_tamano = recibir_mensaje(cliente_cpu);
 				Parametros_de_hilo parametros_hilo_kernel_filesystem;
 				parametros_hilo_kernel_filesystem.conexion = cliente_filesystem;
@@ -268,7 +271,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				pthread_t hilo_truncador_de_archivos;
 				pthread_create(&hilo_truncador_de_archivos, NULL, solicitar_truncamiento, (void *)&parametros_hilo_kernel_filesystem);
 				pthread_detach(hilo_truncador_de_archivos);
-				ejecucion = 0;*/
+				ejecucion = 0;
 				break;
 			default:
 				break; 
@@ -290,6 +293,7 @@ void* solicitar_truncamiento(void* arg){
 	enviar_mensaje(nombre_archivo, cliente_filesystem);
 	enviar_mensaje(nuevo_tamano, cliente_filesystem);
 	char* respuesta = recibir_mensaje(cliente_filesystem);
+
 	bool existe_el_archivo(void* elemento){
 		t_pcb* proceso;
 		proceso = elemento;
@@ -310,14 +314,6 @@ void* solicitar_truncamiento(void* arg){
 	
 	return NULL;
 }
-/*void* crear_proceso_wrapper(void* arg) {
-	Parametros_de_hilo* args = (Parametros_de_hilo *)arg;
-    char* parametro = args->mensaje;
-	int conexion = args->conexion;
-	double estimacion = args->estimacion;
-    crear_proceso(parametro, conexion, estimacion);
-    return NULL;
-}*/
 
 Archivo* crear_archivo(char* nombre_archivo){
 	Archivo* archivo = malloc(sizeof(Archivo));

@@ -51,7 +51,9 @@ int main(void)
 
 				int cant_instrucciones = list_size(contexto->instrucciones);
 
-				while (contexto->program_counter < cant_instrucciones) // Itero sobre todas las instrucciones, ejecutando
+				bool cortar_ejecucion = false;
+
+				while (contexto->program_counter < cant_instrucciones && !cortar_ejecucion) // Itero sobre todas las instrucciones, ejecutando
 				{
 					char *instruccion = fetch(contexto);
 
@@ -65,19 +67,17 @@ int main(void)
 					switch (resultado)
 					{
 					case 1:
-						goto desalojo;
+						cortar_ejecucion = true;
+						log_info(logger, "Desalojé el proceso");
+
+						eliminar_paquete(paquete);
+						liberar_contexto_de_ejecucion(contexto);
 						break;
 					case 0:
 						break;
 					}
 					free(instruccion_array);
 				}
-
-			desalojo:
-				log_info(logger, "Desalojé el proceso");
-
-				eliminar_paquete(paquete);
-				liberar_contexto_de_ejecucion(contexto);
 			}
 		}
 		log_destroy(logger);

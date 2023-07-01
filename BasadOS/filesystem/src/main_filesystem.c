@@ -31,8 +31,8 @@ int main()
 	t_config *superbloque_config = iniciar_config(config_get_string_value(config, "PATH_SUPERBLOQUE"));
 	superbloque.block_size = config_get_double_value(superbloque_config, "BLOCK_SIZE");
 	superbloque.block_count = config_get_double_value(superbloque_config, "BLOCK_COUNT");
-	void *bitmap = malloc((superbloque.block_count / 8));
-	t_bitarray *bitarray = bitarray_create(bitmap, sizeof(bitmap));
+	char* bitmap = malloc((superbloque.block_count / 8));
+	t_bitarray *bitarray = bitarray_create_with_mode(bitmap, sizeof(bitmap), LSB_FIRST);
 
 	//Recorro el directorio de FCBs y creo estructuras
 	crear_estructuras_fcb();
@@ -62,11 +62,14 @@ int main()
 void recibir_ordenes_kernel(int conexion_filesystem_kernel){
 	while(conexion_filesystem_kernel){
 		t_paquete* operacion = recibir_contexto_de_ejecucion(conexion_filesystem_kernel);
+		char* nombre_archivo = recibir_mensaje(conexion_filesystem_kernel);
     	switch(operacion->codigo_operacion){
 			case ABRIR_ARCHIVO:
-				char* nombre_archivo = recibir_mensaje(conexion_filesystem_kernel);
-				abrir_archivo(nombre_archivo, conexion_filesystem_kernel);
+				abrir_o_crear_archivo(nombre_archivo, conexion_filesystem_kernel);
 				break;
+			case TRUNCAR_ARCHIVO:
+				char* nuevo_tamano = recibir_mensaje(conexion_filesystem_kernel);
+
 			default:
 				break;
 		}
@@ -96,7 +99,7 @@ void crear_estructuras_fcb()
                 continue;
             }
 			printf("Archivo: %s\n", ruta_fcb);
-			crear_fcb(ruta_fcb);
+			crear_estructura_fcb(ruta_fcb);
 			free(ruta_fcb);
 		}
 		closedir(dir);	
@@ -107,7 +110,7 @@ void crear_estructuras_fcb()
 }
 
 
-void crear_fcb(char* ruta) //habria que llamarlo crear fcb
+void crear_estructura_fcb(char* ruta) //habria que llamarlo crear fcb
 {
 	t_fcb* fcb = malloc(sizeof(t_fcb));
 	t_config *fcb_config = config_create(ruta);
@@ -120,7 +123,7 @@ void crear_fcb(char* ruta) //habria que llamarlo crear fcb
 }
 
 
-void abrir_archivo(char *nombre_archivo, int conexion_filesystem_kernel)
+void abrir_o_crear_archivo(char *nombre_archivo, int conexion_filesystem_kernel)
 {
 	t_list* lista_con_archivo = list_create();
 	bool existe_el_archivo(void* elemento){
@@ -136,113 +139,110 @@ void abrir_archivo(char *nombre_archivo, int conexion_filesystem_kernel)
 	}
 	else
 	{
-		//HAY QUE CREAR EL ARCHIVO COMO LO HABIAS PENSADO NACHITOOO
-		log_info(logger, "No existe el archivo al que se intenta acceder.");
+		crear_archivo_fcb(nombre_archivo);
+		log_info(logger, "Crear Archivo: %s", nombre_archivo);
+		log_info(logger, "Abrir Archivo: %s", nombre_archivo);
+
 	}
 }
-/*
-int crear_archivo(char *nombre_archivo, t_superbloque *superbloque, t_bitarray *bitarray)
+
+void *crear_archivo_fcb(char *nombre_archivo)
 {
-	char *ruta;
-	strcpy(ruta, "../files/");
+	char* ruta = malloc(sizeof(nombre_archivo) + 11);
+	strcpy(ruta, "fs/fcb/");
 	strcat(ruta, nombre_archivo);
-	strcat(ruta, ".config");
+	strcat(ruta, ".dat");
 	FILE *archivo = fopen(ruta, "wb");
 	if (archivo == NULL)
 	{
 		log_info(logger, "Error al crear el archivo.");
 	}
-	crear_fcb(nombre_archivo);
-	free(ruta);
-	return 0;
-}
-
-void *crear_fcb(char *nombre_archivo)
-{
-	char *ruta;
-	strcpy(ruta, "../files/");
-	strcat(ruta, nombre_archivo);
-	strcat(ruta, ".config");
-	t_config *fcb = config_create(ruta);
+	t_config* fcb = iniciar_config(ruta);
 	config_set_value(fcb, "NOMBRE_ARCHIVO", nombre_archivo);
 	config_set_value(fcb, "TAMANIO_ARCHIVO", "0");
 	config_set_value(fcb, "PUNTERO_DIRECTO", "0");
 	config_set_value(fcb, "PUNTERO_INDIRECTO", "0");
 	config_save(fcb);
+	crear_estructura_fcb(ruta);
 	free(ruta);
-	return 0;
+	return NULL;
 }
 
 
 int truncar_archivo(char *nombre_archivo, int nro_bloques, t_superbloque superbloque, t_bitarray *bitarray, int bloques, t_log *logger, FILE* archivo_de_bloques)
 {
-Al momento de truncar un archivo, pueden ocurrir 2 situaciones:
+/*Al momento de truncar un archivo, pueden ocurrir 2 situaciones:
 Ampliar el tamaño del archivo: Al momento de ampliar el tamaño del archivo deberá actualizar el tamaño del archivo en el FCB y se le deberán asignar tantos bloques como sea necesario para poder direccionar el nuevo tamaño.
 Reducir el tamaño del archivo: Se deberá asignar el nuevo tamaño del archivo en el FCB y se deberán marcar como libres todos los bloques que ya no sean necesarios para direccionar el tamaño del archivo (descartando desde el final del archivo hacia el principio).
-
+*/
 	char *ruta;
-	t_fcb *fcb = malloc(sizeof(t_fcb));
+	t_fcb* fcb = malloc(sizeof(t_fcb));
+	fcb->name = malloc(sizeof(nombre_archivo));
 	unsigned bloques_restantes;
-	strcpy(ruta, "../files/");
+	/*strcpy(ruta, "fs/fcb");
 	strcat(ruta, nombre_archivo);
 	strcat(ruta, ".config");
-	FILE *archivo_fcb = fopen(ruta, "wr+");  
-	if (abrir_archivo(nombre_archivo, superbloque, bitarray))
+	FILE *archivo_fcb = fopen(ruta, "wr+");  */
+	bool es_el_fcb(void* elemento){
+		t_fcb* fcb_en_tabla;
+		fcb_en_tabla = elemento;
+
+		return strcmp(fcb_en_tabla->name, nombre_archivo) == 0;
+	}
+	fcb = list_find(fcb_list, es_el_fcb);
+		
+	if (fcb->direct_pointer == 0 && bloques <= 0)
 	{
-		*fcb = leer_fcb(nombre_archivo);
-		if (fcb->direct_pointer == 0 && bloques <= 0)
+		log_info(logger, "No se puede truncar el archivo.");
+	}
+	else if (bloques >= 0)
+	{ // Ampliar el tamaño del archivo
+		for (int i = 0; i < bloques; i++)
 		{
-			log_info(logger, "No se puede truncar el archivo.");
+			asignar_bloque(fcb, bitarray, archivo_de_bloques, superbloque);
 		}
-		else if (bloques >= 0)
-		{ // Ampliar el tamaño del archivo
-			for (int i = 0; i < bloques; i++)
-			{
-				asignar_bloque(fcb, bitarray, archivo_de_bloques, superbloque);
-			}
-		}
-		else if (fcb->direct_pointer != 0 && fcb->indirect_pointer == 0 && bloques == 1)
+	}
+	else if (fcb->direct_pointer != 0 && fcb->indirect_pointer == 0 && bloques == 1)
+	{
+		bitarray_clean_bit(bitarray, fcb->direct_pointer);
+		fcb->direct_pointer = 0;
+	}
+	else if (fcb->direct_pointer != 0 && fcb->indirect_pointer != 0 && bloques > 0)
+	{
+		bloques_restantes = liberar_bloques(archivo_de_bloques, fcb, bitarray, nro_bloques, superbloque);
+		if (bloques_restantes)
 		{
 			bitarray_clean_bit(bitarray, fcb->direct_pointer);
+			bitarray_clean_bit(bitarray, fcb->direct_pointer);
 			fcb->direct_pointer = 0;
-		}
-		else if (fcb->direct_pointer != 0 && fcb->indirect_pointer != 0 && bloques > 0)
-		{
-			bloques_restantes = liberar_bloques(archivo_de_bloques, *fcb, bitarray, nro_bloques, superbloque);
+			bloques_restantes--;
 			if (bloques_restantes)
 			{
-				bitarray_clean_bit(bitarray, fcb->direct_pointer);
-				bitarray_clean_bit(bitarray, fcb->direct_pointer);
-				fcb->direct_pointer = 0;
-				bloques_restantes--;
-				if (bloques_restantes)
-				{
-					log_info(logger, "No se puede truncar el archivo.");
-				}
+				log_info(logger, "No se puede truncar el archivo.");
 			}
 		}
 	}
-	guardar_fcb(archivo_fcb, *fcb);
-	fclose(archivo_fcb);
+	//guardar_fcb(archivo_fcb, *fcb);
+	//fclose(archivo_fcb);
 	free(fcb);
 }
 
-void guardar_fcb(FILE *archivo_fcb, t_fcb fcb)
+void guardar_fcb(FILE *archivo_fcb, t_fcb* fcb)
 {
 	t_config *fcb_config;
-	config_set_value(fcb_config, "NOMBRE_ARCHIVO", fcb.name);
-	config_set_value(fcb_config, "TAMANIO_ARCHIVO", fcb.size);
-	config_set_value(fcb_config, "PUNTERO_DIRECTO", fcb.direct_pointer);
-	config_set_value(fcb_config, "PUNTERO_INDIRECTO", fcb.indirect_pointer);
+	config_set_value(fcb_config, "NOMBRE_ARCHIVO", fcb->name);
+	config_set_value(fcb_config, "TAMANIO_ARCHIVO", fcb->size);
+	config_set_value(fcb_config, "PUNTERO_DIRECTO", fcb->direct_pointer);
+	config_set_value(fcb_config, "PUNTERO_INDIRECTO", fcb->indirect_pointer);
 	config_save_in_file(fcb_config, dirname(archivo_fcb));
 	config_destroy(fcb_config);
 }
 
-int liberar_bloques(FILE *archivo_de_bloques, t_fcb fcb, t_bitarray* bitarray, int nro_bloques, t_superbloque superbloque)
+int liberar_bloques(FILE *archivo_de_bloques, t_fcb* fcb, t_bitarray* bitarray, int nro_bloques, t_superbloque superbloque)
 {
-	while (nro_bloques != 0 && fcb.indirect_pointer != 0)
+	while (nro_bloques != 0 && fcb->indirect_pointer != 0)
 	{
-		quitar_bloque_de_lista(archivo_de_bloques, bitarray, superbloque, fcb.indirect_pointer);
+		quitar_bloque_de_lista(archivo_de_bloques, bitarray, superbloque, fcb->indirect_pointer);
 		nro_bloques--;
 	}
 	return nro_bloques;
@@ -353,7 +353,7 @@ t_bloque* leer_bloque(FILE *archivo_de_bloques, t_superbloque superbloque, unsig
 	fread(bloque, superbloque.block_size, 1, archivo_de_bloques);
 	return bloque;
 }
-
+/*
 t_list *leer_archivo(FILE *archivo_de_bloques, char *nombre_archivo, t_superbloque superbloque)
 {
 	t_fcb fcb = leer_fcb(nombre_archivo);
@@ -415,4 +415,5 @@ void escribir_archivo(FILE *archivo_de_bloques, char *nombre_archivo, uint32_t *
 		bloque = *list_get(bloques, j);
 		escribir_bloque(archivo_de_bloques, bloque, j, superbloque);
 	}
-}*/
+}
+*/

@@ -21,6 +21,11 @@ void* crear_proceso_wrapper(void* arg) {
 
 void crear_proceso(char* codigo_recibido, int socket_consola, double estimado_inicial) {
 	t_pcb* pcb = crear_pcb(codigo_recibido, socket_consola, estimado_inicial);
+	
+	
+	//ACA VA TU LOGICA
+
+
 	log_info(logger, "Cant instr en creacion del pcb %i",  pcb->contexto_de_ejecucion->cant_instrucciones);
 	sem_wait(&mutex_cola_new);
 	queue_push(cola_new, pcb);

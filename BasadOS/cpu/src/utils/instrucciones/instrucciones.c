@@ -285,5 +285,29 @@ int f_truncate(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* con
     enviar_paquete(paquete, conexion_kernel);
     enviar_mensaje(instrucciones[1], conexion_kernel);
     enviar_mensaje(instrucciones[2], conexion_kernel);
-    return 0;
+    return 1;
+}
+
+int f_read(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_kernel_cpu){
+    log_info(logger, "PID: %i EJECUTANDO: %s PARAMETROS: %s, %s, %s", contexto->pid, instrucciones[0], instrucciones[1], instrucciones[2], instrucciones[3]);
+    t_paquete* paquete = crear_paquete();
+    paquete->codigo_operacion = PETICION_LECTURA;
+    paquete->buffer = serializar_contexto(contexto);
+    enviar_paquete(paquete, conexion_kernel_cpu);
+    enviar_mensaje(instrucciones[1], conexion_kernel_cpu);
+    enviar_mensaje(instrucciones[2], conexion_kernel_cpu);
+    enviar_mensaje(instrucciones[3], conexion_kernel_cpu);
+    return 1;
+}
+
+int f_write(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_kernel_cpu){
+    log_info(logger, "PID: %i EJECUTANDO: %s PARAMETROS: %s, %s, %s", contexto->pid, instrucciones[0], instrucciones[1], instrucciones[2], instrucciones[3]);
+    t_paquete* paquete = crear_paquete();
+    paquete->codigo_operacion = PETICION_LECTURA;
+    paquete->buffer = serializar_contexto(contexto);
+    enviar_paquete(paquete, conexion_kernel_cpu);
+    enviar_mensaje(instrucciones[1], conexion_kernel_cpu);
+    enviar_mensaje(instrucciones[2], conexion_kernel_cpu);
+    enviar_mensaje(instrucciones[3], conexion_kernel_cpu);
+    return 1;
 }

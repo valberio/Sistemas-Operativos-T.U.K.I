@@ -28,9 +28,14 @@ void* comunicacion_con_kernel(void* arg)
                 Segmento* segmento_nuevo = crear_segmento(id_int, tamanio_int);
                 char* respuesta = respuesta_a_kernel(segmento_nuevo, contexto);
                 
+                //TODO: esto tiene que devolver un paquete con el contexto actualizado, y en el codop, la respuesta de memoria
 
                 enviar_mensaje(respuesta, conexion_kernel);
                 log_info(logger, "MEMORIA envio el siguiente mensaje a kernel: %s",respuesta);
+
+                t_paquete* paquete_respuesta = crear_paquete();
+                paquete_respuesta->buffer = serializar_contexto(contexto);
+                enviar_paquete(paquete_respuesta, conexion_kernel);
 
                 break;
             case ELIMINAR_SEGMENTO:
@@ -38,9 +43,6 @@ void* comunicacion_con_kernel(void* arg)
             default:
                 break;
         }
-        
-        //t_paquete* paquete = recibir_paquete(conexion_kernel);
-        //log_info(logger, "Recibí de kernel: %i", paquete->codigo_operacion);
     }
     return  NULL;   
 }
@@ -94,6 +96,8 @@ void* comunicacion_con_cpu(void* arg)
     return NULL;
 }
 
+
+//TODO: esto hay que cambiarlo a un enum
 char* respuesta_a_kernel(Segmento* segmento, t_contexto_de_ejecucion* contexto){
     if(segmento->tamano > 0){
         list_add(contexto->tabla_segmentos, segmento);

@@ -25,7 +25,7 @@ void* administrar_procesos_de_new_wrapper(void* arg){
     return NULL;
 }
 
-void administrar_procesos_de_new(int cliente_cpu){
+void administrar_procesos_de_new(int cliente_cpu){ //TODO: mandarle los procesos en NEW a memoria para que les ponga el segm. 0
 	while(cliente_cpu){
 		
 		sem_wait(&semaforo_de_procesos_para_ejecutar);
@@ -159,6 +159,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 
 			case CREAR_SEGMENTO:
 				//CPU me pide que le pida a memoria que cree un segmento
+				log_info(logger, "El PID %i ahora tiene %i segmentos", proceso_en_ejecucion->contexto_de_ejecucion->pid, list_size(proceso_en_ejecucion->contexto_de_ejecucion->tabla_segmentos));
 				t_paquete* paquete_a_memoria = crear_paquete();
 				paquete_a_memoria->codigo_operacion = CREAR_SEGMENTO;
 				paquete_a_memoria->buffer = serializar_contexto(contexto_actualizado);
@@ -176,9 +177,16 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				enviar_mensaje(tamanio, cliente_memoria);
 
 				//Espero el OK de memoria
-				char* respuesta = recibir_mensaje(cliente_memoria);
+				//TODO: cambiar a un paquete
+				char* respuesta = recibir_mensaje(cliente_memoria); //Aca memoria me puede mandar a compactar, hay que hacer
+																	//un switch para manejar los retornos de memoria
 				log_info(logger, "Recibi de memoria %s", respuesta);
-				//enviar_mensaje("Creame un segmento", cliente_memoria);
+				
+				t_paquete* paquete_respuesta = recibir_paquete(cliente_memoria);
+				proceso_en_ejecucion->contexto_de_ejecucion = deserializar_contexto_de_ejecucion(paquete_respuesta->buffer);
+
+				log_info(logger, "El PID %i ahora tiene %i segmentos", proceso_en_ejecucion->contexto_de_ejecucion->pid, list_size(proceso_en_ejecucion->contexto_de_ejecucion->tabla_segmentos));
+
 				ejecucion = 0;
 				
 				sem_wait(&mutex_cola_ready);

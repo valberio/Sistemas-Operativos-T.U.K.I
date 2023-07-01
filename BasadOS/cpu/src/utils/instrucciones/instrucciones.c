@@ -228,6 +228,7 @@ enum Registros string_a_registro(char *registro)
 int mov_in(t_log *logger, char **instrucciones, t_contexto_de_ejecucion *contexto, int conexion_memoria_cpu)
 {
     log_info(logger, "PID: %i EJECUTANDO: %s PARAMETROS: %s, %s", contexto->pid, instrucciones[0], instrucciones[1], instrucciones[2]);
+    
     // Envio a memoria un paquete que indique con su código de operación que quiero LEER
     t_paquete *paquete = crear_paquete();
     paquete->codigo_operacion = PETICION_LECTURA; // Tengo que poder serializar la direccion de la que quiero leer

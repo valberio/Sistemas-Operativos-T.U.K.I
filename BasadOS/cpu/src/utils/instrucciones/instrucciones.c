@@ -167,68 +167,11 @@ int i_o(t_log *logger, t_contexto_de_ejecucion *contexto, int conexion_cpu_kerne
     return 1;
 }
 
-// Esta funcion deberia estar en la carpeta del pcb
-enum Registros string_a_registro(char *registro)
-{
-    if (strncmp(registro, "AX", 2) == 0)
-    {
-        return rAX;
-    }
-    if (strncmp(registro, "BX", 2) == 0)
-    {
-        return rBX;
-    }
-    if (strncmp(registro, "CX", 2) == 0)
-    {
-        return rCX;
-    }
-    if (strncmp(registro, "DX", 2) == 0)
-    {
-        return rDX;
-    }
-
-    // Registros de 8 bits
-    if (strncmp(registro, "EAX", 3) == 0)
-    {
-        return rEAX;
-    }
-    if (strncmp(registro, "EBX", 3) == 0)
-    {
-        return rEBX;
-    }
-    if (strncmp(registro, "ECX", 3) == 0)
-    {
-        return rECX;
-    }
-    if (strncmp(registro, "EDX", 3) == 0)
-    {
-        return rEDX;
-    }
-
-    // Registros de 16 bits
-    if (strncmp(registro, "RAX", 3) == 0)
-    {
-        return rRAX;
-    }
-    if (strncmp(registro, "REX", 3) == 0)
-    {
-        return rRBX;
-    }
-    if (strncmp(registro, "RCX", 3) == 0)
-    {
-        return rRCX;
-    }
-    if (strncmp(registro, "RDX", 3) == 0)
-    {
-        return rRDX;
-    }
-    return EXIT_FAILURE;
-}
 
 int mov_in(t_log *logger, char **instrucciones, t_contexto_de_ejecucion *contexto, int conexion_memoria_cpu)
 {
     log_info(logger, "PID: %i EJECUTANDO: %s PARAMETROS: %s, %s", contexto->pid, instrucciones[0], instrucciones[1], instrucciones[2]);
-    
+
     // Envio a memoria un paquete que indique con su código de operación que quiero LEER
     t_paquete *paquete = crear_paquete();
     paquete->codigo_operacion = PETICION_LECTURA; // Tengo que poder serializar la direccion de la que quiero leer
@@ -251,11 +194,13 @@ int mov_out(t_log *logger, char **instrucciones, t_contexto_de_ejecucion *contex
     // Envio a memoria un paquete que indique con su código de operación que quiero ESCRIBIR
     t_paquete *paquete = crear_paquete();
     paquete->codigo_operacion = PETICION_ESCRITURA; // Tengo que poder serializar la direccion de la que quiero leer
-
+    paquete->buffer = serializar_contexto(contexto);
     enviar_paquete(paquete, conexion_memoria_cpu);
 
-    // Memoria responde con un OK confirmado que escribió lo que debía
+    enviar_mensaje(instrucciones[1], conexion_memoria_cpu);
+    enviar_mensaje(instrucciones[2], conexion_memoria_cpu);
 
+    // Memoria responde con un OK confirmado que escribió lo que debía
     t_paquete *paquete_respuesta = recibir_paquete(conexion_memoria_cpu);
 
     log_info(logger, "PID: %i EJECUTANDO: %s - PARAMETROS: %s, %s - RTA RECIBIDA: %i", contexto->pid, instrucciones[0], instrucciones[1], instrucciones[2], paquete_respuesta->codigo_operacion);

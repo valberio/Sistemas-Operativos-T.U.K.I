@@ -51,22 +51,7 @@ enum Instrucciones{
     EXIT
 };
 
-enum Registros{
-    rAX,
-    rBX,
-    rCX,
-    rDX,
 
-    rEAX,
-    rEBX,
-    rECX,
-    rEDX,
-
-    rRAX,
-    rRBX,
-    rRCX,
-    rRDX
-};
 
 
 #endif /* INSTRUCCIONES_H_ */

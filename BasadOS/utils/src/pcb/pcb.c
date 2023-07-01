@@ -312,3 +312,120 @@ t_contexto_de_ejecucion* deserializar_contexto_de_ejecucion(t_buffer* buffer){
     
     return contexto;
 }
+
+
+enum Registros string_a_registro(char *registro)
+{
+    if (strncmp(registro, "AX", 2) == 0)
+    {
+        return rAX;
+    }
+    if (strncmp(registro, "BX", 2) == 0)
+    {
+        return rBX;
+    }
+    if (strncmp(registro, "CX", 2) == 0)
+    {
+        return rCX;
+    }
+    if (strncmp(registro, "DX", 2) == 0)
+    {
+        return rDX;
+    }
+
+    // Registros de 8 bits
+    if (strncmp(registro, "EAX", 3) == 0)
+    {
+        return rEAX;
+    }
+    if (strncmp(registro, "EBX", 3) == 0)
+    {
+        return rEBX;
+    }
+    if (strncmp(registro, "ECX", 3) == 0)
+    {
+        return rECX;
+    }
+    if (strncmp(registro, "EDX", 3) == 0)
+    {
+        return rEDX;
+    }
+
+    // Registros de 16 bits
+    if (strncmp(registro, "RAX", 3) == 0)
+    {
+        return rRAX;
+    }
+    if (strncmp(registro, "REX", 3) == 0)
+    {
+        return rRBX;
+    }
+    if (strncmp(registro, "RCX", 3) == 0)
+    {
+        return rRCX;
+    }
+    if (strncmp(registro, "RDX", 3) == 0)
+    {
+        return rRDX;
+    }
+    return EXIT_FAILURE;
+}
+
+char* leer_registro(char* registro_char, t_contexto_de_ejecucion* contexto)
+{
+    enum Registros registro = string_a_registro(registro_char);
+
+    char* valor_en_registro;
+
+    switch (registro)
+    {
+    case rAX:
+        strcpy(valor_en_registro, contexto->registros->AX);
+        break;
+    case rBX:
+        strcpy(valor_en_registro, contexto->registros->BX);
+        break;
+    case rCX:
+        strcpy(valor_en_registro, contexto->registros->CX);
+        break;
+    case rDX:
+        strcpy(valor_en_registro, contexto->registros->DX);
+        break;
+
+    // Registros 8 bits
+    case rEAX:
+        strcpy(valor_en_registro, contexto->registros->EAX);
+        break;
+
+    case rEBX:
+        strcpy(valor_en_registro, contexto->registros->EBX);
+        break;
+
+    case rECX:
+        strcpy(valor_en_registro, contexto->registros->ECX);
+        break;
+
+    case rEDX:
+        strcpy(valor_en_registro, contexto->registros->EDX);
+        break;
+
+    // Registros de 16 bits
+    case rRAX:
+        strcpy(valor_en_registro, contexto->registros->RAX);
+        break;
+
+    case rRBX:
+        strcpy(valor_en_registro, contexto->registros->RBX);
+        break;
+
+    case rRCX:
+        strcpy(valor_en_registro, contexto->registros->RCX);
+        break;
+
+    case rRDX:
+        strcpy(valor_en_registro, contexto->registros->RDX);
+        break;
+    }
+    return valor_en_registro;
+}
+

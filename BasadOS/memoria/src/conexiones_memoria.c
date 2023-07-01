@@ -65,7 +65,11 @@ void* comunicacion_con_cpu(void* arg)
     while(conexion_cpu >= 0)
     {
         t_paquete* peticion = recibir_paquete(conexion_cpu);
+        t_contexto_de_ejecucion* contexto = deserializar_contexto_de_ejecucion(peticion->buffer);
         t_paquete* paquete_respuesta = crear_paquete();
+
+        char* registro;
+        char* direccion_fisica;
 
         log_info(logger, "MEMORIA recibió una petición del CPU");
 
@@ -74,20 +78,30 @@ void* comunicacion_con_cpu(void* arg)
             case PETICION_LECTURA: //Caso lectura, mov_in
                 paquete_respuesta->codigo_operacion = 0;
 
-
-                char* registro = recibir_mensaje(conexion_cpu);
-                void* direccion_fisica = recibir_mensaje(conexion_cpu);
+                registro = recibir_mensaje(conexion_cpu);
+                direccion_fisica = recibir_mensaje(conexion_cpu);
 
                 log_info(logger, "MEMORIA recibió el registro %s", registro);
                 log_info(logger, "MEMORIA recibió la dirección %s", (char*)direccion_fisica);
 
                 enviar_paquete(paquete_respuesta, conexion_cpu);
                 log_info(logger, "MEMORIA respondió una petición de lectura del CPU");
+    
                 break;
             case PETICION_ESCRITURA: //Caso escritura mov_out
-                paquete_respuesta->codigo_operacion = 1;
-                enviar_paquete(paquete_respuesta, conexion_cpu);
                 log_info(logger, "MEMORIA respondió una petición de escritura del CPU");
+
+                direccion_fisica = recibir_mensaje(conexion_cpu);
+                registro = recibir_mensaje(conexion_cpu);
+
+                char* datos_en_registro = leer_registro(registro, contexto);
+                
+
+                //Paso 3: informo a CPU que la escritura ocurrió exitosamente
+                log_info(logger, "Lei del registro %s el valor %s", registro, datos_en_registro);
+                paquete_respuesta->codigo_operacion = 0;
+                paquete_respuesta->buffer = serializar_contexto(contexto);
+                enviar_paquete(paquete_respuesta, conexion_cpu);
                 break;
             default:
                 break;

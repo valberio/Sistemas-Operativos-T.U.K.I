@@ -67,6 +67,8 @@ t_paquete* recibir_contexto_de_ejecucion(int socket_cliente);
 void instanciar_registros(t_registros* registro);
 t_buffer* serializar_contexto(t_contexto_de_ejecucion* contexto);
 t_contexto_de_ejecucion* deserializar_contexto_de_ejecucion(t_buffer* buffer);
+enum Registros string_a_registro(char *registro);
+char* leer_registro(char* registro, t_contexto_de_ejecucion* contexto);
 
 
 enum Estados {
@@ -76,6 +78,22 @@ enum Estados {
     BLOCKED, 
     EXITT
 };
-//void liberar_registros(t_registros registros);
+
+enum Registros{
+    rAX,
+    rBX,
+    rCX,
+    rDX,
+
+    rEAX,
+    rEBX,
+    rECX,
+    rEDX,
+
+    rRAX,
+    rRBX,
+    rRCX,
+    rRDX
+};
 
 #endif  /*PCB_H_ */

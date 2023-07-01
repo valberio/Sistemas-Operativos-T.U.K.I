@@ -336,8 +336,8 @@ int f_truncate(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* con
     t_paquete* paquete = crear_paquete();
     paquete->codigo_operacion = TRUNCAR_ARCHIVO;
     paquete->buffer = serializar_contexto(contexto);
-    enviar_paquete(paquete, conexion_kernel_cpu);
-    enviar_mensaje(instrucciones[1], conexion_kernel_cpu);
-    enviar_mensaje(instrucciones[2], conexion_kernel_cpu);
+    enviar_paquete(paquete, conexion_kernel);
+    enviar_mensaje(instrucciones[1], conexion_kernel);
+    enviar_mensaje(instrucciones[2], conexion_kernel);
     return 0;
 }

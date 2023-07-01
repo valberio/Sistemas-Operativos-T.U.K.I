@@ -169,8 +169,11 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				char* tamanio = recibir_mensaje(cliente_cpu);
 				log_info(logger, "Recibi de CPU %s", tamanio);
 
-				//Envio contexto y parametros a memoria
+				//Envio contexto
 				enviar_paquete(paquete_a_memoria, cliente_memoria);
+				//Envio parametros
+				enviar_mensaje(id, cliente_memoria);
+				enviar_mensaje(tamanio, cliente_memoria);
 
 				//Espero el OK de memoria
 				char* respuesta = recibir_mensaje(cliente_memoria);

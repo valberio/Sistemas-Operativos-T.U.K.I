@@ -11,7 +11,7 @@ void* comunicacion_con_kernel(void* arg)
 
     while(conexion_kernel >= 0)
     {
-        
+        log_info(logger, "Recibi una peticion de KERNEL"); 
         t_paquete* paquete = recibir_paquete(conexion_kernel);
         t_contexto_de_ejecucion* contexto = deserializar_contexto_de_ejecucion(paquete->buffer);
 

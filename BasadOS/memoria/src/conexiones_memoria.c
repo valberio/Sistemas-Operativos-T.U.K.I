@@ -55,12 +55,17 @@ void* comunicacion_con_kernel(void* arg)
 
 
                 int id_a_eliminar_int = atoi(id_a_eliminar);
+                Segmento *test = list_get(contexto->tabla_segmentos, 0);
                 int posicion = get_index_of_list(contexto->tabla_segmentos, id_a_eliminar_int);
-                log_info(logger, "El id es: %s", posicion); 
+                log_info(logger, "La posicion es: %d", posicion); 
                 eliminar_segmento(id_a_eliminar_int);
-                list_remove(contexto->tabla_segmentos,get_index_of_list(contexto->tabla_segmentos,posicion));
+                list_remove(contexto->tabla_segmentos,posicion);
 
-                enviar_mensaje("Listo",conexion_kernel);
+                
+                t_paquete* paquete_a_kernel_eliminar = crear_paquete();
+                paquete_a_kernel_eliminar->codigo_operacion = 0;
+                paquete_a_kernel_eliminar->buffer = serializar_contexto(contexto);
+                enviar_paquete(paquete_a_kernel_eliminar, conexion_kernel);
                 break;
             default:
                 break;
@@ -117,13 +122,11 @@ void* comunicacion_con_cpu(void* arg)
                 int dir = atoi(direccion_fisica);
                 registro = recibir_mensaje(conexion_cpu);
 
+                log_info(logger, "CPU me pidio MOV_OUT, hay %i segmentos en la tabla de segmentos", list_size(contexto->tabla_segmentos));
+
                 char* datos_en_registro = leer_registro(registro, contexto);
                 
-                void* dir_fis = traduccion_dir_logica_fisica(direccion_fisica, contexto);
-
-                memcpy(dir_fis, datos_en_registro, sizeof(datos_en_registro));
-
-                log_info(logger, "Contenido de memoria: %s", (char *)dir_fis); 
+                int dir_fis = traduccion_dir_logica_fisica(direccion_fisica, contexto);
                 
                 //Paso 3: informo a CPU que la escritura ocurrió exitosamente
                 log_info(logger, "Lei del registro %s el valor %s", registro, datos_en_registro);

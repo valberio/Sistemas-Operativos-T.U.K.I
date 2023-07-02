@@ -227,19 +227,17 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				//CPU me pide que le pida a memoria que elimine un segmento
 				t_paquete* paquete_a_memoria1 = crear_paquete();
 				paquete_a_memoria1->codigo_operacion = ELIMINAR_SEGMENTO;
-				paquete->buffer = NULL;
+				paquete_a_memoria1->buffer = serializar_contexto(contexto_actualizado);
 				char* id_a_eliminar = recibir_mensaje(cliente_cpu);
 				log_info(logger, "Recibi de CPU %s", id_a_eliminar);
 
 				enviar_paquete(paquete_a_memoria1, cliente_memoria);
 				eliminar_paquete(paquete_a_memoria1);
+				enviar_mensaje(id_a_eliminar, cliente_memoria);
 				
-				enviar_mensaje(id_a_eliminar,cliente_memoria);
-				recibir_mensaje(cliente_memoria);
-
 				paquete_respuesta = recibir_paquete(cliente_memoria);
 				t_contexto_de_ejecucion* contexto_respuesta = deserializar_contexto_de_ejecucion(paquete->buffer);
-				contexto_actualizado = contexto_respuesta;
+				proceso_en_ejecucion->contexto_de_ejecucion = contexto_respuesta;
 				ejecucion = 0;
 
 				sem_wait(&mutex_cola_ready);

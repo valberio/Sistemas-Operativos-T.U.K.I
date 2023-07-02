@@ -33,22 +33,6 @@ int main(int argc, char *argv[])
 
     reservar_espacio_de_memoria(tamano, tamano_segmento_0);
 
-    // crear_segmento(1, 4);
-    // crear_segmento(2, 2);
-    // crear_segmento(3, 4);
-    // eliminar_segmento(2);
-    // for (int i = 0; i < list_size(lista_de_memoria); i++)
-    // {
-    //     Segmento *xd = list_get(lista_de_memoria, i);
-    //     log_info(logger, "SEGMENTO ID: %d, TAMANO: %d", xd->id, xd->tamano);
-    // }
-    // compactar();
-    // for (int i = 0; i < list_size(lista_de_memoria); i++)
-    // {
-    //     Segmento *xd = list_get(lista_de_memoria, i);
-    //     log_info(logger, "SEGMENTO ID: %d, TAMANO: %d", xd->id, xd->tamano);
-    // }
-
     // Creo el server de la memoria en esta IP y puerto
 
     char *puerto_escucha = config_get_string_value(config, "PUERTO_ESCUCHA");

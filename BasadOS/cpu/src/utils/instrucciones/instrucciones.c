@@ -195,6 +195,7 @@ int mov_out(t_log *logger, char **instrucciones, t_contexto_de_ejecucion *contex
     t_paquete *paquete = crear_paquete();
     paquete->codigo_operacion = PETICION_ESCRITURA; // Tengo que poder serializar la direccion de la que quiero leer
     paquete->buffer = serializar_contexto(contexto);
+    log_info(logger, "CPU manda un contexto con %i segmentos", list_size(contexto->tabla_segmentos));
     enviar_paquete(paquete, conexion_memoria_cpu);
 
     enviar_mensaje(instrucciones[1], conexion_memoria_cpu);

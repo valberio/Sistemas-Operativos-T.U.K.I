@@ -40,7 +40,7 @@ void* comunicacion_con_kernel(void* arg)
                 if(segmento_nuevo->tamano == -1){
                     recibir_mensaje(conexion_kernel);
                     log_info(logger,"SE pidio compactar");
-                    compactar();
+                    compactar(); 
                     enviar_mensaje("Listo",conexion_kernel);
                 }
 
@@ -53,9 +53,10 @@ void* comunicacion_con_kernel(void* arg)
 
 
                 int id_a_eliminar_int = atoi(id_a_eliminar);
-
+                int posicion = get_index_of_list(contexto->tabla_segmentos, id_a_eliminar_int);
+                log_info(logger, "El id es: %s", posicion); 
                 eliminar_segmento(id_a_eliminar_int);
-                list_remove(contexto->tabla_segmentos,get_index_of_list(contexto->tabla_segmentos,id_a_eliminar_int));
+                list_remove(contexto->tabla_segmentos,get_index_of_list(contexto->tabla_segmentos,posicion));
 
                 enviar_mensaje("Listo",conexion_kernel);
                 break;

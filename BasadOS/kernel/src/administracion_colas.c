@@ -188,7 +188,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				switch(paquete_respuesta->codigo_operacion){
 					case SEGMENTO_CREADO:
 						t_contexto_de_ejecucion* contexto_respuesta = deserializar_contexto_de_ejecucion(paquete->buffer);
-						log_info(logger, "El PID %i ahora tiene %i segmentos", contexto_respuesta->pid, list_size(contexto_respuesta->tabla_segmentos));
+						contexto_actualizado = contexto_respuesta;
 						break;
 					case COMPACTACION_NECESARIA:
 						//checkear operaciones entre filesystem y memoria
@@ -235,6 +235,9 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				enviar_mensaje(id_a_eliminar,cliente_memoria);
 				recibir_mensaje(cliente_memoria);
 
+				t_paquete* paquete_respuesta = recibir_paquete(cliente_memoria);
+				t_contexto_de_ejecucion* contexto_respuesta = deserializar_contexto_de_ejecucion(paquete->buffer);
+				contexto_actualizado = contexto_respuesta;
 				ejecucion = 0;
 
 				sem_wait(&mutex_cola_ready);

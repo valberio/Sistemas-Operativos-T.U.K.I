@@ -233,7 +233,8 @@ int delete_segment(t_log *logger, char **instrucciones, t_contexto_de_ejecucion 
     paquete->codigo_operacion = ELIMINAR_SEGMENTO;
     paquete->buffer = serializar_contexto(contexto);
     enviar_paquete(paquete, conexion_kernel_cpu);
-
+    enviar_mensaje(instrucciones[1], conexion_kernel_cpu); //Envio el id
+    eliminar_paquete(paquete);
     return 1;
 }
 

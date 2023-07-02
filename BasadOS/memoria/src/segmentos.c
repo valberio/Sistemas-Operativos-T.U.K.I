@@ -49,7 +49,7 @@ int obtener_espacio_libre_total()
     bool obtener_espacios_libres_de_la_memoria(void *elemento)
     {
         Segmento *segmento = elemento;
-        return segmento->id == huecos_libres;
+        return segmento->id < 0;
     }
     void *calcular_espacio_libre(void *un_segmento, void *otro_segmento)
     {
@@ -99,7 +99,7 @@ Segmento *crear_segmento(int id, int tamano)
         list_add_in_index(lista_de_memoria, get_index_of_list(lista_de_memoria, hueco_libre->id), nuevo_segmento);
         return nuevo_segmento;
     }
-    if (obtener_espacio_libre_total() > tamano)
+    if (obtener_espacio_libre_total() >= tamano)
     { // Me dice que tengo que compactar
         Segmento *nuevo_segmento = inicializar_segmento(-1);
         return nuevo_segmento;
@@ -204,31 +204,6 @@ void finalizar_proceso(t_contexto_de_ejecucion *contexto_de_ejecucion)
         eliminar_segmento(segmento->id);
         list_remove(contexto_de_ejecucion->tabla_segmentos, i);
     };
-}
-
-void crear_segmento_para_proceso(t_contexto_de_ejecucion *contexto, int id, int tamano, int conexion_memoria_kernel)
-{
-
-    if (list_size(contexto->tabla_segmentos) > cantidad_total_de_segmentos_por_proceso)
-    {
-        return;
-    }
-
-    Segmento *segmento = crear_segmento(id, tamano);
-    list_add(contexto->tabla_segmentos, segmento);
-
-    t_paquete *paquete = crear_paquete();
-    paquete->buffer = serializar_contexto(contexto);
-
-    if (segmento->tamano < 0)
-    {
-        paquete->codigo_operacion = segmento->tamano;
-    }
-    else
-    {
-        paquete->codigo_operacion = 0;
-    }
-    enviar_paquete(paquete, conexion_memoria_kernel);
 }
 
 void compactar()

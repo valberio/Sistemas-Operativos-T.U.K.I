@@ -162,7 +162,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 
 			case CREAR_SEGMENTO:
 				//CPU me pide que le pida a memoria que cree un segmento
-				log_info(logger, "El PID %i ahora tiene %i segmentos", proceso_en_ejecucion->contexto_de_ejecucion->pid, list_size(proceso_en_ejecucion->contexto_de_ejecucion->tabla_segmentos));
+				
 				t_paquete* paquete_a_memoria = crear_paquete();
 				paquete_a_memoria->codigo_operacion = CREAR_SEGMENTO;
 				paquete_a_memoria->buffer = serializar_contexto(contexto_actualizado);
@@ -185,20 +185,26 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				paquete_respuesta = recibir_paquete(cliente_memoria);
 
 				log_info(logger,"Recibi la respuesta de memoria");
-
+				log_info(logger, "El PID %i ahora tiene %i segmentos", proceso_en_ejecucion->contexto_de_ejecucion->pid, list_size(proceso_en_ejecucion->contexto_de_ejecucion->tabla_segmentos));
 				switch(paquete_respuesta->codigo_operacion){
 					case SEGMENTO_CREADO:
 						t_contexto_de_ejecucion* contexto_respuesta = deserializar_contexto_de_ejecucion(paquete_respuesta->buffer);
 						proceso_en_ejecucion->contexto_de_ejecucion = contexto_respuesta;
-						log_info(logger, "El PID %i ahora tiene %i segmentos", proceso_en_ejecucion->contexto_de_ejecucion->pid, list_size(proceso_en_ejecucion->contexto_de_ejecucion->tabla_segmentos));
-						break;
+									break;
 					case COMPACTACION_NECESARIA:
 						//checkear operaciones entre filesystem y memoria
 						enviar_mensaje("compactar",cliente_memoria);
 						recibir_mensaje(cliente_memoria);
-						for(int i = 0; i < list_size(contexto_actualizado->tabla_segmentos);i++){
-							Segmento* sas =list_get(contexto_actualizado->tabla_segmentos,i);
-							log_info(logger,"SEGMENTO ID: %d, TAMANO: %d",sas->id,sas->tamano);
+						enviar_paquete(paquete_a_memoria, cliente_memoria);
+						//Envio parametros
+						enviar_mensaje(id, cliente_memoria);
+						enviar_mensaje(tamanio, cliente_memoria);
+						paquete_respuesta = recibir_paquete(cliente_memoria);
+						contexto_respuesta = deserializar_contexto_de_ejecucion(paquete_respuesta->buffer);
+						proceso_en_ejecucion->contexto_de_ejecucion = contexto_respuesta;
+						for(int i = 0; i < list_size(contexto_respuesta->tabla_segmentos);i++){
+							Segmento* sas =list_get(contexto_respuesta->tabla_segmentos,i);
+							log_info(logger,"SEGMENTO ID: %d, DESPLAZAMIENTO: %d",sas->id,sas->desplazamiento);
 						}
 						break;
 					case OUT_OF_MEMORY:
@@ -234,9 +240,9 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				enviar_paquete(paquete_a_memoria1, cliente_memoria);
 				eliminar_paquete(paquete_a_memoria1);
 				enviar_mensaje(id_a_eliminar, cliente_memoria);
-				
+
 				paquete_respuesta = recibir_paquete(cliente_memoria);
-				t_contexto_de_ejecucion* contexto_respuesta = deserializar_contexto_de_ejecucion(paquete->buffer);
+				t_contexto_de_ejecucion* contexto_respuesta = deserializar_contexto_de_ejecucion(paquete_respuesta->buffer);
 				proceso_en_ejecucion->contexto_de_ejecucion = contexto_respuesta;
 				ejecucion = 0;
 

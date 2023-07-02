@@ -30,6 +30,10 @@ void* comunicacion_con_kernel(void* arg)
 
                 Segmento* segmento_nuevo = crear_segmento(id_int, tamanio_int);
 
+                log_info(logger, "EL TAMANIO DEL SEGMENTO CREADO ES: %d", segmento_nuevo->tamano);
+
+               	
+
                 t_paquete* paquete_a_kernel = crear_paquete();
                 log_info(logger, "En el contexto hay %i segmentos", list_size(contexto->tabla_segmentos));
 				paquete_a_kernel->codigo_operacion = respuesta_a_kernel(segmento_nuevo, contexto);
@@ -43,6 +47,11 @@ void* comunicacion_con_kernel(void* arg)
                     recibir_mensaje(conexion_kernel);
                     log_info(logger,"SE pidio compactar");
                     compactar(); 
+                    log_info(logger,"LA LISTA DE MEMORIA TIENE: ");
+					for(int i = 0; i < list_size(lista_de_memoria);i++){
+					    Segmento* sas =list_get(lista_de_memoria,i);
+						log_info(logger,"SEGMENTO ID: %d, DESPLAZAMIENTO: %d",sas->id,sas->desplazamiento);
+					}		
                     enviar_mensaje("Listo",conexion_kernel);
                 }
 

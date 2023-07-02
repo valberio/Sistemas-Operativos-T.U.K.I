@@ -184,7 +184,7 @@ t_buffer* serializar_contexto(t_contexto_de_ejecucion* contexto)
     }
 
     //5. Tamaño de la TABLA de segmentos
-    tamano += sizeof(int) + (2 * sizeof(int) + sizeof(void*)) * list_size(contexto->tabla_segmentos);  
+    tamano += sizeof(int) + (3 * sizeof(int)) * list_size(contexto->tabla_segmentos);  
 
 
     //Aloco la memoria para el buffer.
@@ -230,8 +230,8 @@ t_buffer* serializar_contexto(t_contexto_de_ejecucion* contexto)
         offset += sizeof(int);
         memcpy(stream + offset, &(segmento->id), sizeof(int)); 
         offset += sizeof(int);
-        memcpy(stream+offset,segmento->inicio,sizeof(void*));
-        offset += sizeof(void*);
+        memcpy(stream+offset,&(segmento->desplazamiento),sizeof(int));
+        offset += sizeof(int);
     }
 
     //Guardo el buffer
@@ -304,9 +304,8 @@ t_contexto_de_ejecucion* deserializar_contexto_de_ejecucion(t_buffer* buffer){
         stream += sizeof(int);
         memcpy(&(segmento->id),stream,sizeof(int));
         stream += sizeof(int);
-        segmento->inicio = malloc(sizeof(void*));
-        memcpy(segmento->inicio,stream,sizeof(void*));
-        stream += sizeof(void*);
+        memcpy(&(segmento->desplazamiento),stream,sizeof(int));
+        stream += sizeof(int);
         list_add(contexto->tabla_segmentos,segmento);
     }
     
@@ -436,7 +435,7 @@ void* traduccion_dir_logica_fisica(int dir_logica, t_contexto_de_ejecucion* cont
 
     Segmento* segmento = list_get(contexto->tabla_segmentos, num_segmento);
 
-    void* dir_fisica = segmento->inicio;
-    dir_fisica+=desplazamiento_segmento;
+    void* dir_fisica; //= segmento->inicio; hay que cambairlo
+    //dir_fisica+=desplazamiento_segmento;
     return dir_fisica;
 }

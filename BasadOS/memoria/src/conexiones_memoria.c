@@ -20,25 +20,44 @@ void* comunicacion_con_kernel(void* arg)
         {
             case CREAR_SEGMENTO:
                 char* id = recibir_mensaje(conexion_kernel);
+                log_info(logger, "El id es: %s", id); 
                 char* tamanio = recibir_mensaje(conexion_kernel);
+                log_info(logger, "El tamanio es: %s", tamanio); 
+
 
                 int id_int = atoi(id);
 				int tamanio_int = atoi(tamanio);
 
                 Segmento* segmento_nuevo = crear_segmento(id_int, tamanio_int);
-                char* respuesta = respuesta_a_kernel(segmento_nuevo, contexto);
+
+                t_paquete* paquete_a_kernel = crear_paquete();
+				paquete_a_kernel->codigo_operacion = respuesta_a_kernel(segmento_nuevo, contexto);
+				paquete_a_kernel->buffer = serializar_contexto(contexto);
+
+                log_info(logger,"Voy a enviar el pauqete a kernel");
+                enviar_paquete(paquete_a_kernel, conexion_kernel);
                 
-                //TODO: esto tiene que devolver un paquete con el contexto actualizado, y en el codop, la respuesta de memoria
-
-                enviar_mensaje(respuesta, conexion_kernel);
-                log_info(logger, "MEMORIA envio el siguiente mensaje a kernel: %s",respuesta);
-
-                t_paquete* paquete_respuesta = crear_paquete();
-                paquete_respuesta->buffer = serializar_contexto(contexto);
-                enviar_paquete(paquete_respuesta, conexion_kernel);
+                if(segmento_nuevo->tamano == -1){
+                    recibir_mensaje(conexion_kernel);
+                    log_info(logger,"SE pidio compactar");
+                    compactar();
+                    enviar_mensaje("Listo",conexion_kernel);
+                }
 
                 break;
             case ELIMINAR_SEGMENTO:
+                log_info(logger, "SE pidio eliminar un segmento"); 
+
+                char* id_a_eliminar = recibir_mensaje(conexion_kernel);
+                log_info(logger, "El id es: %s", id_a_eliminar); 
+
+
+                int id_a_eliminar_int = atoi(id_a_eliminar);
+
+                eliminar_segmento(id_a_eliminar_int);
+                list_remove(contexto->tabla_segmentos,get_index_of_list(contexto->tabla_segmentos,id_a_eliminar_int));
+
+                enviar_mensaje("Listo",conexion_kernel);
                 break;
             default:
                 break;
@@ -118,16 +137,16 @@ void* comunicacion_con_cpu(void* arg)
 
 
 //TODO: esto hay que cambiarlo a un enum
-char* respuesta_a_kernel(Segmento* segmento, t_contexto_de_ejecucion* contexto){
+op_code respuesta_a_kernel(Segmento* segmento, t_contexto_de_ejecucion* contexto){
     if(segmento->tamano > 0){
         list_add(contexto->tabla_segmentos, segmento);
-        return "SEGMENTO CREADO";
+        return SEGMENTO_CREADO;
     }
     else if(segmento->tamano == -1){
-        return "COMPACTAR";
+        return COMPACTACION_NECESARIA;
     }
     else if(segmento->tamano == -2){
-        return "OUT OF MEMORY";
+        return OUT_OF_MEMORY;
     }
-    return "ERROR";
+    
 }

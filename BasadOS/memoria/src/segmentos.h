@@ -15,7 +15,7 @@ extern void* espacio_de_memoria;
 typedef struct {
     int tamano;
     int id;
-    void* inicio;
+    int desplazamiento;
 } Segmento;
 
 Segmento* inicializar_segmento(int );
@@ -28,6 +28,8 @@ void unificacion_de_huecos_libres();
 Segmento* first_fit(int,int);
 Segmento* worst_fit(int,int);
 Segmento* best_fit(int,int);
+int buscar_segmento_compactable();
+void compactar();
 
 
 #endif /* SEGMENTOS_H_ */

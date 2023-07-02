@@ -177,17 +177,41 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				//Envio parametros
 				enviar_mensaje(id, cliente_memoria);
 				enviar_mensaje(tamanio, cliente_memoria);
+				log_info(logger,"Envie parametros");
 
 				//Espero el OK de memoria
 				//TODO: cambiar a un paquete
-				char* respuesta = recibir_mensaje(cliente_memoria); //Aca memoria me puede mandar a compactar, hay que hacer
-																	//un switch para manejar los retornos de memoria
-				log_info(logger, "Recibi de memoria %s", respuesta);
-				
 				t_paquete* paquete_respuesta = recibir_paquete(cliente_memoria);
-				proceso_en_ejecucion->contexto_de_ejecucion = deserializar_contexto_de_ejecucion(paquete_respuesta->buffer);
 
-				log_info(logger, "El PID %i ahora tiene %i segmentos", proceso_en_ejecucion->contexto_de_ejecucion->pid, list_size(proceso_en_ejecucion->contexto_de_ejecucion->tabla_segmentos));
+				log_info(logger,"Recibi la respuesta de memoria");
+
+				switch(paquete_respuesta->codigo_operacion){
+					case SEGMENTO_CREADO:
+						t_contexto_de_ejecucion* contexto_respuesta = deserializar_contexto_de_ejecucion(paquete->buffer);
+						log_info(logger, "El PID %i ahora tiene %i segmentos", contexto_respuesta->pid, list_size(contexto_respuesta->tabla_segmentos));
+						break;
+					case COMPACTACION_NECESARIA:
+						//checkear operaciones entre filesystem y memoria
+						enviar_mensaje("compactar",cliente_memoria);
+						recibir_mensaje(cliente_memoria);
+						for(int i = 0; i < list_size(contexto_actualizado->tabla_segmentos);i++){
+							Segmento* sas =list_get(contexto_actualizado->tabla_segmentos,i);
+							log_info(logger,"SEGMENTO ID: %d, TAMANO: %d",sas->id,sas->tamano);
+						}
+						break;
+					case OUT_OF_MEMORY:
+						sem_wait(&mutex_cola_exit);
+						queue_push(cola_exit, proceso_en_ejecucion);
+						sem_post(&mutex_cola_exit);
+
+						sem_post(&semaforo_procesos_en_exit);
+						log_info(logger, "PID: %i - Estado anterior: RUNNING - Estado actual: EXIT", proceso_en_ejecucion->pid);
+						log_info(logger, "Finaliza el proceso %i - Motivo: OUT_OF_MEMORY", proceso_en_ejecucion->pid);
+						ejecucion = 0;
+						break;
+					default:
+						break;
+				}
 
 				ejecucion = 0;
 				
@@ -202,8 +226,13 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				t_paquete* paquete_a_memoria1 = crear_paquete();
 				paquete_a_memoria1->codigo_operacion = ELIMINAR_SEGMENTO;
 				paquete->buffer = NULL;
+				char* id_a_eliminar = recibir_mensaje(cliente_cpu);
+				log_info(logger, "Recibi de CPU %s", id_a_eliminar);
+
 				enviar_paquete(paquete_a_memoria1, cliente_memoria);
 				eliminar_paquete(paquete_a_memoria1);
+				
+				enviar_mensaje(id_a_eliminar,cliente_memoria);
 				recibir_mensaje(cliente_memoria);
 
 				ejecucion = 0;

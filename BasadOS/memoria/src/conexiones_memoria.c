@@ -31,8 +31,10 @@ void* comunicacion_con_kernel(void* arg)
                 Segmento* segmento_nuevo = crear_segmento(id_int, tamanio_int);
 
                 t_paquete* paquete_a_kernel = crear_paquete();
+                log_info(logger, "En el contexto hay %i segmentos", list_size(contexto->tabla_segmentos));
 				paquete_a_kernel->codigo_operacion = respuesta_a_kernel(segmento_nuevo, contexto);
 				paquete_a_kernel->buffer = serializar_contexto(contexto);
+                log_info(logger, "En el contexto hay %i segmentos", list_size(contexto->tabla_segmentos));
 
                 log_info(logger,"Voy a enviar el pauqete a kernel");
                 enviar_paquete(paquete_a_kernel, conexion_kernel);

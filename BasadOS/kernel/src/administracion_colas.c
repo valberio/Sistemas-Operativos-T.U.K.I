@@ -83,6 +83,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 		contexto_actualizado = deserializar_contexto_de_ejecucion(paquete->buffer);
 		proceso_en_ejecucion->contexto_de_ejecucion = contexto_actualizado;
 		char* parametros_retorno;
+		t_paquete* paquete_respuesta;
 		
 		switch(paquete->codigo_operacion)
 		{
@@ -181,14 +182,15 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 
 				//Espero el OK de memoria
 				//TODO: cambiar a un paquete
-				t_paquete* paquete_respuesta = recibir_paquete(cliente_memoria);
+				paquete_respuesta = recibir_paquete(cliente_memoria);
 
 				log_info(logger,"Recibi la respuesta de memoria");
 
 				switch(paquete_respuesta->codigo_operacion){
 					case SEGMENTO_CREADO:
-						t_contexto_de_ejecucion* contexto_respuesta = deserializar_contexto_de_ejecucion(paquete->buffer);
-						contexto_actualizado = contexto_respuesta;
+						t_contexto_de_ejecucion* contexto_respuesta = deserializar_contexto_de_ejecucion(paquete_respuesta->buffer);
+						proceso_en_ejecucion->contexto_de_ejecucion = contexto_respuesta;
+						log_info(logger, "El PID %i ahora tiene %i segmentos", proceso_en_ejecucion->contexto_de_ejecucion->pid, list_size(proceso_en_ejecucion->contexto_de_ejecucion->tabla_segmentos));
 						break;
 					case COMPACTACION_NECESARIA:
 						//checkear operaciones entre filesystem y memoria
@@ -235,7 +237,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				enviar_mensaje(id_a_eliminar,cliente_memoria);
 				recibir_mensaje(cliente_memoria);
 
-				t_paquete* paquete_respuesta = recibir_paquete(cliente_memoria);
+				paquete_respuesta = recibir_paquete(cliente_memoria);
 				t_contexto_de_ejecucion* contexto_respuesta = deserializar_contexto_de_ejecucion(paquete->buffer);
 				contexto_actualizado = contexto_respuesta;
 				ejecucion = 0;

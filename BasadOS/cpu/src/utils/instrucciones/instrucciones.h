@@ -28,7 +28,6 @@ int signal_instruccion(t_log* logger, t_contexto_de_ejecucion* contexto, int con
 int i_o(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_kernel_cpu, char** instrucciones);
 int create_segment(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_kernel_cpu);
 int delete_segment(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int id_segmento);
-void* traduccion_dir_logica_fisica(int dir_logica, t_contexto_de_ejecucion* contexto);
 enum Registros string_a_registro(char* registro);
 
 //La instruccion EXIT tiene una i para no pisarse con el estado de proceso EXIT

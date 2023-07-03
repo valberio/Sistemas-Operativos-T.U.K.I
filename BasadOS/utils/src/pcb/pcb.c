@@ -220,8 +220,9 @@ t_buffer* serializar_contexto(t_contexto_de_ejecucion* contexto)
         offset += contexto->largo_instruccion[i];
     }
 
-    //Copio la tabla de instrucciones 
+    //Copio la tabla de segmentos
     int tamano_tabla_segmentos = list_size(contexto->tabla_segmentos);
+
     memcpy(stream + offset, &(tamano_tabla_segmentos) , sizeof(int));
     offset += sizeof(int);
     for(int i = 0; i < list_size(contexto->tabla_segmentos);i++){
@@ -428,14 +429,22 @@ char* leer_registro(char* registro_char, t_contexto_de_ejecucion* contexto)
     return valor_en_registro;
 }
 
-int traduccion_dir_logica_fisica(int dir_logica, t_contexto_de_ejecucion* contexto){
+int traduccion_dir_logica_fisica(int dir_logica, t_list* tabla_segmentos){
 
     int tam_max_segmento = 10; //HAY QUE SACARLO DEL CONFIG
     int num_segmento = floor(dir_logica / tam_max_segmento);
     int desplazamiento_segmento = dir_logica % tam_max_segmento;
 
 
-    Segmento* segmento = list_get(contexto->tabla_segmentos, 0); //Hardcode, cambiar
+    printf("\nEn la lista de segmentos hay %i\n", list_size(tabla_segmentos));
+    if(list_size(tabla_segmentos) != 0)
+    {
+        Segmento* segmento = list_get(tabla_segmentos, 0);
+        int dir_fisica = segmento->desplazamiento + desplazamiento_segmento;
+        return dir_fisica;
+    }
+    return 0;
+ //Hardcode, cambiar
     /*bool obtener_segmento(void *elemento)
     {
         Segmento *segmento = elemento;
@@ -443,7 +452,4 @@ int traduccion_dir_logica_fisica(int dir_logica, t_contexto_de_ejecucion* contex
     }
 
     Segmento* segmento = list_find(contexto->tabla_segmentos, obtener_segmento);*/
-
-    int dir_fisica = segmento->desplazamiento + desplazamiento_segmento;
-    return dir_fisica;
 }

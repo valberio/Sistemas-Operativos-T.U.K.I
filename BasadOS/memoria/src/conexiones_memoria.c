@@ -32,8 +32,6 @@ void* comunicacion_con_kernel(void* arg)
 
                 log_info(logger, "EL TAMANIO DEL SEGMENTO CREADO ES: %d", segmento_nuevo->tamano);
 
-               	
-
                 t_paquete* paquete_a_kernel = crear_paquete();
                 log_info(logger, "En el contexto hay %i segmentos", list_size(contexto->tabla_segmentos));
 				paquete_a_kernel->codigo_operacion = respuesta_a_kernel(segmento_nuevo, contexto);
@@ -132,13 +130,23 @@ void* comunicacion_con_cpu(void* arg)
                 registro = recibir_mensaje(conexion_cpu);
 
                 log_info(logger, "CPU me pidio MOV_OUT, hay %i segmentos en la tabla de segmentos", list_size(contexto->tabla_segmentos));
+                Segmento* seg = list_get(contexto->tabla_segmentos, 0);
+                log_info(logger, "ID segmento %i", seg->id);
+                
+                char* datos_en_registro = malloc(sizeof(char) * 4);
+                datos_en_registro = leer_registro(registro, contexto);
+                log_info(logger, "Voy a guardar %s", datos_en_registro);
+                
+                int direccion = seg->desplazamiento;
+                
+                memcpy(espacio_de_memoria + direccion, datos_en_registro, sizeof(char)*4);
 
-                char* datos_en_registro = leer_registro(registro, contexto);
-                
-                int dir_fis = traduccion_dir_logica_fisica(direccion_fisica, contexto);
-                
+                char* test = malloc(sizeof(char) * 4);
+                memcpy(test, espacio_de_memoria + direccion, sizeof(char)*4);
+                log_info(logger, "Guarde en memoria %s", test);
+
                 //Paso 3: informo a CPU que la escritura ocurrió exitosamente
-                log_info(logger, "Lei del registro %s el valor %s", registro, datos_en_registro);
+                log_info(logger, "CPU me pidio MOV_OUT, hay %i segmentos en la tabla de segmentos", list_size(contexto->tabla_segmentos));
                 paquete_respuesta->codigo_operacion = 0;
                 paquete_respuesta->buffer = serializar_contexto(contexto);
                 enviar_paquete(paquete_respuesta, conexion_cpu);

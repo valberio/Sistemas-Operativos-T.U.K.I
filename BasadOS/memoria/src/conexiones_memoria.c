@@ -102,8 +102,8 @@ void* comunicacion_con_cpu(void* arg)
         t_contexto_de_ejecucion* contexto = deserializar_contexto_de_ejecucion(peticion->buffer);
         t_paquete* paquete_respuesta = crear_paquete();
 
-        char* registro;
-        char* direccion_fisica;
+        char* registro = ' ';
+        char* direccion_logica = ' ';
 
         log_info(logger, "MEMORIA recibió una petición del CPU");
 
@@ -113,40 +113,38 @@ void* comunicacion_con_cpu(void* arg)
                 paquete_respuesta->codigo_operacion = 0;
 
                 registro = recibir_mensaje(conexion_cpu);
-                direccion_fisica = recibir_mensaje(conexion_cpu);
+                direccion_logica = recibir_mensaje(conexion_cpu);
 
                 log_info(logger, "MEMORIA recibió el registro %s", registro);
-                log_info(logger, "MEMORIA recibió la dirección %s", (char*)direccion_fisica);
+                log_info(logger, "MEMORIA recibió la dirección %s", (char*)direccion_logica);
 
                 enviar_paquete(paquete_respuesta, conexion_cpu);
                 log_info(logger, "MEMORIA respondió una petición de lectura del CPU");
     
                 break;
-            case PETICION_ESCRITURA: //Caso escritura mov_out
-                log_info(logger, "MEMORIA respondió una petición de escritura del CPU");
 
-                direccion_fisica = recibir_mensaje(conexion_cpu);
-                int dir = atoi(direccion_fisica);
+            case PETICION_ESCRITURA: //Caso escritura mov_out
+                log_info(logger, "MEMORIA recibió una petición de escritura del CPU");
+
+                direccion_logica = recibir_mensaje(conexion_cpu);
+                int direccion_logica_int = atoi(direccion_logica);
                 registro = recibir_mensaje(conexion_cpu);
 
-                log_info(logger, "CPU me pidio MOV_OUT, hay %i segmentos en la tabla de segmentos", list_size(contexto->tabla_segmentos));
-                Segmento* seg = list_get(contexto->tabla_segmentos, 0);
-                log_info(logger, "ID segmento %i", seg->id);
-                
-                char* datos_en_registro = malloc(sizeof(char) * 4);
+                int tamanio_registro = tamanio_del_registro(registro);
+
+                char* datos_en_registro = malloc(tamanio_registro * sizeof(char));
                 datos_en_registro = leer_registro(registro, contexto);
                 log_info(logger, "Voy a guardar %s", datos_en_registro);
                 
-                int direccion = seg->desplazamiento;
-                
-                memcpy(espacio_de_memoria + direccion, datos_en_registro, sizeof(char)*4);
+                int direccion = traduccion_dir_logica_fisica(direccion_logica, contexto->tabla_segmentos);
+                                
+                memcpy(espacio_de_memoria + direccion, datos_en_registro, tamanio_registro);
 
-                char* test = malloc(sizeof(char) * 4);
-                memcpy(test, espacio_de_memoria + direccion, sizeof(char)*4);
+                char* test = malloc(tamanio_registro);
+                memcpy(test, espacio_de_memoria + direccion, tamanio_registro);
                 log_info(logger, "Guarde en memoria %s", test);
 
                 //Paso 3: informo a CPU que la escritura ocurrió exitosamente
-                log_info(logger, "CPU me pidio MOV_OUT, hay %i segmentos en la tabla de segmentos", list_size(contexto->tabla_segmentos));
                 paquete_respuesta->codigo_operacion = 0;
                 paquete_respuesta->buffer = serializar_contexto(contexto);
                 enviar_paquete(paquete_respuesta, conexion_cpu);
@@ -172,4 +170,60 @@ op_code respuesta_a_kernel(Segmento* segmento, t_contexto_de_ejecucion* contexto
         return OUT_OF_MEMORY;
     }
     
+}
+
+int tamanio_del_registro(char* registro_char)
+{
+    int tamanio_del_registro = 0;
+    enum Registros registro = string_a_registro(registro_char);
+    switch (registro)
+        {
+        case rAX:
+            tamanio_del_registro = 5; //4 + 1, para considerar el \0
+            break;
+        case rBX:
+            tamanio_del_registro = 5;
+            break;
+        case rCX:
+            tamanio_del_registro = 5;
+            break;
+        case rDX:
+            tamanio_del_registro = 5;
+            break;
+
+        // Registros 8 bits
+        case rEAX:
+            tamanio_del_registro = 9;
+            break;
+
+        case rEBX:
+            tamanio_del_registro = 9;
+            break;
+
+        case rECX:
+            tamanio_del_registro = 9;
+            break;
+
+        case rEDX:
+            tamanio_del_registro = 9;
+            break;
+
+        // Registros de 16 bits
+        case rRAX:
+            tamanio_del_registro = 17;
+            break;
+
+        case rRBX:
+            tamanio_del_registro = 17;
+            break;
+
+        case rRCX:
+            tamanio_del_registro = 17;
+            break;
+
+        case rRDX:
+            tamanio_del_registro = 17;
+            break;
+        }
+        return tamanio_del_registro;
 }

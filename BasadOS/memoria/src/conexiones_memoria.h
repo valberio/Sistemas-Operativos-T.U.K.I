@@ -4,6 +4,7 @@
 #include<loggers/loggers_utils.h>
 #include<sockets/server_utils.h>
 #include "segmentos.h"
+#include"../../utils/src/pcb/pcb.h"
 #include <pthread.h>
 
 typedef struct 
@@ -14,5 +15,7 @@ typedef struct
 void* comunicacion_con_cpu(void* );
 void* comunicacion_con_kernel(void*);
 op_code respuesta_a_kernel(Segmento*,t_contexto_de_ejecucion*);
+int tamanio_del_registro(char* registro); //Probablemente deba ir en pcb.c
+
 
 #endif /* CONEXIONES_MEMORIA_H_ */

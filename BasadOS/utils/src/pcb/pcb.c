@@ -435,8 +435,6 @@ int traduccion_dir_logica_fisica(int dir_logica, t_list* tabla_segmentos){
     int num_segmento = floor(dir_logica / tam_max_segmento);
     int desplazamiento_segmento = dir_logica % tam_max_segmento;
 
-
-    printf("\nEn la lista de segmentos hay %i\n", list_size(tabla_segmentos));
     if(list_size(tabla_segmentos) != 0)
     {
         Segmento* segmento = list_get(tabla_segmentos, 0);

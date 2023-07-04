@@ -233,7 +233,7 @@ int buscar_segmento_compactable()
     {
         Segmento *un_segmento = list_get(lista_de_memoria, i);
         Segmento *otro_segmento = list_get(lista_de_memoria, i + 1);
-        if (un_segmento->id == huecos_libres && otro_segmento->id > 0)
+        if (un_segmento->id < 0 && otro_segmento->id > 0)
         {
             return i + 1;
         }

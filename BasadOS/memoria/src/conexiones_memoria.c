@@ -104,19 +104,27 @@ void* comunicacion_con_cpu(void* arg)
 
         char* registro = ' ';
         char* direccion_logica = ' ';
+        int direccion_logica_int;
+        int direccion_fisica;
 
         log_info(logger, "MEMORIA recibió una petición del CPU");
 
         switch(peticion->codigo_operacion)
         {
-            case PETICION_LECTURA: //Caso lectura, mov_in
+            case PETICION_LECTURA: //Caso lectura, mov_in, guardo en el registro lo que lei en la direccion de memoria
                 paquete_respuesta->codigo_operacion = 0;
-
+                paquete_respuesta->buffer = serializar_contexto(contexto);
                 registro = recibir_mensaje(conexion_cpu);
                 direccion_logica = recibir_mensaje(conexion_cpu);
+                direccion_logica_int = atoi(direccion_logica);
 
-                log_info(logger, "MEMORIA recibió el registro %s", registro);
-                log_info(logger, "MEMORIA recibió la dirección %s", (char*)direccion_logica);
+                direccion_fisica = traduccion_dir_logica_fisica(direccion_logica_int, contexto->tabla_segmentos);
+
+                //Accedo a la memoria, copio los datos en una variable auxiliar
+                char* datos_leidos = malloc(tamanio_del_registro(registro));
+                memcpy(datos_leidos, espacio_de_memoria + direccion_fisica, tamanio_del_registro(registro));
+
+                log_info(logger, "MOV IN leyo %s", datos_leidos);
 
                 enviar_paquete(paquete_respuesta, conexion_cpu);
                 log_info(logger, "MEMORIA respondió una petición de lectura del CPU");
@@ -127,7 +135,7 @@ void* comunicacion_con_cpu(void* arg)
                 log_info(logger, "MEMORIA recibió una petición de escritura del CPU");
 
                 direccion_logica = recibir_mensaje(conexion_cpu);
-                int direccion_logica_int = atoi(direccion_logica);
+                direccion_logica_int = atoi(direccion_logica);
                 registro = recibir_mensaje(conexion_cpu);
 
                 int tamanio_registro = tamanio_del_registro(registro);
@@ -136,12 +144,12 @@ void* comunicacion_con_cpu(void* arg)
                 datos_en_registro = leer_registro(registro, contexto);
                 log_info(logger, "Voy a guardar %s", datos_en_registro);
                 
-                int direccion = traduccion_dir_logica_fisica(direccion_logica, contexto->tabla_segmentos);
+                direccion_fisica = traduccion_dir_logica_fisica(direccion_logica, contexto->tabla_segmentos);
                                 
-                memcpy(espacio_de_memoria + direccion, datos_en_registro, tamanio_registro);
+                memcpy(espacio_de_memoria + direccion_fisica, datos_en_registro, tamanio_registro);
 
                 char* test = malloc(tamanio_registro);
-                memcpy(test, espacio_de_memoria + direccion, tamanio_registro);
+                memcpy(test, espacio_de_memoria + direccion_fisica, tamanio_registro);
                 log_info(logger, "Guarde en memoria %s", test);
 
                 //Paso 3: informo a CPU que la escritura ocurrió exitosamente

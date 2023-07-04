@@ -178,7 +178,7 @@ int mov_in(t_log *logger, char **instrucciones, t_contexto_de_ejecucion *context
     paquete->buffer = serializar_contexto(contexto); //Mando el contexto de ejecucion, necesito acceder a los registros
     enviar_paquete(paquete, conexion_memoria_cpu);
     enviar_mensaje (instrucciones[1], conexion_memoria_cpu); //Mando el registro
-    enviar_mensaje(traduccion_dir_logica_fisica(instrucciones[2], contexto), conexion_memoria_cpu); //Mando la direccion
+    enviar_mensaje(instrucciones[2], conexion_memoria_cpu); //Mando la direccion
 
     // Espero la respuesta con el valor que se encontraba en la direccion
     t_paquete *paquete_respuesta = recibir_paquete(conexion_memoria_cpu);

@@ -15,61 +15,61 @@ int set(t_log *logger, char **instrucciones, t_contexto_de_ejecucion *contexto)
     {
     case rAX:
         strcpy(contexto->registros->AX, valor);
-        log_info(logger, contexto->registros->AX);
+        log_info(logger, "%s", contexto->registros->AX);
         break;
     case rBX:
         strcpy(contexto->registros->BX, valor);
-        log_info(logger, contexto->registros->BX);
+        log_info(logger, "%s", contexto->registros->BX);
         break;
     case rCX:
         strcpy(contexto->registros->CX, valor);
-        log_info(logger, contexto->registros->CX);
+        log_info(logger, "%s", contexto->registros->CX);
         break;
     case rDX:
         strcpy(contexto->registros->DX, valor);
-        log_info(logger, contexto->registros->DX);
+        log_info(logger, "%s", contexto->registros->DX);
         break;
 
     // Registros 8 bits
     case rEAX:
         strcpy(contexto->registros->EAX, valor);
-        log_info(logger, contexto->registros->EAX);
+        log_info(logger, "%s", contexto->registros->EAX);
         break;
 
     case rEBX:
         strcpy(contexto->registros->EBX, valor);
-        log_info(logger, contexto->registros->EBX);
+        log_info(logger, "%s", contexto->registros->EBX);
         break;
 
     case rECX:
         strcpy(contexto->registros->EDX, valor);
-        log_info(logger, contexto->registros->EDX);
+        log_info(logger, "%s", contexto->registros->EDX);
         break;
 
     case rEDX:
         strcpy(contexto->registros->EDX, valor);
-        log_info(logger, contexto->registros->EDX);
+        log_info(logger, "%s", contexto->registros->EDX);
         break;
 
     // Registros de 16 bits
     case rRAX:
         strcpy(contexto->registros->RAX, valor);
-        log_info(logger, contexto->registros->RAX);
+        log_info(logger, "%s", contexto->registros->RAX);
         break;
 
     case rRBX:
         strcpy(contexto->registros->RBX, valor);
-        log_info(logger, contexto->registros->RBX);
+        log_info(logger, "%s", contexto->registros->RBX);
         break;
 
     case rRCX:
         strcpy(contexto->registros->RDX, valor);
-        log_info(logger, contexto->registros->RDX);
+        log_info(logger, "%s", contexto->registros->RDX);
         break;
 
     case rRDX:
         strcpy(contexto->registros->RDX, valor);
-        log_info(logger, contexto->registros->RDX);
+        log_info(logger, "%s", contexto->registros->RDX);
         break;
     }
     return 0;
@@ -167,18 +167,17 @@ int i_o(t_log *logger, t_contexto_de_ejecucion *contexto, int conexion_cpu_kerne
     return 1;
 }
 
-
 int mov_in(t_log *logger, char **instrucciones, t_contexto_de_ejecucion *contexto, int conexion_memoria_cpu)
 {
     log_info(logger, "PID: %i EJECUTANDO: %s PARAMETROS: %s, %s", contexto->pid, instrucciones[0], instrucciones[1], instrucciones[2]);
 
     // Envio a memoria un paquete que indique con su código de operación que quiero LEER
     t_paquete *paquete = crear_paquete();
-    paquete->codigo_operacion = PETICION_LECTURA; // Tengo que poder serializar la direccion de la que quiero leer
-    paquete->buffer = serializar_contexto(contexto); //Mando el contexto de ejecucion, necesito acceder a los registros
+    paquete->codigo_operacion = PETICION_LECTURA;    // Tengo que poder serializar la direccion de la que quiero leer
+    paquete->buffer = serializar_contexto(contexto); // Mando el contexto de ejecucion, necesito acceder a los registros
     enviar_paquete(paquete, conexion_memoria_cpu);
-    enviar_mensaje (instrucciones[1], conexion_memoria_cpu); //Mando el registro
-    enviar_mensaje(instrucciones[2], conexion_memoria_cpu); //Mando la direccion
+    enviar_mensaje(instrucciones[1], conexion_memoria_cpu); // Mando el registro
+    enviar_mensaje(instrucciones[2], conexion_memoria_cpu); // Mando la direccion
 
     // Espero la respuesta con el valor que se encontraba en la direccion
     t_paquete *paquete_respuesta = recibir_paquete(conexion_memoria_cpu);
@@ -218,8 +217,8 @@ int create_segment(t_log *logger, char **instrucciones, t_contexto_de_ejecucion 
     paquete->codigo_operacion = CREAR_SEGMENTO;
     paquete->buffer = serializar_contexto(contexto);
     enviar_paquete(paquete, conexion_kernel_cpu);
-    enviar_mensaje(instrucciones[1], conexion_kernel_cpu); //Envio el id
-    enviar_mensaje(instrucciones[2], conexion_kernel_cpu); //Envio el tamaño
+    enviar_mensaje(instrucciones[1], conexion_kernel_cpu); // Envio el id
+    enviar_mensaje(instrucciones[2], conexion_kernel_cpu); // Envio el tamaño
     eliminar_paquete(paquete);
 
     return 1;
@@ -234,7 +233,7 @@ int delete_segment(t_log *logger, char **instrucciones, t_contexto_de_ejecucion 
     paquete->codigo_operacion = ELIMINAR_SEGMENTO;
     paquete->buffer = serializar_contexto(contexto);
     enviar_paquete(paquete, conexion_kernel_cpu);
-    enviar_mensaje(instrucciones[1], conexion_kernel_cpu); //Envio el id
+    enviar_mensaje(instrucciones[1], conexion_kernel_cpu); // Envio el id
     eliminar_paquete(paquete);
     return 1;
 }
@@ -258,9 +257,10 @@ int f_open(t_log *logger, t_contexto_de_ejecucion *contexto, int conexion_kernel
     return 1; // Si el archivo esta en uso, corta la ejecucion
 }
 
-int f_close(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_kernel_cpu){
+int f_close(t_log *logger, char **instrucciones, t_contexto_de_ejecucion *contexto, int conexion_kernel_cpu)
+{
     log_info(logger, "PID: %i EJECUTANDO: %s PARAMETROS: %s", contexto->pid, instrucciones[0], instrucciones[1]);
-    t_paquete* paquete = crear_paquete();
+    t_paquete *paquete = crear_paquete();
     paquete->codigo_operacion = CERRAR_ARCHIVO;
     paquete->buffer = serializar_contexto(contexto);
     enviar_paquete(paquete, conexion_kernel_cpu);
@@ -268,9 +268,10 @@ int f_close(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contex
     return 0;
 }
 
-int f_seek(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_kernel_cpu){
+int f_seek(t_log *logger, char **instrucciones, t_contexto_de_ejecucion *contexto, int conexion_kernel_cpu)
+{
     log_info(logger, "PID: %i EJECUTANDO: %s PARAMETROS: %s, %s", contexto->pid, instrucciones[0], instrucciones[1], instrucciones[2]);
-    t_paquete* paquete = crear_paquete();
+    t_paquete *paquete = crear_paquete();
     paquete->codigo_operacion = ACTUALIZAR_PUNTERO;
     paquete->buffer = serializar_contexto(contexto);
     enviar_paquete(paquete, conexion_kernel_cpu);
@@ -279,9 +280,10 @@ int f_seek(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* context
     return 0;
 }
 
-int f_truncate(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_kernel){
+int f_truncate(t_log *logger, char **instrucciones, t_contexto_de_ejecucion *contexto, int conexion_kernel)
+{
     log_info(logger, "PID: %i EJECUTANDO: %s PARAMETROS: %s, %s", contexto->pid, instrucciones[0], instrucciones[1], instrucciones[2]);
-    t_paquete* paquete = crear_paquete();
+    t_paquete *paquete = crear_paquete();
     paquete->codigo_operacion = TRUNCAR_ARCHIVO;
     paquete->buffer = serializar_contexto(contexto);
     enviar_paquete(paquete, conexion_kernel);
@@ -290,9 +292,10 @@ int f_truncate(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* con
     return 1;
 }
 
-int f_read(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_kernel_cpu){
+int f_read(t_log *logger, char **instrucciones, t_contexto_de_ejecucion *contexto, int conexion_kernel_cpu)
+{
     log_info(logger, "PID: %i EJECUTANDO: %s PARAMETROS: %s, %s, %s", contexto->pid, instrucciones[0], instrucciones[1], instrucciones[2], instrucciones[3]);
-    t_paquete* paquete = crear_paquete();
+    t_paquete *paquete = crear_paquete();
     paquete->codigo_operacion = PETICION_LECTURA;
     paquete->buffer = serializar_contexto(contexto);
     enviar_paquete(paquete, conexion_kernel_cpu);
@@ -302,9 +305,10 @@ int f_read(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* context
     return 1;
 }
 
-int f_write(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_kernel_cpu){
+int f_write(t_log *logger, char **instrucciones, t_contexto_de_ejecucion *contexto, int conexion_kernel_cpu)
+{
     log_info(logger, "PID: %i EJECUTANDO: %s PARAMETROS: %s, %s, %s", contexto->pid, instrucciones[0], instrucciones[1], instrucciones[2], instrucciones[3]);
-    t_paquete* paquete = crear_paquete();
+    t_paquete *paquete = crear_paquete();
     paquete->codigo_operacion = PETICION_LECTURA;
     paquete->buffer = serializar_contexto(contexto);
     enviar_paquete(paquete, conexion_kernel_cpu);

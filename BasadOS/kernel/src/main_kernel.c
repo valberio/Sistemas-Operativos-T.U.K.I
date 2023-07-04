@@ -95,6 +95,7 @@ int main(void)
 	//HILO 1: ESPERA CONEXIONES DE CONSOLA
 	Parametros_de_hilo parametros_hilo_consola_kernel;
 	parametros_hilo_consola_kernel.conexion = server_consola;
+	parametros_hilo_consola_kernel.pid = cliente_memoria;
 	pthread_t hilo_receptor_de_consolas;
 	pthread_create(&hilo_receptor_de_consolas, NULL, recibir_de_consolas_wrapper, (void *)&parametros_hilo_consola_kernel);
 	pthread_detach(hilo_receptor_de_consolas);

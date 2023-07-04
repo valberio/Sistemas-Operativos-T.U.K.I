@@ -177,6 +177,10 @@ void *comunicacion_con_cpu(void *arg)
 // TODO: esto hay que cambiarlo a un enum
 op_code respuesta_a_kernel(Segmento *segmento, t_contexto_de_ejecucion *contexto)
 {
+    else if (segmento->tamano == -2 || list_size(contexto->tabla_segmentos) > cantidad_maxima_segmentos_por_proceso)
+    {
+        return OUT_OF_MEMORY;
+    }
     if (segmento->tamano > 0)
     {
         list_add(contexto->tabla_segmentos, segmento);
@@ -186,10 +190,7 @@ op_code respuesta_a_kernel(Segmento *segmento, t_contexto_de_ejecucion *contexto
     {
         return COMPACTACION_NECESARIA;
     }
-    else if (segmento->tamano == -2)
-    {
-        return OUT_OF_MEMORY;
-    }
+    
     return 0;
 }
 int tamanio_del_registro(char *registro_char)

@@ -7,6 +7,8 @@
 #include"../../utils/src/pcb/pcb.h"
 #include <pthread.h>
 
+extern int cantidad_maxima_segmentos_por_proceso
+
 typedef struct 
 {
     int conexion;

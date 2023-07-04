@@ -168,14 +168,14 @@ void *crear_archivo_fcb(char *nombre_archivo)
 	return NULL;
 }
 
-
+//nombre del archivo, nuevo tamaño
 int truncar_archivo(char *nombre_archivo, int nro_bloques, t_superbloque superbloque, t_bitarray *bitarray, int bloques, t_log *logger, FILE* archivo_de_bloques)
 {
 /*Al momento de truncar un archivo, pueden ocurrir 2 situaciones:
 Ampliar el tamaño del archivo: Al momento de ampliar el tamaño del archivo deberá actualizar el tamaño del archivo en el FCB y se le deberán asignar tantos bloques como sea necesario para poder direccionar el nuevo tamaño.
 Reducir el tamaño del archivo: Se deberá asignar el nuevo tamaño del archivo en el FCB y se deberán marcar como libres todos los bloques que ya no sean necesarios para direccionar el tamaño del archivo (descartando desde el final del archivo hacia el principio).
 */
-	char *ruta;
+	//char *ruta;
 	t_fcb* fcb = malloc(sizeof(t_fcb));
 	fcb->name = malloc(sizeof(nombre_archivo));
 	unsigned bloques_restantes;
@@ -190,7 +190,7 @@ Reducir el tamaño del archivo: Se deberá asignar el nuevo tamaño del archivo 
 		return strcmp(fcb_en_tabla->name, nombre_archivo) == 0;
 	}
 	fcb = list_find(fcb_list, es_el_fcb);
-		
+	
 	if (fcb->direct_pointer == 0 && bloques <= 0)
 	{
 		log_info(logger, "No se puede truncar el archivo.");
@@ -222,7 +222,7 @@ Reducir el tamaño del archivo: Se deberá asignar el nuevo tamaño del archivo 
 			}
 		}
 	}
-	//guardar_fcb(archivo_fcb, *fcb);
+	guardar_fcb(archivo_fcb, *fcb);
 	//fclose(archivo_fcb);
 	free(fcb);
 }

@@ -15,17 +15,16 @@ void* crear_proceso_wrapper(void* arg) {
     char* parametro = args->mensaje;
 	int conexion = args->conexion;
 	double estimacion = args->estimacion;
-    crear_proceso(parametro, conexion, estimacion);
+	int conexion_kernel_memoria = args->pid;
+    crear_proceso(parametro, conexion, estimacion, conexion_kernel_memoria);
     return NULL;
 }
 
 void crear_proceso(char* codigo_recibido, int socket_consola, double estimado_inicial) {
 	t_pcb* pcb = crear_pcb(codigo_recibido, socket_consola, estimado_inicial);
 	
-	
-	//ACA VA TU LOGICA
 
-
+	//ACA VA TU LOGica
 	log_info(logger, "Cant instr en creacion del pcb %i",  pcb->contexto_de_ejecucion->cant_instrucciones);
 	sem_wait(&mutex_cola_new);
 	queue_push(cola_new, pcb);

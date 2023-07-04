@@ -5,7 +5,7 @@
 
 Segmento *segmento_0;
 int huecos_libres = -1;
-int cantidad_total_de_segmentos_por_proceso;
+int cantidad_maxima_segmentos_por_proceso;
 char *string_algoritmo;
 char algoritmo;
 
@@ -30,7 +30,7 @@ Segmento *inicializar_segmento(int tamano)
 }
 void reservar_espacio_de_memoria(int tamano_memoria, int tamano_segmento_0)
 {
-    cantidad_total_de_segmentos_por_proceso = config_get_int_value(config, "CANT_SEGMENTOS");
+    cantidad_maxima_segmentos_por_proceso = config_get_int_value(config, "CANT_SEGMENTOS");
     string_algoritmo = config_get_string_value(config, "ALGORITMO_ASIGNACION");
     algoritmo = string_algoritmo[0];
     espacio_de_memoria = malloc(tamano_memoria);

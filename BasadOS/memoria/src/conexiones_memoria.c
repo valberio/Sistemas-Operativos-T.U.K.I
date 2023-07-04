@@ -124,7 +124,9 @@ void* comunicacion_con_cpu(void* arg)
                 char* datos_leidos = malloc(tamanio_del_registro(registro));
                 memcpy(datos_leidos, espacio_de_memoria + direccion_fisica, tamanio_del_registro(registro));
 
-                log_info(logger, "MOV IN leyo %s", datos_leidos);
+                guardar_en_registros(registro, datos_leidos, contexto);
+
+                log_info(logger, "Guarde en el registro %s", contexto->registros->AX);
 
                 enviar_paquete(paquete_respuesta, conexion_cpu);
                 log_info(logger, "MEMORIA respondió una petición de lectura del CPU");
@@ -179,7 +181,6 @@ op_code respuesta_a_kernel(Segmento* segmento, t_contexto_de_ejecucion* contexto
     }
     
 }
-
 int tamanio_del_registro(char* registro_char)
 {
     int tamanio_del_registro = 0;
@@ -234,4 +235,60 @@ int tamanio_del_registro(char* registro_char)
             break;
         }
         return tamanio_del_registro;
+}
+
+void guardar_en_registros(char* registro_char, char* datos, t_contexto_de_ejecucion* contexto)
+{
+    enum Registros registro = string_a_registro(registro_char);
+
+    switch (registro)
+        {
+        case rAX:
+            strcpy(contexto->registros->AX, datos); //4 + 1, para considerar el \0
+            break;
+        case rBX:
+            strcpy(contexto->registros->BX, datos);
+            break;
+        case rCX:
+            strcpy(contexto->registros->CX, datos);
+            break;
+        case rDX:
+            strcpy(contexto->registros->DX, datos);
+            break;
+
+        // Registros 8 bits
+        case rEAX:
+            strcpy(contexto->registros->EAX, datos);
+            break;
+
+        case rEBX:
+            strcpy(contexto->registros->EBX, datos);
+            break;
+
+        case rECX:
+            strcpy(contexto->registros->ECX, datos);
+            break;
+
+        case rEDX:
+            strcpy(contexto->registros->EDX, datos);
+            break;
+
+        // Registros de 16 bits
+        case rRAX:
+            strcpy(contexto->registros->RAX, datos);
+            break;
+
+        case rRBX:
+            strcpy(contexto->registros->RBX, datos);
+            break;
+
+        case rRCX:
+            strcpy(contexto->registros->RCX, datos);
+            break;
+
+        case rRDX:
+            strcpy(contexto->registros->RDX , datos);
+            break;
+        }
+        return NULL;
 }

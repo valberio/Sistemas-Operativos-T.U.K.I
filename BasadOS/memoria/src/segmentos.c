@@ -11,17 +11,20 @@ char algoritmo;
 
 int get_index_of_list(t_list *lista, int id)
 {
-    for (int i = 0; i < list_size(lista); i++)
+
+    int tamano_lista = list_size(lista);
+    for (int i = 0; i < tamano_lista; i++)
     {
         Segmento *segmento = list_get(lista, i);
+
         if (segmento->id == id)
         {
             return i;
         }
     }
+
     return -1;
 }
-
 Segmento *inicializar_segmento(int tamano)
 {
     Segmento *segmento = malloc(sizeof(Segmento));
@@ -196,40 +199,35 @@ void inicializar_proceso(t_contexto_de_ejecucion *contexto_de_ejecucion, int con
     enviar_contexto_de_ejecucion(contexto_de_ejecucion, conexion_memoria_kernel);
 }
 
-void finalizar_proceso(t_contexto_de_ejecucion *contexto_de_ejecucion)
+t_list *compactar()
 {
-    for (int i = 0; i < list_size(contexto_de_ejecucion->tabla_segmentos); i++)
-    {
-        Segmento *segmento = list_get(contexto_de_ejecucion->tabla_segmentos, i);
-        eliminar_segmento(segmento->id);
-        list_remove(contexto_de_ejecucion->tabla_segmentos, i);
-    };
-}
-
-void compactar()
-{
+    t_list *segmentos_actualizados = list_create();
     bool ordenar_por_desplazamiento(void *segmento, void *segmento_dos)
     {
-        Segmento *un_segmento = segmento;
-        Segmento *otro_segmento = segmento_dos;
+        Segmento *un_segmento = (Segmento *)segmento;
+        Segmento *otro_segmento = (Segmento *)segmento_dos;
         return un_segmento->desplazamiento < otro_segmento->desplazamiento;
     }
-    while (buscar_segmento_compactable())
+
+    int posicion_segmento_compactable;
+    while ((posicion_segmento_compactable = buscar_segmento_compactable()) >= 0)
     {
-        int posicion_segmento_compactable = buscar_segmento_compactable();
-        log_info(logger, "La posicion es: %d", posicion_segmento_compactable);
         Segmento *segmento_compactable = list_get(lista_de_memoria, posicion_segmento_compactable);
         Segmento *hueco_libre = list_get(lista_de_memoria, posicion_segmento_compactable - 1);
         segmento_compactable->desplazamiento = hueco_libre->desplazamiento;
-        hueco_libre->desplazamiento = hueco_libre->desplazamiento + segmento_compactable->tamano;
-        list_sort(lista_de_memoria,ordenar_por_desplazamiento);
+        hueco_libre->desplazamiento += segmento_compactable->tamano;
+        list_add(segmentos_actualizados, segmento_compactable);
+        list_sort(lista_de_memoria, ordenar_por_desplazamiento);
         unificacion_de_huecos_libres();
     }
+
+    return segmentos_actualizados;
 }
 
 int buscar_segmento_compactable()
 {
-    for (int i = 0; i < list_size(lista_de_memoria) - 1; i++)
+    int lista_size = list_size(lista_de_memoria);
+    for (int i = 0; i < lista_size - 1; i++)
     {
         Segmento *un_segmento = list_get(lista_de_memoria, i);
         Segmento *otro_segmento = list_get(lista_de_memoria, i + 1);
@@ -238,5 +236,5 @@ int buscar_segmento_compactable()
             return i + 1;
         }
     }
-    return 0;
+    return -1;
 }

@@ -47,7 +47,8 @@ extern t_config* config;
 void administrar_procesos_de_ready(int , int, int);
 void* administrar_procesos_de_new_wrapper(void*);
 void administrar_procesos_de_new(int );
-void* administrar_procesos_de_exit();
+void* administrar_procesos_de_exit_wrapper(void*);
+void administrar_procesos_de_exit(int);
 Archivo* crear_archivo(char*);
 int buscar_archivo_en_tabla_global(char*);
 void aniadir_a_bloqueados(t_pcb* , char*);
@@ -56,6 +57,8 @@ void gestionar_cierre_archivo(char* nombre_archivo);
 void borrar_de_tabla_de_archivos(t_pcb* proceso, char* nombre_archivo);
 void actualizar_puntero(t_pcb* proceso, char* nombre_archivo, uint32_t valor_puntero);
 void* solicitar_truncamiento(void* arg);
+void actualizar_tablas_de_segmentos(t_list *,t_list* );
+
 
 
 

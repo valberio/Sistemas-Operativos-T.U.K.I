@@ -4,6 +4,7 @@
         "time.h": "c",
         "libgen.h": "c",
         "server_utils.h": "c",
-        "administracion_colas.h": "c"
+        "administracion_colas.h": "c",
+        "loggers_utils.h": "c"
     }
 }

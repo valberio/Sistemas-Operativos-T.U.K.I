@@ -4,10 +4,12 @@
 #include<loggers/loggers_utils.h>
 #include<sockets/server_utils.h>
 #include "segmentos.h"
-#include"../../utils/src/pcb/pcb.h"
+#include<pcb/pcb.h>
 #include <pthread.h>
 
-extern int cantidad_maxima_segmentos_por_proceso
+extern int cantidad_maxima_segmentos_por_proceso;
+extern Segmento* segmento_0;
+
 
 typedef struct 
 {
@@ -19,6 +21,7 @@ void* comunicacion_con_kernel(void*);
 op_code respuesta_a_kernel(Segmento*,t_contexto_de_ejecucion*);
 int tamanio_del_registro(char* registro); //Probablemente deba ir en pcb.c
 void guardar_en_registros(char* registro, char* datos, t_contexto_de_ejecucion* contexto);
+void finalizar_proceso(t_contexto_de_ejecucion* contexto_de_ejecucion);
 
 
 #endif /* CONEXIONES_MEMORIA_H_ */

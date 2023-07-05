@@ -24,6 +24,17 @@ void *comunicacion_con_kernel(void *arg)
 
         switch (paquete->codigo_operacion)
         {
+        case INICIALIZAR_PROCESO:
+            log_info(logger, "sas");
+            list_add(contexto->tabla_segmentos, segmento_0);
+            t_paquete *paquete_inicializar_proceso = crear_paquete();
+            paquete_inicializar_proceso->codigo_operacion = 0;
+            paquete_inicializar_proceso->buffer = serializar_contexto(contexto);
+            enviar_paquete(paquete_inicializar_proceso, conexion_kernel);
+            break;
+        case FINALIZAR_PROCESO:
+            finalizar_proceso(contexto);
+            break;
         case CREAR_SEGMENTO:
             char *id = recibir_mensaje(conexion_kernel);
             log_info(logger, "El id es: %s", id);
@@ -40,6 +51,11 @@ void *comunicacion_con_kernel(void *arg)
             t_paquete *paquete_a_kernel = crear_paquete();
             paquete_a_kernel->codigo_operacion = respuesta_a_kernel(segmento_nuevo, contexto);
             paquete_a_kernel->buffer = serializar_contexto(contexto);
+            for (int i = 0; i < list_size(contexto->tabla_segmentos); i++)
+            {
+                Segmento *sas = list_get(contexto->tabla_segmentos, i);
+                log_info(logger, "SEGMENTO ID: %d, DESPLAZAMIENTO: %d", sas->id, sas->desplazamiento);
+            }
 
             enviar_paquete(paquete_a_kernel, conexion_kernel);
 
@@ -47,20 +63,11 @@ void *comunicacion_con_kernel(void *arg)
             {
                 recibir_mensaje(conexion_kernel);
                 log_info(logger, "SE pidio compactar");
-                compactar();
-                log_info(logger, "LA LISTA DE MEMORIA TIENE: ");
-                for (int i = 0; i < list_size(lista_de_memoria); i++)
-                {
-                    Segmento *sas = list_get(lista_de_memoria, i);
-                    log_info(logger, "SEGMENTO ID: %d, DESPLAZAMIENTO: %d", sas->id, sas->desplazamiento);
-                }
-                log_info(logger, "LA TABLA DE SEGMENTOS DEL CONTEXTO  TIENE: ");
-                for (int i = 0; i < list_size(contexto->tabla_segmentos); i++)
-                {
-                    Segmento *sas = list_get(contexto->tabla_segmentos, i);
-                    log_info(logger, "SEGMENTO ID: %d, DESPLAZAMIENTO: %d", sas->id, sas->desplazamiento);
-                }
-                enviar_mensaje("Listo", conexion_kernel);
+                t_list *segmentos_modificados = compactar();
+                paquete_a_kernel->codigo_operacion = 0;
+                paquete_a_kernel->buffer = serializar_lista_segmentos(segmentos_modificados);
+
+                enviar_paquete(paquete_a_kernel, conexion_kernel);
             }
 
             break;
@@ -68,7 +75,7 @@ void *comunicacion_con_kernel(void *arg)
             log_info(logger, "SE pidio eliminar un segmento");
 
             char *id_a_eliminar = recibir_mensaje(conexion_kernel);
-
+            log_info(logger, "El id es: %s", id_a_eliminar);
             int id_a_eliminar_int = atoi(id_a_eliminar);
             int posicion = get_index_of_list(contexto->tabla_segmentos, id_a_eliminar_int);
             log_info(logger, "La posicion es: %d", posicion);
@@ -177,11 +184,11 @@ void *comunicacion_con_cpu(void *arg)
 // TODO: esto hay que cambiarlo a un enum
 op_code respuesta_a_kernel(Segmento *segmento, t_contexto_de_ejecucion *contexto)
 {
-    else if (segmento->tamano == -2 || list_size(contexto->tabla_segmentos) > cantidad_maxima_segmentos_por_proceso)
+    if (segmento->tamano == -2 || list_size(contexto->tabla_segmentos) > cantidad_maxima_segmentos_por_proceso)
     {
         return OUT_OF_MEMORY;
     }
-    if (segmento->tamano > 0)
+    else if (segmento->tamano > 0)
     {
         list_add(contexto->tabla_segmentos, segmento);
         return SEGMENTO_CREADO;
@@ -190,7 +197,7 @@ op_code respuesta_a_kernel(Segmento *segmento, t_contexto_de_ejecucion *contexto
     {
         return COMPACTACION_NECESARIA;
     }
-    
+
     return 0;
 }
 int tamanio_del_registro(char *registro_char)
@@ -302,5 +309,13 @@ void guardar_en_registros(char *registro_char, char *datos, t_contexto_de_ejecuc
         strcpy(contexto->registros->RDX, datos);
         break;
     }
-
+}
+void finalizar_proceso(t_contexto_de_ejecucion *contexto_de_ejecucion)
+{
+    int tabla_size = list_size(contexto_de_ejecucion->tabla_segmentos);
+    for (int i = tabla_size - 1; i > 0; i--)
+    {
+        Segmento *segmento = list_remove(contexto_de_ejecucion->tabla_segmentos, i);
+        eliminar_segmento(segmento->id);
+    }
 }

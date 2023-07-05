@@ -29,7 +29,7 @@ Segmento* first_fit(int,int);
 Segmento* worst_fit(int,int);
 Segmento* best_fit(int,int);
 int buscar_segmento_compactable();
-void compactar();
+t_list* compactar();
 
 
 #endif /* SEGMENTOS_H_ */

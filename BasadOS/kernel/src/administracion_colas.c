@@ -1,5 +1,12 @@
 #include "administracion_colas.h"
-void *administrar_procesos_de_exit()
+void *administrar_procesos_de_exit_wrapper(void *arg)
+{
+	Parametros_de_hilo *args = (Parametros_de_hilo *)arg;
+	int parametro = args->conexion;
+	administrar_procesos_de_exit(parametro);
+	return NULL;
+}
+void administrar_procesos_de_exit(int conexion_kernel_memoria)
 {
 	while (1)
 	{
@@ -15,11 +22,16 @@ void *administrar_procesos_de_exit()
 
 		// ACA VA TU LOGICA DE MATARLOS
 
+		t_paquete *paquete_a_memoria = crear_paquete();
+		paquete->codigo_operacion = FINALIZAR_PROCESO;
+		paquete->buffer = serializar_contexto(proceso_a_finalizar->contexto_de_ejecucion);
+
+		enviar_paquete(paquete_a_memoria, conexion_kernel_memoria);
+
 		enviar_paquete(paquete, proceso_a_finalizar->socket_consola);
 
 		sem_post(&semaforo_multiprogramacion);
 	}
-	return NULL;
 }
 
 void *administrar_procesos_de_new_wrapper(void *arg)
@@ -206,27 +218,28 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				case SEGMENTO_CREADO:
 					t_contexto_de_ejecucion *contexto_respuesta = deserializar_contexto_de_ejecucion(paquete_respuesta->buffer);
 					proceso_en_ejecucion->contexto_de_ejecucion = contexto_respuesta;
-					break;
 					sem_wait(&mutex_cola_ready);
 					queue_push(cola_ready, proceso_en_ejecucion);
 					sem_post(&mutex_cola_ready);
 					sem_post(&semaforo_procesos_en_ready);
+					break;
 				case COMPACTACION_NECESARIA:
 					// checkear operaciones entre filesystem y memoria
 					enviar_mensaje("compactar", cliente_memoria);
-					recibir_mensaje(cliente_memoria);
+					paquete_respuesta = recibir_paquete(cliente_memoria);
+					t_list *segmentos_actualizados = deserializar_lista_de_segmentos(paquete_respuesta->buffer);
+					actualizar_tablas_de_segmentos(segmentos_actualizados, contexto_actualizado->tabla_segmentos);
+					paquete_a_memoria->buffer = serializar_contexto(contexto_actualizado);
+
 					enviar_paquete(paquete_a_memoria, cliente_memoria);
 					// Envio parametros
 					enviar_mensaje(id, cliente_memoria);
 					enviar_mensaje(tamanio, cliente_memoria);
+
 					paquete_respuesta = recibir_paquete(cliente_memoria);
 					contexto_respuesta = deserializar_contexto_de_ejecucion(paquete_respuesta->buffer);
 					proceso_en_ejecucion->contexto_de_ejecucion = contexto_respuesta;
-					for (int i = 0; i < list_size(contexto_respuesta->tabla_segmentos); i++)
-					{
-						Segmento *sas = list_get(contexto_respuesta->tabla_segmentos, i);
-						log_info(logger, "SEGMENTO ID: %d, DESPLAZAMIENTO: %d", sas->id, sas->desplazamiento);
-					}
+
 					sem_wait(&mutex_cola_ready);
 					queue_push(cola_ready, proceso_en_ejecucion);
 					sem_post(&mutex_cola_ready);
@@ -303,7 +316,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				break;
 			case CERRAR_ARCHIVO:
 				parametros_retorno = recibir_mensaje(cliente_cpu);
-				
+
 				gestionar_cierre_archivo(parametros_retorno);
 				borrar_de_tabla_de_archivos(proceso_en_ejecucion, parametros_retorno);
 				// LOGICA CON FILESYSTEM INTRODUCIR AQUI
@@ -482,4 +495,37 @@ void actualizar_puntero(t_pcb *proceso, char *nombre_archivo, uint32_t valor_pun
 	Archivo_de_proceso *archivo = list_find(proceso->tabla_archivos_abiertos, existe_el_archivo);
 	archivo->puntero = valor_puntero;
 	log_info(logger, "PID: %i - Actualizar puntero Archivo: %s - Puntero %i", proceso->pid, archivo->nombre, archivo->puntero);
+}
+
+void actualizar_tablas_de_segmentos(t_list *segmentos_actualizados, t_list *segmentos_en_running)
+{
+	while (list_size(segmentos_actualizados) > 0)
+	{
+		Segmento *segmento_actualizado = list_get(segmentos_actualizados, 0);
+		bool reemplazar_si_coinciden_ids(void *un_elemento)
+		{
+			Segmento *un_segmento = un_elemento;
+			return un_segmento->id == segmento_actualizado->id;
+		}
+
+		sem_wait(&mutex_cola_ready);
+		list_replace_by_condition(cola_ready->elements, reemplazar_si_coinciden_ids, segmento_actualizado);
+		sem_post(&mutex_cola_ready);
+
+		sem_wait(&mutex_cola_exit);
+		list_replace_by_condition(cola_exit->elements, reemplazar_si_coinciden_ids, segmento_actualizado);
+		sem_post(&mutex_cola_exit);
+
+		sem_wait(&mutex_cola_blocked);
+		list_replace_by_condition(cola_blocked->elements, reemplazar_si_coinciden_ids, segmento_actualizado);
+		sem_post(&mutex_cola_blocked);
+
+		list_replace_by_condition(segmentos_en_running, reemplazar_si_coinciden_ids, segmento_actualizado);
+		list_remove(segmentos_actualizados, 0);
+		for (int i = 0; i < list_size(segmentos_en_running); i++)
+		{
+			Segmento *sas = list_get(segmentos_en_running, i);
+			log_info(logger, "SEGMENTO ID: %d, DESPLAZAMIENTO: %d", sas->id, sas->desplazamiento);
+		}
+	}
 }

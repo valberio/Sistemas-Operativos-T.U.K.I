@@ -2,6 +2,8 @@
 #define INSTRUCCIONES_H_
 
 #include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
 #include<loggers/loggers_utils.h>
 #include<pcb/pcb.h>

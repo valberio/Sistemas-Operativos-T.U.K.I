@@ -177,7 +177,12 @@ int mov_in(t_log *logger, char **instrucciones, t_contexto_de_ejecucion *context
     paquete->buffer = serializar_contexto(contexto); // Mando el contexto de ejecucion, necesito acceder a los registros
     enviar_paquete(paquete, conexion_memoria_cpu);
     enviar_mensaje(instrucciones[1], conexion_memoria_cpu); // Mando el registro
-    enviar_mensaje(instrucciones[2], conexion_memoria_cpu); // Mando la direccion
+
+    int direccion_logica = atoi(instrucciones[2]);
+    int direccion_fisica = traduccion_dir_logica_fisica(direccion_logica, contexto->tabla_segmentos);
+    char* direccion_fisica_char = malloc(sizeof(direccion_fisica));
+    snprintf(direccion_fisica_char, sizeof(direccion_logica), "%d", direccion_fisica);
+    enviar_mensaje(direccion_fisica_char, conexion_memoria_cpu); // Mando la direccion
 
     // Espero la respuesta con el valor que se encontraba en la direccion
     t_paquete *paquete_respuesta = recibir_paquete(conexion_memoria_cpu);
@@ -197,8 +202,16 @@ int mov_out(t_log *logger, char **instrucciones, t_contexto_de_ejecucion *contex
     log_info(logger, "CPU manda un contexto con %i segmentos", list_size(contexto->tabla_segmentos));
     enviar_paquete(paquete, conexion_memoria_cpu);
 
-    enviar_mensaje(instrucciones[1], conexion_memoria_cpu);
-    enviar_mensaje(instrucciones[2], conexion_memoria_cpu);
+   
+    int direccion_logica = atoi(instrucciones[1]);
+    int direccion_fisica = traduccion_dir_logica_fisica(direccion_logica, contexto->tabla_segmentos);
+
+    char* direccion_fisica_char = malloc(sizeof(direccion_fisica));
+    snprintf(direccion_fisica_char, sizeof(direccion_logica), "%d", direccion_fisica);
+
+    enviar_mensaje(direccion_fisica_char, conexion_memoria_cpu); //Envio direccion fisica
+
+    enviar_mensaje(instrucciones[2], conexion_memoria_cpu); //Envio registro
 
     // Memoria responde con un OK confirmado que escribió lo que debía
     t_paquete *paquete_respuesta = recibir_paquete(conexion_memoria_cpu);

@@ -119,6 +119,7 @@ void *comunicacion_con_cpu(void *arg)
 
         char *registro;
         char *direccion_logica;
+        char* char_dir_fis;
         int direccion_logica_int;
         int direccion_fisica;
 
@@ -130,10 +131,8 @@ void *comunicacion_con_cpu(void *arg)
             paquete_respuesta->codigo_operacion = 0;
             paquete_respuesta->buffer = serializar_contexto(contexto);
             registro = recibir_mensaje(conexion_cpu);
-            direccion_logica = recibir_mensaje(conexion_cpu);
-            direccion_logica_int = atoi(direccion_logica);
-
-            direccion_fisica = traduccion_dir_logica_fisica(direccion_logica_int, contexto->tabla_segmentos);
+            char_dir_fis = recibir_mensaje(conexion_cpu);
+            direccion_fisica = atoi(char_dir_fis);
 
             // Accedo a la memoria, copio los datos en una variable auxiliar
             char *datos_leidos = malloc(tamanio_del_registro(registro));
@@ -151,17 +150,15 @@ void *comunicacion_con_cpu(void *arg)
         case PETICION_ESCRITURA: // Caso escritura mov_out
             log_info(logger, "MEMORIA recibió una petición de escritura del CPU");
 
-            direccion_logica = recibir_mensaje(conexion_cpu);
-            direccion_logica_int = atoi(direccion_logica);
+            char_dir_fis = recibir_mensaje(conexion_cpu);
+            direccion_fisica = atoi(char_dir_fis);
             registro = recibir_mensaje(conexion_cpu);
 
             int tamanio_registro = tamanio_del_registro(registro);
 
-            char *datos_en_registro = malloc(tamanio_registro * sizeof(char));
+            char* datos_en_registro = malloc(tamanio_registro * sizeof(char));
             datos_en_registro = leer_registro(registro, contexto);
             log_info(logger, "Voy a guardar %s", datos_en_registro);
-
-            direccion_fisica = traduccion_dir_logica_fisica(direccion_logica_int, contexto->tabla_segmentos);
 
             memcpy(espacio_de_memoria + direccion_fisica, datos_en_registro, tamanio_registro);
 
@@ -199,61 +196,6 @@ op_code respuesta_a_kernel(Segmento *segmento, t_contexto_de_ejecucion *contexto
     }
 
     return 0;
-}
-int tamanio_del_registro(char *registro_char)
-{
-    int tamanio_del_registro = 0;
-    enum Registros registro = string_a_registro(registro_char);
-    switch (registro)
-    {
-    case rAX:
-        tamanio_del_registro = 5; // 4 + 1, para considerar el \0
-        break;
-    case rBX:
-        tamanio_del_registro = 5;
-        break;
-    case rCX:
-        tamanio_del_registro = 5;
-        break;
-    case rDX:
-        tamanio_del_registro = 5;
-        break;
-
-    // Registros 8 bits
-    case rEAX:
-        tamanio_del_registro = 9;
-        break;
-
-    case rEBX:
-        tamanio_del_registro = 9;
-        break;
-
-    case rECX:
-        tamanio_del_registro = 9;
-        break;
-
-    case rEDX:
-        tamanio_del_registro = 9;
-        break;
-
-    // Registros de 16 bits
-    case rRAX:
-        tamanio_del_registro = 17;
-        break;
-
-    case rRBX:
-        tamanio_del_registro = 17;
-        break;
-
-    case rRCX:
-        tamanio_del_registro = 17;
-        break;
-
-    case rRDX:
-        tamanio_del_registro = 17;
-        break;
-    }
-    return tamanio_del_registro;
 }
 
 void guardar_en_registros(char *registro_char, char *datos, t_contexto_de_ejecucion *contexto)

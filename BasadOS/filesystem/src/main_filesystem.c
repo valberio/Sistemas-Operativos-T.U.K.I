@@ -222,7 +222,7 @@ Reducir el tamaño del archivo: Se deberá asignar el nuevo tamaño del archivo 
 			}
 		}
 	}
-	guardar_fcb(archivo_fcb, *fcb);
+	//guardar_fcb(archivo_fcb, *fcb);
 	//fclose(archivo_fcb);
 	free(fcb);
 }

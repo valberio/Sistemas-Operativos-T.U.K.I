@@ -367,6 +367,8 @@ t_list *deserializar_lista_de_segmentos(t_buffer *buffer)
     }
     return lista_segmentos;
 }
+
+
 enum Registros string_a_registro(char *registro)
 {
     if (strncmp(registro, "AX", 2) == 0)
@@ -424,11 +426,68 @@ enum Registros string_a_registro(char *registro)
     return EXIT_FAILURE;
 }
 
-char *leer_registro(char *registro_char, t_contexto_de_ejecucion *contexto)
+
+int tamanio_del_registro(char *registro_char)
+{
+    int tamanio_del_registro = 0;
+    enum Registros registro = string_a_registro(registro_char);
+    switch (registro)
+    {
+    case rAX:
+        tamanio_del_registro = 5; // 4 + 1, para considerar el \0
+        break;
+    case rBX:
+        tamanio_del_registro = 5;
+        break;
+    case rCX:
+        tamanio_del_registro = 5;
+        break;
+    case rDX:
+        tamanio_del_registro = 5;
+        break;
+
+    // Registros 8 bits
+    case rEAX:
+        tamanio_del_registro = 9;
+        break;
+
+    case rEBX:
+        tamanio_del_registro = 9;
+        break;
+
+    case rECX:
+        tamanio_del_registro = 9;
+        break;
+
+    case rEDX:
+        tamanio_del_registro = 9;
+        break;
+
+    // Registros de 16 bits
+    case rRAX:
+        tamanio_del_registro = 17;
+        break;
+
+    case rRBX:
+        tamanio_del_registro = 17;
+        break;
+
+    case rRCX:
+        tamanio_del_registro = 17;
+        break;
+
+    case rRDX:
+        tamanio_del_registro = 17;
+        break;
+    }
+    return tamanio_del_registro;
+}
+
+char* leer_registro(char *registro_char, t_contexto_de_ejecucion *contexto)
 {
     enum Registros registro = string_a_registro(registro_char);
-
-    char *valor_en_registro;
+    int tamanio_registro = tamanio_del_registro(registro_char);
+    char *valor_en_registro = malloc(tamanio_registro * sizeof(char));
 
     switch (registro)
     {
@@ -491,7 +550,7 @@ int traduccion_dir_logica_fisica(int dir_logica, t_list *tabla_segmentos)
 
     if (list_size(tabla_segmentos) != 0)
     {
-        Segmento *segmento = list_get(tabla_segmentos, 0);
+        Segmento *segmento = list_get(tabla_segmentos, num_segmento); //Hardcodeado, hay que buscar por el numero de id del segmento
         int dir_fisica = segmento->desplazamiento + desplazamiento_segmento;
         return dir_fisica;
     }

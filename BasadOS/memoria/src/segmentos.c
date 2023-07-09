@@ -238,3 +238,4 @@ int buscar_segmento_compactable()
     }
     return -1;
 }
+

@@ -16,7 +16,7 @@ typedef struct {
     int tamano;
     int id;
     int desplazamiento;
-} Segmento;
+}Segmento;
 
 Segmento* inicializar_segmento(int );
 int obtener_espacio_libre_total();
@@ -30,6 +30,7 @@ Segmento* worst_fit(int,int);
 Segmento* best_fit(int,int);
 int buscar_segmento_compactable();
 t_list* compactar();
+
 
 
 #endif /* SEGMENTOS_H_ */

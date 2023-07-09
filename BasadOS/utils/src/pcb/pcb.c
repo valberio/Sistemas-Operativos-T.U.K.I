@@ -550,17 +550,25 @@ int traduccion_dir_logica_fisica(int dir_logica, t_list *tabla_segmentos)
 
     if (list_size(tabla_segmentos) != 0)
     {
-        Segmento *segmento = list_get(tabla_segmentos, num_segmento); //Hardcodeado, hay que buscar por el numero de id del segmento
+        int segmento_index = obtener_segmento_por_id(num_segmento, tabla_segmentos);
+        Segmento* segmento = list_get(tabla_segmentos, segmento_index);
         int dir_fisica = segmento->desplazamiento + desplazamiento_segmento;
         return dir_fisica;
     }
     return 0;
-    // Hardcode, cambiar
-    /*bool obtener_segmento(void *elemento)
-    {
-        Segmento *segmento = elemento;
-        return segmento->id == num_segmento;
-    }
+}
 
-    Segmento* segmento = list_find(contexto->tabla_segmentos, obtener_segmento);*/
+int obtener_segmento_por_id(int id, t_list* tabla_segmentos)
+{
+    int tam = list_size(tabla_segmentos);
+    int index = NULL;
+    for (int i = 0; i < tam; i++)
+    {
+        Segmento* temp = list_get(tabla_segmentos, i);
+        if (temp->id == id)
+        {
+            index = i;
+        }
+    }
+    return index;
 }

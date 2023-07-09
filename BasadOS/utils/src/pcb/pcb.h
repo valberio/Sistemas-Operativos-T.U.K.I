@@ -74,6 +74,7 @@ int tamanio_del_registro(char* registro);
 int traduccion_dir_logica_fisica(int dir_logica, t_list* tabla_segmentos);
 t_buffer *serializar_lista_segmentos(t_list *tabla);
 t_list *deserializar_lista_de_segmentos(t_buffer *buffer);
+int obtener_segmento_por_id(int id, t_list* tabla_segmentos);
 
 
 

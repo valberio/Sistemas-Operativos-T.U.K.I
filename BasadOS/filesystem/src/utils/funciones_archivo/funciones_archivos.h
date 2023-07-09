@@ -1,7 +1,7 @@
 #ifndef FUNCIONES_ARCHIVOS_H_
 #define FUNCIONES_ARCHIVOS_H_
 
-extern t_list* fcb_list;
+
 
 #include <sockets/client_utils.h>
 #include <sockets/server_utils.h>
@@ -13,5 +13,7 @@ extern t_list* fcb_list;
 #include <dirent.h>
 #include <sys/stat.h>
 #include <string.h>
+
+extern t_list* fcb_list;
 
 #endif /* FUNCIONES_ARCHIVOS_H_ */

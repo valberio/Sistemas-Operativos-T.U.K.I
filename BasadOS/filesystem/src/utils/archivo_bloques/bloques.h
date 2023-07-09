@@ -13,7 +13,8 @@
 #include <string.h>
 
 typedef struct {
-    void* datos;
+    int tamano;
+    char* datos;
 }t_bloque;
 
 typedef struct {
@@ -23,4 +24,7 @@ typedef struct {
     uint32_t indirect_pointer; //Apunta a un bloque que contendrá los punteros a los siguientes bloques del archivo.
 }t_fcb; 
 
+
+void crear_archivo_bloques(double cant_bloques, double tamano_bloque, char* ruta_archivo_bloques);
+void leer_archivo_de_bloques(double cant_bloques, double tamano_bloque, char* ruta_archivo_bloques);
 #endif /* BLOQUES_H_ */

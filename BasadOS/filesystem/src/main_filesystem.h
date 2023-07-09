@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 #include <string.h>
 #include "utils/bitmap/bitmap.h"
+#include "utils/archivo_bloques/bloques.h"
 
 extern t_log* logger;
 
@@ -23,7 +24,7 @@ typedef struct {
 
 
 //void *crear_fcb(char *nombre_archivo);
-void crear_estructuras_fcb(t_bitarray* bitarray);
+void crear_estructuras_fcb();
 void recibir_ordenes_kernel(int conexion_filesystem_kernel);
 void crear_estructura_fcb(char *nombre_archivo);
 void* crear_archivo_fcb(char *nombre_archivo);

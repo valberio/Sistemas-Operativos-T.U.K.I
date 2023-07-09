@@ -1,6 +1,6 @@
-#include "funciones_archivo.h"
+#include "funciones_archivos.h"
 
-
+/*
 void leer_archivo(char* nombre_archivo,int direccion_logica, int cantidad_de_bytes){
     
     t_fcb* fcb = buscar_fcb(nombre_archivo*);
@@ -23,5 +23,5 @@ t_fcb* buscar_fcb(char* nombre_archivo){
 
     t_fcb* fcb_encontrado  = list_find(fcb_list, matchear_nombre);
 
-    return fcb_necontrado
-}
+    return fcb_encontrado;
+}*/

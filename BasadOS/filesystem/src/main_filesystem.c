@@ -14,7 +14,7 @@
 t_list* fcb_list;
 t_config *config;
 t_log* logger;
-
+t_bitarray* bitarray;
 
 int main()
 {
@@ -37,8 +37,10 @@ int main()
 	//Bitmap
 	char* ruta_bitmap = config_get_string_value(config, "PATH_BITMAP");
 
-	t_bitarray* bitarray = crear_bitmap(ruta_bitmap, superbloque.block_count);
+	bitarray = crear_bitmap(ruta_bitmap, superbloque.block_count);
 
+	crear_archivo_bloques(superbloque.block_count, superbloque.block_size, "");
+	leer_archivo_de_bloques(superbloque.block_count, superbloque.block_size, "");
 	//Recorro el directorio de FCBs y creo estructuras
 	crear_estructuras_fcb(bitarray);
 	
@@ -51,7 +53,7 @@ int main()
 	log_info(logger, "Filesystem recibió la conexión del kernel!");
 	}
 	
-	recibir_ordenes_kernel(conexion_filesystem_kernel);
+	//recibir_ordenes_kernel(conexion_filesystem_kernel);
 	/*if (cliente_filesystem_a_memoria)
 	{
 		log_info(logger, "Filesystem se conectó a memoria!");
@@ -102,7 +104,7 @@ void crear_estructuras_fcb(t_bitarray* bitarray)
                 continue;
             }
 			printf("Archivo: %s\n", ruta_fcb);
-			crear_estructura_fcb(ruta_fcb, t_bitarray);
+			crear_estructura_fcb(ruta_fcb);
 			free(ruta_fcb);
 		}
 		closedir(dir);	
@@ -113,14 +115,14 @@ void crear_estructuras_fcb(t_bitarray* bitarray)
 }
 
 
-void crear_estructura_fcb(char* ruta, t_bitarray* bitarray) //habria que llamarlo crear fcb
+void crear_estructura_fcb(char* ruta) //habria que llamarlo crear fcb
 {
 	t_fcb* fcb = malloc(sizeof(t_fcb));
 	t_config *fcb_config = config_create(ruta);
 	fcb->direct_pointer = config_get_int_value(fcb_config, "PUNTERO_DIRECTO");
-	bit_array_set_bit(bitarray, fcb->direct_pointer);
+	bitarray_set_bit(bitarray, fcb->direct_pointer);
 	fcb->indirect_pointer = config_get_int_value(fcb_config, "PUNTERO_INDIRECTO");
-	bit_array_set_bit(bitarray, fcb->indirect_pointer);
+	bitarray_set_bit(bitarray, fcb->indirect_pointer);
 	//FALTA SETEAR LOS BITS QUE ESTEN EN EL INDIRECTO
 	fcb->size = config_get_int_value(fcb_config, "TAMANIO_ARCHIVO");
 	fcb->name = malloc(sizeof(config_get_string_value(fcb_config, "NOMBRE_ARCHIVO")) + 2);

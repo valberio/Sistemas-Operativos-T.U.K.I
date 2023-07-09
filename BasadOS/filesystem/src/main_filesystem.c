@@ -26,13 +26,19 @@ int main()
 	char *ip = config_get_string_value(config, "IP_MEMORIA");
 	int cliente_filesystem_a_memoria = crear_conexion_al_server(logger, ip, puerto_a_memoria);
 
-	//Levanto el bitmap de bloques
+	//Superbloque
 	t_superbloque superbloque;
 	t_config *superbloque_config = iniciar_config(config_get_string_value(config, "PATH_SUPERBLOQUE"));
+	
 	superbloque.block_size = config_get_double_value(superbloque_config, "BLOCK_SIZE");
 	superbloque.block_count = config_get_double_value(superbloque_config, "BLOCK_COUNT");
+
+	//tenemos tantos bits como bloques
+	//Bitmap
+	char* ruta_bitmap = config_get_string_value(config, "PATH_BITMAP");
 	char* bitmap = malloc((superbloque.block_count / 8));
 	t_bitarray *bitarray = bitarray_create_with_mode(bitmap, sizeof(bitmap), LSB_FIRST);
+
 
 	//Recorro el directorio de FCBs y creo estructuras
 	crear_estructuras_fcb();
@@ -58,6 +64,7 @@ int main()
 		printf("Recibi instruccion %s, %s\n", list_get(contexto->instrucciones, 0), list_get(contexto->instrucciones, 1));
 	}*/
 }
+
 
 void recibir_ordenes_kernel(int conexion_filesystem_kernel){
 	while(conexion_filesystem_kernel){

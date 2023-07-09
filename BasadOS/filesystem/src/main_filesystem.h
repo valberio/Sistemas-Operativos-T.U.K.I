@@ -11,28 +11,19 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <string.h>
+#include "utils/bitmap/bitmap.h"
 
 extern t_log* logger;
-
 
 typedef struct {
     double block_size;
     double block_count;
 }t_superbloque;
 
-typedef struct {
-    uint32_t* data;
-}t_bloque;
 
-typedef struct {
-    char* name;
-    uint32_t size; //En bytes
-    uint32_t direct_pointer; //Apunta al primer bloque de datos del archivo.
-    uint32_t indirect_pointer; //Apunta a un bloque que contendrá los punteros a los siguientes bloques del archivo.
-}t_fcb; 
 
 //void *crear_fcb(char *nombre_archivo);
-void crear_estructuras_fcb(); 
+void crear_estructuras_fcb(t_bitarray* bitarray);
 void recibir_ordenes_kernel(int conexion_filesystem_kernel);
 void crear_estructura_fcb(char *nombre_archivo);
 void* crear_archivo_fcb(char *nombre_archivo);

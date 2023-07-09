@@ -36,16 +36,12 @@ int main()
 	//tenemos tantos bits como bloques
 	//Bitmap
 	char* ruta_bitmap = config_get_string_value(config, "PATH_BITMAP");
-	char* bitmap = malloc((superbloque.block_count / 8));
-	t_bitarray *bitarray = bitarray_create_with_mode(bitmap, sizeof(bitmap), LSB_FIRST);
 
+	t_bitarray* bitarray = crear_bitmap(ruta_bitmap, superbloque.block_count);
 
 	//Recorro el directorio de FCBs y creo estructuras
-	crear_estructuras_fcb();
-	log_info(logger, "La cantidad de FCBs es de %d\n", list_size(fcb_list));
-	log_info(logger, "El nombre del primer archivo FCB es: %s", ((t_fcb*)list_get(fcb_list, 0))->name);
+	crear_estructuras_fcb(bitarray);
 	
-
 	// Conecto el filesystem como servidor del kernel
 	char* puerto_a_kernel = config_get_string_value(config, "PUERTO_ESCUCHA");
 	int servidor_filesystem = iniciar_servidor(logger, puerto_a_kernel);
@@ -83,7 +79,7 @@ void recibir_ordenes_kernel(int conexion_filesystem_kernel){
 	}
 }
 
-void crear_estructuras_fcb() 
+void crear_estructuras_fcb(t_bitarray* bitarray) 
 {	
 	char* directorio_fcb = config_get_string_value(config, "PATH_FCB");
 	DIR *dir = opendir(directorio_fcb);
@@ -106,7 +102,7 @@ void crear_estructuras_fcb()
                 continue;
             }
 			printf("Archivo: %s\n", ruta_fcb);
-			crear_estructura_fcb(ruta_fcb);
+			crear_estructura_fcb(ruta_fcb, t_bitarray);
 			free(ruta_fcb);
 		}
 		closedir(dir);	
@@ -117,12 +113,15 @@ void crear_estructuras_fcb()
 }
 
 
-void crear_estructura_fcb(char* ruta) //habria que llamarlo crear fcb
+void crear_estructura_fcb(char* ruta, t_bitarray* bitarray) //habria que llamarlo crear fcb
 {
 	t_fcb* fcb = malloc(sizeof(t_fcb));
 	t_config *fcb_config = config_create(ruta);
 	fcb->direct_pointer = config_get_int_value(fcb_config, "PUNTERO_DIRECTO");
+	bit_array_set_bit(bitarray, fcb->direct_pointer);
 	fcb->indirect_pointer = config_get_int_value(fcb_config, "PUNTERO_INDIRECTO");
+	bit_array_set_bit(bitarray, fcb->indirect_pointer);
+	//FALTA SETEAR LOS BITS QUE ESTEN EN EL INDIRECTO
 	fcb->size = config_get_int_value(fcb_config, "TAMANIO_ARCHIVO");
 	fcb->name = malloc(sizeof(config_get_string_value(fcb_config, "NOMBRE_ARCHIVO")) + 2);
 	strcpy(fcb->name, config_get_string_value(fcb_config, "NOMBRE_ARCHIVO"));
@@ -174,14 +173,14 @@ void *crear_archivo_fcb(char *nombre_archivo)
 	free(ruta);
 	return NULL;
 }
-
+/*
 //nombre del archivo, nuevo tamaño
 int truncar_archivo(char *nombre_archivo, int nro_bloques, t_superbloque superbloque, t_bitarray *bitarray, int bloques, t_log *logger, FILE* archivo_de_bloques)
 {
-/*Al momento de truncar un archivo, pueden ocurrir 2 situaciones:
+	Al momento de truncar un archivo, pueden ocurrir 2 situaciones:
 Ampliar el tamaño del archivo: Al momento de ampliar el tamaño del archivo deberá actualizar el tamaño del archivo en el FCB y se le deberán asignar tantos bloques como sea necesario para poder direccionar el nuevo tamaño.
 Reducir el tamaño del archivo: Se deberá asignar el nuevo tamaño del archivo en el FCB y se deberán marcar como libres todos los bloques que ya no sean necesarios para direccionar el tamaño del archivo (descartando desde el final del archivo hacia el principio).
-*/
+
 	//char *ruta;
 	t_fcb* fcb = malloc(sizeof(t_fcb));
 	fcb->name = malloc(sizeof(nombre_archivo));
@@ -189,7 +188,7 @@ Reducir el tamaño del archivo: Se deberá asignar el nuevo tamaño del archivo 
 	/*strcpy(ruta, "fs/fcb");
 	strcat(ruta, nombre_archivo);
 	strcat(ruta, ".config");
-	FILE *archivo_fcb = fopen(ruta, "wr+");  */
+	FILE *archivo_fcb = fopen(ruta, "wr+");  
 	bool es_el_fcb(void* elemento){
 		t_fcb* fcb_en_tabla;
 		fcb_en_tabla = elemento;
@@ -360,6 +359,7 @@ t_bloque* leer_bloque(FILE *archivo_de_bloques, t_superbloque superbloque, unsig
 	fread(bloque, superbloque.block_size, 1, archivo_de_bloques);
 	return bloque;
 }
+*/
 /*
 t_list *leer_archivo(FILE *archivo_de_bloques, char *nombre_archivo, t_superbloque superbloque)
 {

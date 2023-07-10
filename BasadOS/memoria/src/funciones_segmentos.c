@@ -182,7 +182,7 @@ void inicializar_proceso(t_contexto_de_ejecucion *contexto_de_ejecucion, int con
     enviar_contexto_de_ejecucion(contexto_de_ejecucion, conexion_memoria_kernel);
 }
 
-t_list *compactar()
+t_list* compactar()
 {
     t_list *segmentos_actualizados = list_create();
     bool ordenar_por_desplazamiento(void *segmento, void *segmento_dos)

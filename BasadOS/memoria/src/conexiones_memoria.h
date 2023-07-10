@@ -10,7 +10,12 @@
 
 extern int cantidad_maxima_segmentos_por_proceso;
 extern Segmento* segmento_0;
-
+extern t_list* lista_de_memoria;
+extern t_config* config;
+extern t_log* logger;
+extern void* espacio_de_memoria;
+extern int retardo_acceso_memoria;
+extern int retardo_compactacion;
 
 typedef struct 
 {

@@ -33,4 +33,5 @@ void leer_bloque_completo(int nro_bloque, int tamano_bloque, char* ruta_archivo_
 char* leer_bloque_desde_hasta(uint32_t nro_bloque, uint32_t desde, uint32_t hasta, int tamano_bloque, char* ruta_archivo_bloque);
 char* completar_con_ceros(int index, int cant_bloques);
 char* obtener_puntero_bloque_libre(int cant_bloques, t_bitarray* bitarray);
+void escribir_en_archivo_de_bloques(char* ruta);
 #endif /* BLOQUES_H_ */

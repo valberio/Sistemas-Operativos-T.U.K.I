@@ -225,7 +225,9 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 					break;
 				case COMPACTACION_NECESARIA:
 					// checkear operaciones entre filesystem y memoria
+
 					enviar_mensaje("compactar", cliente_memoria);
+
 					paquete_respuesta = recibir_paquete(cliente_memoria);
 					t_list *segmentos_actualizados = deserializar_lista_de_segmentos(paquete_respuesta->buffer);
 					actualizar_tablas_de_segmentos(segmentos_actualizados, contexto_actualizado->tabla_segmentos);

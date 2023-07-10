@@ -14,6 +14,8 @@ t_list* fcb_list;
 t_config *config;
 t_log* logger;
 t_bitarray* bitarray;
+uint32_t cantidad_bloques;
+uint32_t tamanio_bloque;
 
 int main()
 {
@@ -29,28 +31,27 @@ int main()
 	t_superbloque superbloque;
 	t_config *superbloque_config = iniciar_config(config_get_string_value(config, "PATH_SUPERBLOQUE"));
 	
-	superbloque.block_size = config_get_double_value(superbloque_config, "BLOCK_SIZE");
-	superbloque.block_count = config_get_double_value(superbloque_config, "BLOCK_COUNT");
+	tamanio_bloque = config_get_double_value(superbloque_config, "BLOCK_SIZE");
+	cantidad_bloques = config_get_double_value(superbloque_config, "BLOCK_COUNT");
+
 
 	//tenemos tantos bits como bloques
 	//Bitmap
 	char* ruta_bitmap = config_get_string_value(config, "PATH_BITMAP");
 
 
-	bitarray = crear_bitmap(ruta_bitmap, superbloque.block_count);
+	bitarray = crear_bitmap(ruta_bitmap, cantidad_bloques);
 
 	
 	char* ruta_archivo_bloques = config_get_string_value(config, "PATH_BLOQUES");
-	crear_archivo_bloques(superbloque.block_count, superbloque.block_size, ruta_archivo_bloques);
+	crear_archivo_bloques(cantidad_bloques, tamanio_bloque, ruta_archivo_bloques);
 
-	leer_bloque_completo(0, superbloque.block_size, ruta_archivo_bloques);
-	leer_bloque_desde_hasta(0, 5, 10, superbloque.block_size, ruta_archivo_bloques);
-
-	
-
-	//leer_archivo_de_bloques(superbloque.block_count, superbloque.block_size, "");
 	//Recorro el directorio de FCBs y creo estructuras
-	crear_estructuras_fcb(bitarray);
+	crear_estructuras_fcb();
+	leer_bloque_completo(45, tamanio_bloque, ruta_archivo_bloques);
+	leer_bloque_completo(43, tamanio_bloque, ruta_archivo_bloques);
+
+
 	
 	// Conecto el filesystem como servidor del kernel
 	char* puerto_a_kernel = config_get_string_value(config, "PUERTO_ESCUCHA");
@@ -89,7 +90,7 @@ void recibir_ordenes_kernel(int conexion_filesystem_kernel){
 	}
 }
 
-void crear_estructuras_fcb(t_bitarray* bitarray) 
+void crear_estructuras_fcb() 
 {	
 	char* directorio_fcb = config_get_string_value(config, "PATH_FCB");
 	DIR *dir = opendir(directorio_fcb);
@@ -127,16 +128,50 @@ void crear_estructura_fcb(char* ruta) //habria que llamarlo crear fcb
 	t_fcb* fcb = malloc(sizeof(t_fcb));
 	t_config *fcb_config = config_create(ruta);
 	fcb->direct_pointer = config_get_int_value(fcb_config, "PUNTERO_DIRECTO");
-	bitarray_set_bit(bitarray, fcb->direct_pointer);
 	fcb->indirect_pointer = config_get_int_value(fcb_config, "PUNTERO_INDIRECTO");
-	bitarray_set_bit(bitarray, fcb->indirect_pointer);
-	//FALTA SETEAR LOS BITS QUE ESTEN EN EL INDIRECTO
 	fcb->size = config_get_int_value(fcb_config, "TAMANIO_ARCHIVO");
-	fcb->name = malloc(sizeof(config_get_string_value(fcb_config, "NOMBRE_ARCHIVO")) + 2);
+	fcb->name = malloc(sizeof(config_get_string_value(fcb_config, "NOMBRE_ARCHIVO")));
+
+	bitarray_set_bit(bitarray, fcb->indirect_pointer);
+
+	//Actualizo los bloques que usa el fcb en el bitmap
+	bitarray_set_bit(bitarray, fcb->direct_pointer);
+	FILE* archivo_bloques = fopen("fs/bloques.dat", "rb+");
+	if (archivo_bloques == NULL) {
+        printf("No se pudo abrir el archivo\n");
+    }
+	uint32_t bytes_a_guardar = fcb->size - tamanio_bloque;
+	int digitos_bloque = obtener_digitos_cant_bloque();
+
+	if (bytes_a_guardar > 0){
+		uint32_t bloques_necesarios = ceil(bytes_a_guardar / tamanio_bloque);
+		//log_info(logger, "Los bloques necesarios son %i", bloques_necesarios);
+		for (int i = 0; i < bloques_necesarios; i++)
+		{
+			char* index = obtener_puntero_bloque_libre(cantidad_bloques, bitarray);
+			int bloque_index = atoi(index);
+			bitarray_set_bit(bitarray, bloque_index);
+			fseek(archivo_bloques, ((fcb->indirect_pointer * tamanio_bloque) + (i * digitos_bloque)) * sizeof(char), SEEK_SET);
+    		fwrite(index, sizeof(char), digitos_bloque, archivo_bloques);
+		}
+	}
+	fclose(archivo_bloques);
 	strcpy(fcb->name, config_get_string_value(fcb_config, "NOMBRE_ARCHIVO"));
 	list_add(fcb_list, fcb);
 }
 
+
+int obtener_digitos_cant_bloque()
+{
+	int digitos = 0;
+	uint32_t temp = cantidad_bloques;
+
+	while (temp /= 10)
+	{
+		digitos++;
+	}
+	return digitos + 1;
+}
 
 void abrir_o_crear_archivo(char *nombre_archivo, int conexion_filesystem_kernel)
 {
@@ -267,7 +302,7 @@ int buscar_bloque_disponible(t_bitarray *bitarray, t_superbloque superbloque)
 {
 	int i = 0;
 	bool bit = bitarray_test_bit(bitarray, i);
-	while (i < superbloque.block_count && bit != 0)
+	while (i < cantidad_bloques && bit != 0)
 	{
 		i++;
 	}
@@ -296,8 +331,8 @@ void quitar_bloque_de_lista(FILE *archivo_de_bloques, t_bitarray *bitarray, t_su
 	uint32_t eliminado = 0;
 	int i = 0;
 	char *ruta = dirname(archivo_de_bloques);
-	fseek(archivo_de_bloques, superbloque.block_size * indirect_pointer, SEEK_SET);
-	fread(&bloque, superbloque.block_size, 1, archivo_de_bloques);
+	fseek(archivo_de_bloques, tamanio_bloque * indirect_pointer, SEEK_SET);
+	fread(&bloque, tamanio_bloque, 1, archivo_de_bloques);
 	while (read != 0)
 	{
 		read = bloque.data[i];
@@ -306,8 +341,8 @@ void quitar_bloque_de_lista(FILE *archivo_de_bloques, t_bitarray *bitarray, t_su
 	eliminado = bloque.data[i - 4];
 	bitarray_clean_bit(bitarray, eliminado);
 	bloque.data[i - 4] = '\0';
-	fseek(archivo_de_bloques, superbloque.block_size * indirect_pointer, SEEK_SET);
-	fwrite(&bloque, superbloque.block_size, 1, archivo_de_bloques);
+	fseek(archivo_de_bloques, tamanio_bloque * indirect_pointer, SEEK_SET);
+	fwrite(&bloque, tamanio_bloque, 1, archivo_de_bloques);
 }
 
 void asignar_bloque(t_fcb *fcb, t_bitarray *bitarray, FILE *archivo_de_bloques, t_superbloque superbloque)
@@ -330,9 +365,9 @@ t_bitarray *leer_bitmap(FILE *bitmap, t_bitarray *bitarray, t_superbloque superb
 	bool temp_value;
 	t_bitarray* leido;
 	fseek(bitmap, 0, SEEK_SET);
-	for (int i = 0; i < superbloque.block_count; i++)
+	for (int i = 0; i < cantidad_bloques; i++)
 	{
-		fread(&temp_value, superbloque.block_size, 1, bitarray);
+		fread(&temp_value, tamanio_bloque, 1, bitarray);
 		if (temp_value)
 		{
 			bitarray_set_bit(bitarray, i);
@@ -349,23 +384,23 @@ void escribir_bitmap(FILE *bitmap, t_bitarray *bitarray, t_superbloque superbloq
 {
 	bool temp_value;
 	fseek(bitmap, 0, SEEK_SET);
-	for (int i = 0; i < superbloque.block_count; i++)
+	for (int i = 0; i < cantidad_bloques; i++)
 	{
 		temp_value = bitarray_test_bit(bitarray, i);
-		fwrite(&temp_value, superbloque.block_count, 1, bitarray);
+		fwrite(&temp_value, cantidad_bloques, 1, bitarray);
 	}
 }
 
 void escribir_bloque(FILE *archivo_de_bloques, t_bloque bloque, unsigned nro_bloque, t_superbloque superbloque)
 {
-	fwrite(&bloque, superbloque.block_size * nro_bloque, 1, archivo_de_bloques);
+	fwrite(&bloque, tamanio_bloque * nro_bloque, 1, archivo_de_bloques);
 }
 
 t_bloque* leer_bloque(FILE *archivo_de_bloques, t_superbloque superbloque, unsigned nro_bloque)
 {
 	t_bloque* bloque;
-	fseek(archivo_de_bloques, superbloque.block_size * nro_bloque, SEEK_SET);
-	fread(bloque, superbloque.block_size, 1, archivo_de_bloques);
+	fseek(archivo_de_bloques, tamanio_bloque * nro_bloque, SEEK_SET);
+	fread(bloque, tamanio_bloque, 1, archivo_de_bloques);
 	return bloque;
 }
 */
@@ -377,20 +412,20 @@ t_list *leer_archivo(FILE *archivo_de_bloques, char *nombre_archivo, t_superbloq
 	t_bloque *bloque;
 	t_bloque bloque_aux;
 	int32_t nro_bloque;
-	fseek(archivo_de_bloques, superbloque.block_size * fcb->direct_pointer, SEEK_SET);
-	fread(bloque, superbloque.block_size, 1, archivo_de_bloques);
+	fseek(archivo_de_bloques, tamanio_bloque * fcb->direct_pointer, SEEK_SET);
+	fread(bloque, tamanio_bloque, 1, archivo_de_bloques);
 	list_add(bloques, bloque);
-	fseek(archivo_de_bloques, superbloque.block_size * fcb->indirect_pointer, SEEK_SET);
-	fread(bloque, superbloque.block_size, 1, archivo_de_bloques);
+	fseek(archivo_de_bloques, tamanio_bloque * fcb->indirect_pointer, SEEK_SET);
+	fread(bloque, tamanio_bloque, 1, archivo_de_bloques);
 	nro_bloque = bloque->data[i];
-	fseek(archivo_de_bloques, superbloque.block_size * nro_bloque, SEEK_SET);
-	read(&bloque_aux, superbloque.block_size, 1, archivo_de_bloques);
+	fseek(archivo_de_bloques, tamanio_bloque * nro_bloque, SEEK_SET);
+	read(&bloque_aux, tamanio_bloque, 1, archivo_de_bloques);
 	list_add(bloques, &bloque_aux);
 	while (nro_bloque != 0)
 	{
 		nro_bloque = bloque->data[i];
-		fseek(archivo_de_bloques, superbloque.block_size * nro_bloque, SEEK_SET);
-		read(&bloque_aux, superbloque.block_size, 1, archivo_de_bloques);
+		fseek(archivo_de_bloques, tamanio_bloque * nro_bloque, SEEK_SET);
+		read(&bloque_aux, tamanio_bloque, 1, archivo_de_bloques);
 		list_add(bloques, &bloque_aux);
 	}
 	return bloques;
@@ -404,9 +439,9 @@ void escribir_archivo(FILE *archivo_de_bloques, char *nombre_archivo, uint32_t *
 	uint32_t *direcciones, leido;
 	t_bloque bloque;
 	int i = 0, j = 0;
-	fseek(archivo_de_bloques, superbloque.block_size * fcb->direct_pointer, SEEK_SET);
+	fseek(archivo_de_bloques, tamanio_bloque * fcb->direct_pointer, SEEK_SET);
 	bloque.data = data[i];
-	fwrite(&bloque, superbloque.block_size * fcb->direct_pointer, 1, archivo_de_bloques);
+	fwrite(&bloque, tamanio_bloque * fcb->direct_pointer, 1, archivo_de_bloques);
 	i++;
 	int32_t nro_bloque;
 	while (i < bloques->elements_count)
@@ -416,15 +451,15 @@ void escribir_archivo(FILE *archivo_de_bloques, char *nombre_archivo, uint32_t *
 		i++;
 		;
 	}
-	fread(leido, sizeof(uint32_t) * superbloque.block_size, 1, fcb->indirect_pointer);
-	while (j < superbloque.block_size / sizeof(uint32_t))
+	fread(leido, sizeof(uint32_t) * tamanio_bloque, 1, fcb->indirect_pointer);
+	while (j < tamanio_bloque / sizeof(uint32_t))
 	{
 		list_add(leidos, leido[j]);
 	}
 	while (bloques != NULL)
 	{
 
-		fwrite(&bloque, superbloque.block_size * fcb->indirect_pointer, 1, archivo_de_bloques);
+		fwrite(&bloque, tamanio_bloque * fcb->indirect_pointer, 1, archivo_de_bloques);
 	}
 	while (j < leidos->elements_count)
 	{

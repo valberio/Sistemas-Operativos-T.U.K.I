@@ -43,4 +43,6 @@ void escribir_bloque(FILE *archivo_de_bloques, t_bloque bloque, unsigned nro_blo
 t_bloque* leer_bloque(FILE *archivo_de_bloques, t_superbloque superbloque, unsigned nro_bloque);
 t_list *leer_archivo(FILE *archivo_de_bloques, char *nombre_archivo, t_superbloque superbloque);
 void escribir_archivo(FILE *archivo_de_bloques, char *nombre_archivo, uint32_t *data);
+
+int obtener_digitos_cant_bloque();
 #endif /* FILESYSTEM_H_ */

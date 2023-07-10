@@ -90,10 +90,7 @@ char* completar_con_ceros(index, cant_bloques)
     sprintf(cadena_index, "%d", index);
     //index es el nro de BLOQUe
     int cantidad_de_digitos_bloques = strlen(cadena_cant_bloques);
-    log_info(logger, "digitos bloques %i", cantidad_de_digitos_bloques);
     int cantidad_de_digitos_index = strlen(cadena_index);
-    log_info(logger, "digitos indice %i", cantidad_de_digitos_index);
-    log_info(logger, "el numero de bloque es: %s", cadena_index);
     
     char* numero_bloque = malloc(cantidad_de_digitos_bloques); 
     for(int i = 0; i < (cantidad_de_digitos_bloques - cantidad_de_digitos_index); i++){
@@ -108,4 +105,13 @@ char* completar_con_ceros(index, cant_bloques)
     
     numero_bloque[cantidad_de_digitos_bloques] = '\0';
     return numero_bloque;
+}
+
+void escribir_en_archivo_de_bloques(char* ruta)
+{
+    FILE* archivo_de_bloque = fopen(ruta, "w");
+
+    char* datos = "DALEEEEE FUNCIONAAAA";
+    fwrite(datos, sizeof(datos), 1, archivo_de_bloque);
+    fclose(archivo_de_bloque);
 }

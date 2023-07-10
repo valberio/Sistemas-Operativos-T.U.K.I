@@ -4,6 +4,8 @@ t_log *logger;
 t_config *config;
 t_list *lista_de_memoria;
 void *espacio_de_memoria;
+int retardo_acceso_memoria;
+int retardo_compactacion;
 
 int main(int argc, char *argv[])
 {
@@ -13,8 +15,9 @@ int main(int argc, char *argv[])
     // La memoria tiene en paralelo 3 conexiones: con kernel, cpu, y fileSystem
 
     int tamano = config_get_int_value(config, "TAM_MEMORIA");
-
     int tamano_segmento_0 = config_get_int_value(config, "TAM_SEGMENTO_0");
+    retardo_acceso_memoria = config_get_int_value(config, "RETARDO_MEMORIA") / 1000;
+    retardo_compactacion = config_get_int_value(config, "RETARDO_COMPACTACION") / 1000;
 
     reservar_espacio_de_memoria(tamano, tamano_segmento_0);
 

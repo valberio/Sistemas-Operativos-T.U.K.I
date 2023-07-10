@@ -1,6 +1,6 @@
 #include "conexiones_memoria.h"
 
-void *comunicacion_con_kernel(void *arg) //crear su propio archivo
+void *comunicacion_con_kernel(void *arg)
 {
     parametros_de_hilo *parametros = (parametros_de_hilo *)arg;
 
@@ -86,6 +86,8 @@ void *comunicacion_con_kernel(void *arg) //crear su propio archivo
             paquete_a_kernel_eliminar->buffer = serializar_contexto(contexto);
             enviar_paquete(paquete_a_kernel_eliminar, conexion_kernel);
             break;
+
+    
         default:
             break;
         }
@@ -93,7 +95,7 @@ void *comunicacion_con_kernel(void *arg) //crear su propio archivo
     return NULL;
 }
 
-void *comunicacion_con_cpu(void *arg) //crear su propio archivo
+void *comunicacion_con_cpu(void *arg)
 {
 
     parametros_de_hilo *parametros = (parametros_de_hilo *)arg;
@@ -133,7 +135,10 @@ void *comunicacion_con_cpu(void *arg) //crear su propio archivo
             char_dir_fis = recibir_mensaje(conexion_cpu);
             direccion_fisica = atoi(char_dir_fis);
 
+
             // Accedo a la memoria, copio los datos en una variable auxiliar
+            sleep(retardo_acceso_memoria);
+            log_info(logger, "Retardo el acceso a memoria %i segundos...", retardo_acceso_memoria);
             char *datos_leidos = malloc(tamanio_del_registro(registro));
             memcpy(datos_leidos, espacio_de_memoria + direccion_fisica, tamanio_del_registro(registro));
 
@@ -155,6 +160,7 @@ void *comunicacion_con_cpu(void *arg) //crear su propio archivo
 
             int tamanio_registro = tamanio_del_registro(contexto->registros);
 
+            log_info(logger, "Retardo el acceso a memoria %i segundos...", retardo_acceso_memoria);
             char* datos_en_registro = malloc(tamanio_registro * sizeof(char));
             datos_en_registro = leer_registro(registro, contexto->registros);
             log_info(logger, "MOV_OUT va a guardar %s", datos_en_registro);

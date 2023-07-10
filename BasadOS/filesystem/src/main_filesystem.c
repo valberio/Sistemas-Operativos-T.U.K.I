@@ -50,6 +50,7 @@ int main()
 	crear_estructuras_fcb();
 	leer_bloque_completo(45, tamanio_bloque, ruta_archivo_bloques);
 	leer_bloque_completo(43, tamanio_bloque, ruta_archivo_bloques);
+	leer_bloque_completo(44, tamanio_bloque, ruta_archivo_bloques);
 
 
 	

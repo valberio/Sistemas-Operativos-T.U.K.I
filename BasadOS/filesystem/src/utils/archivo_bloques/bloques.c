@@ -53,6 +53,7 @@ void leer_bloque_completo(int nro_bloque, int tamano_bloque, char* ruta_archivo_
 
     log_info(logger, "En el bloque %i hay %s", nro_bloque, datos);
 
+    free(datos);
     fclose(archivo_bloques);
 }
 

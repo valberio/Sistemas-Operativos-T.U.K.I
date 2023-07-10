@@ -16,10 +16,8 @@ int obtener_segmento_por_id(int id, t_list* tabla_segmentos)
     return index;
 }
 
-int traduccion_dir_logica_fisica(int dir_logica, t_list *tabla_segmentos)
+int traduccion_dir_logica_fisica(int dir_logica, t_list *tabla_segmentos, int tam_max_segmento)
 {
-
-    int tam_max_segmento = 10; // HAY QUE SACARLO DEL CONFIG
     int num_segmento = floor(dir_logica / tam_max_segmento);
     int desplazamiento_segmento = dir_logica % tam_max_segmento;
 
@@ -31,4 +29,28 @@ int traduccion_dir_logica_fisica(int dir_logica, t_list *tabla_segmentos)
         return dir_fisica;
     }
     return 0;
+}
+
+char* int_a_string(int numero) {
+    int longitud = 1;  
+    int temp = numero;
+
+    // Obtener la longitud del número
+    while (temp /= 10) {
+        longitud++;
+    }
+
+    char* cadena = malloc((longitud + 1) * sizeof(char));
+    if (cadena == NULL) {
+        return NULL;  
+    }
+
+    for (int i = longitud - 1; i >= 0; i--) {
+        cadena[i] = '0' + (numero % 10); 
+        numero /= 10;
+    }
+
+    cadena[longitud] = '\0'; 
+
+    return cadena;
 }

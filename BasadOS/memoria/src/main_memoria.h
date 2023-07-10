@@ -6,6 +6,8 @@
 #include "funciones_segmentos.h"
 #include "conexiones_memoria.h"
 #include<sockets/server_utils.h>
+#include<pcb/pcb.h>
+
 
 
 

@@ -25,7 +25,6 @@ void *comunicacion_con_kernel(void *arg) //crear su propio archivo
         switch (paquete->codigo_operacion)
         {
         case INICIALIZAR_PROCESO:
-            log_info(logger, "sas");
             list_add(contexto->tabla_segmentos, segmento_0);
             t_paquete *paquete_inicializar_proceso = crear_paquete();
             paquete_inicializar_proceso->codigo_operacion = 0;
@@ -138,9 +137,9 @@ void *comunicacion_con_cpu(void *arg) //crear su propio archivo
             char *datos_leidos = malloc(tamanio_del_registro(registro));
             memcpy(datos_leidos, espacio_de_memoria + direccion_fisica, tamanio_del_registro(registro));
 
-            guardar_en_registros(registro, datos_leidos, contexto);
+            guardar_en_registros(registro, datos_leidos, contexto->registros);
 
-            log_info(logger, "Guarde en el registro %s", contexto->registros->AX);
+            log_info(logger, "Guarde en el registro %s", leer_registro(registro, contexto->registros)); //CORREGIR
 
             enviar_paquete(paquete_respuesta, conexion_cpu);
             log_info(logger, "MEMORIA respondió una petición de lectura del CPU");
@@ -154,11 +153,11 @@ void *comunicacion_con_cpu(void *arg) //crear su propio archivo
             direccion_fisica = atoi(char_dir_fis);
             registro = recibir_mensaje(conexion_cpu);
 
-            int tamanio_registro = tamanio_del_registro(registro);
+            int tamanio_registro = tamanio_del_registro(contexto->registros);
 
             char* datos_en_registro = malloc(tamanio_registro * sizeof(char));
-            datos_en_registro = leer_registro(registro, contexto);
-            log_info(logger, "Voy a guardar %s", datos_en_registro);
+            datos_en_registro = leer_registro(registro, contexto->registros);
+            log_info(logger, "MOV_OUT va a guardar %s", datos_en_registro);
 
             memcpy(espacio_de_memoria + direccion_fisica, datos_en_registro, tamanio_registro);
 
@@ -198,60 +197,6 @@ op_code respuesta_a_kernel(Segmento *segmento, t_contexto_de_ejecucion *contexto
     return 0;
 }
 
-void guardar_en_registros(char *registro_char, char *datos, t_contexto_de_ejecucion *contexto) //mover a utils registro
-{
-    enum Registros registro = string_a_registro(registro_char);
-
-    switch (registro)
-    {
-    case rAX:
-        strcpy(contexto->registros->AX, datos); // 4 + 1, para considerar el \0
-        break;
-    case rBX:
-        strcpy(contexto->registros->BX, datos);
-        break;
-    case rCX:
-        strcpy(contexto->registros->CX, datos);
-        break;
-    case rDX:
-        strcpy(contexto->registros->DX, datos);
-        break;
-
-    // Registros 8 bits
-    case rEAX:
-        strcpy(contexto->registros->EAX, datos);
-        break;
-
-    case rEBX:
-        strcpy(contexto->registros->EBX, datos);
-        break;
-
-    case rECX:
-        strcpy(contexto->registros->ECX, datos);
-        break;
-
-    case rEDX:
-        strcpy(contexto->registros->EDX, datos);
-        break;
-
-    // Registros de 16 bits
-    case rRAX:
-        strcpy(contexto->registros->RAX, datos);
-        break;
-
-    case rRBX:
-        strcpy(contexto->registros->RBX, datos);
-        break;
-
-    case rRCX:
-        strcpy(contexto->registros->RCX, datos);
-        break;
-
-    case rRDX:
-        strcpy(contexto->registros->RDX, datos);
-        break;
-    }
-}
 void finalizar_proceso(t_contexto_de_ejecucion *contexto_de_ejecucion)
 {
     int tabla_size = list_size(contexto_de_ejecucion->tabla_segmentos);

@@ -46,6 +46,7 @@ enum Registros{
 enum Registros string_a_registro(char *registro);
 char* leer_registro(char *registro_char, t_registros* registros);
 int tamanio_del_registro(char *registro_char);
+void guardar_en_registros(char *registro_char, char *datos, t_registros* registros);
 
 
 #endif  /*REGISTROS_H_ */

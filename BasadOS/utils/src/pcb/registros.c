@@ -120,6 +120,7 @@ char* leer_registro(char *registro_char, t_registros* registros)
 
 
 int tamanio_del_registro(char *registro_char)
+
 {
     int tamanio_del_registro = 0;
     enum Registros registro = string_a_registro(registro_char);
@@ -173,4 +174,60 @@ int tamanio_del_registro(char *registro_char)
         break;
     }
     return tamanio_del_registro;
+}
+
+
+void guardar_en_registros(char *registro_char, char *datos, t_registros* registros) 
+{
+    enum Registros registro = string_a_registro(registro_char);
+
+    switch (registro)
+    {
+    case rAX:
+        strcpy(registros->AX, datos);
+        break;
+    case rBX:
+        strcpy(registros->BX, datos);
+        break;
+    case rCX:
+        strcpy(registros->CX, datos);
+        break;
+    case rDX:
+        strcpy(registros->DX, datos);
+        break;
+
+    // Registros 8 bits
+    case rEAX:
+        strcpy(registros->EAX, datos);
+        break;
+
+    case rEBX:
+        strcpy(registros->EBX, datos);
+        break;
+
+    case rECX:
+        strcpy(registros->ECX, datos);
+        break;
+
+    case rEDX:
+        strcpy(registros->EDX, datos);
+        break;
+
+    // Registros de 16 bits
+    case rRAX:
+        strcpy(registros->RAX, datos);
+        break;
+
+    case rRBX:
+        strcpy(registros->RBX, datos);
+        break;
+
+    case rRCX:
+        strcpy(registros->RCX, datos);
+        break;
+
+    case rRDX:
+        strcpy(registros->RDX, datos);
+        break;
+    }
 }

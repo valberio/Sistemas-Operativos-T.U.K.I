@@ -1,18 +1,6 @@
 #include "main_cpu.h"
 
-/*------------------------------------------------------------------*/
-/*|						CHECKPOINT 3					   			*/
-/*------------------------------------------------------------------*/
-/*		Interpreta todas las operaciones
-		Ejecuta las instrucciones I/O, WAIT y SIGNAL.				*/
-/*------------------------------------------------------------------*/
 
-// TO-DO GENERAL CPU
-/*-Serializar los distintos valores de retorno de las instrucciones (parametros
-	para kernel)
-  -Implementar de manera genérica todas las instrucciones
-  -Serializar diccionarios y cambiar el contexto a un diccionario
-	*/
 
 int main(void)
 {
@@ -20,6 +8,7 @@ int main(void)
 	t_log *logger = iniciar_logger("log_cpu.log", "LOG_CPU");
 	t_config *config = iniciar_config("configs/cpu.config");
 	int retardo_instruccion = config_get_int_value(config, "RETARDO_INSTRUCCION") / 1000;
+	int tam_max_segmento = config_get_string_value(config, "TAM_MAX_SEGMENTO");
 
 	// CPU como cliente para memoria
 	int conexion_memoria_cpu = conectarse_a_memoria(config, logger);
@@ -57,7 +46,7 @@ int main(void)
 				{
 					char *instruccion = fetch(contexto);
 
-					char **instruccion_array = decode(instruccion, retardo_instruccion);
+					char **instruccion_array = decode(instruccion, retardo_instruccion, tam_max_segmento, contexto->tabla_segmentos, logger);
 
 					contexto->program_counter++;
 

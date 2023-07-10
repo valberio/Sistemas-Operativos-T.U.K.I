@@ -30,6 +30,7 @@
     char bit = '1';
     fwrite(&bit, sizeof(char), 1, bitmap);
     fclose(bitmap);
+    log_info(logger, "Acceso a Bitmap - Bloque: %i - Estado: 1", index);
  }
 
 void limpiar_bit(int index, t_bitarray* bitarray, char* ruta_bitmap)
@@ -40,6 +41,8 @@ void limpiar_bit(int index, t_bitarray* bitarray, char* ruta_bitmap)
     char bit = '0';
     fwrite(&bit, sizeof(char), 1, bitmap);
     fclose(bitmap);
+    log_info(logger, "Acceso a Bitmap - Bloque: %i - Estado: 0", index);
+
  }
 
  char ver_bit(int index, t_bitarray* bitarray, char* ruta_bitmap)

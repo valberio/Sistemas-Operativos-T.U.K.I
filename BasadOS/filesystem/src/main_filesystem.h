@@ -16,11 +16,6 @@
 
 extern t_log* logger;
 
-typedef struct {
-    double block_size;
-    double block_count;
-}t_superbloque;
-
 
 
 //void *crear_fcb(char *nombre_archivo);
@@ -29,7 +24,8 @@ void recibir_ordenes_kernel(int conexion_filesystem_kernel);
 void crear_estructura_fcb(char *nombre_archivo);
 void* crear_archivo_fcb(char *nombre_archivo);
 void abrir_o_crear_archivo(char *nombre_archivo, int conexion_filesystem_cliente);
-
+int obtener_digitos_cant_bloque();
+/*
 int truncar_archivo(char *nombre_archivo, int nro_bloques, t_superbloque superbloque, t_bitarray *bitarray, int bloques, t_log *logger, FILE* archivo_de_bloques);
 void guardar_fcb(FILE *archivo_fcb, t_fcb* fcb);
 int liberar_bloques(FILE *archivo_de_bloques, t_fcb* fcb, t_bitarray* bitarray, int nro_bloques, t_superbloque superbloque);
@@ -43,6 +39,6 @@ void escribir_bloque(FILE *archivo_de_bloques, t_bloque bloque, unsigned nro_blo
 t_bloque* leer_bloque(FILE *archivo_de_bloques, t_superbloque superbloque, unsigned nro_bloque);
 t_list *leer_archivo(FILE *archivo_de_bloques, char *nombre_archivo, t_superbloque superbloque);
 void escribir_archivo(FILE *archivo_de_bloques, char *nombre_archivo, uint32_t *data);
+*/
 
-int obtener_digitos_cant_bloque();
 #endif /* FILESYSTEM_H_ */

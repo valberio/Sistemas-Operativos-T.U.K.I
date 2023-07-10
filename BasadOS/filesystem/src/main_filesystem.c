@@ -28,7 +28,6 @@ int main()
 	int cliente_filesystem_a_memoria = crear_conexion_al_server(logger, ip, puerto_a_memoria);
 
 	//Superbloque
-	t_superbloque superbloque;
 	t_config *superbloque_config = iniciar_config(config_get_string_value(config, "PATH_SUPERBLOQUE"));
 	
 	tamanio_bloque = config_get_double_value(superbloque_config, "BLOCK_SIZE");

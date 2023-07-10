@@ -22,4 +22,32 @@
     return bitarray;
  }
 
- 
+ void setear_bit(int index, t_bitarray* bitarray, char* ruta_bitmap)
+ {
+    FILE* bitmap = fopen(ruta_bitmap, "w");
+    bitarray_set_bit(bitarray, index);
+    fseek(bitmap, index, SEEK_SET);
+    char bit = '1';
+    fwrite(&bit, sizeof(char), 1, bitmap);
+    fclose(bitmap);
+ }
+
+void limpiar_bit(int index, t_bitarray* bitarray, char* ruta_bitmap)
+ {
+    FILE* bitmap = fopen(ruta_bitmap, "w");
+    bitarray_clean_bit(bitarray, index);
+    fseek(bitmap, index, SEEK_SET);
+    char bit = '0';
+    fwrite(&bit, sizeof(char), 1, bitmap);
+    fclose(bitmap);
+ }
+
+ char ver_bit(int index, t_bitarray* bitarray, char* ruta_bitmap)
+ {
+    FILE* bitmap = fopen(ruta_bitmap, "r");
+    fseek(bitmap, index, SEEK_SET);
+    char bit;
+    fread(&bit, sizeof(char), 1, bitmap);
+    fclose(bitmap);   
+    return bit;
+ }

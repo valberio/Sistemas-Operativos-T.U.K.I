@@ -41,7 +41,6 @@ int main()
 
 
 	bitarray = crear_bitmap(ruta_bitmap, cantidad_bloques);
-
 	
 	char* ruta_archivo_bloques = config_get_string_value(config, "PATH_BLOQUES");
 	crear_archivo_bloques(cantidad_bloques, tamanio_bloque, ruta_archivo_bloques);
@@ -133,10 +132,10 @@ void crear_estructura_fcb(char* ruta) //habria que llamarlo crear fcb
 	fcb->size = config_get_int_value(fcb_config, "TAMANIO_ARCHIVO");
 	fcb->name = malloc(sizeof(config_get_string_value(fcb_config, "NOMBRE_ARCHIVO")));
 
-	bitarray_set_bit(bitarray, fcb->indirect_pointer);
+	setear_bit(fcb->indirect_pointer, bitarray, "fs/bitmap.dat");
 
 	//Actualizo los bloques que usa el fcb en el bitmap
-	bitarray_set_bit(bitarray, fcb->direct_pointer);
+	setear_bit(fcb->direct_pointer, bitarray, "fs/bitmap.dat");
 	FILE* archivo_bloques = fopen("fs/bloques.dat", "rb+");
 	if (archivo_bloques == NULL) {
         printf("No se pudo abrir el archivo\n");
@@ -151,7 +150,7 @@ void crear_estructura_fcb(char* ruta) //habria que llamarlo crear fcb
 		{
 			char* index = obtener_puntero_bloque_libre(cantidad_bloques, bitarray);
 			int bloque_index = atoi(index);
-			bitarray_set_bit(bitarray, bloque_index);
+			setear_bit(bloque_index, bitarray, "fs/bitmap.dat"); //DESHARCODEAR DESPUES
 			fseek(archivo_bloques, ((fcb->indirect_pointer * tamanio_bloque) + (i * digitos_bloque)) * sizeof(char), SEEK_SET);
     		fwrite(index, sizeof(char), digitos_bloque, archivo_bloques);
 		}

@@ -70,7 +70,7 @@ char* leer_bloque_desde_hasta(uint32_t nro_bloque, uint32_t desde, uint32_t hast
     log_info(logger, "Lei %s", datos);
 }
 
-uint32_t obtener_puntero_bloque_libre(int cant_bloques, t_bitarray* bitarray)
+char* obtener_puntero_bloque_libre(int cant_bloques, t_bitarray* bitarray)
 {
 
     int index = 0;
@@ -79,6 +79,7 @@ uint32_t obtener_puntero_bloque_libre(int cant_bloques, t_bitarray* bitarray)
         index++;
     }
     char* puntero = completar_con_ceros(index, cant_bloques);
+    return puntero;
 }
 
 char* completar_con_ceros(index, cant_bloques)

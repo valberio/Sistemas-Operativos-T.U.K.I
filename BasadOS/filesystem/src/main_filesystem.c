@@ -36,10 +36,13 @@ int main()
 	//Bitmap
 	char* ruta_bitmap = config_get_string_value(config, "PATH_BITMAP");
 
+
 	bitarray = crear_bitmap(ruta_bitmap, superbloque.block_count);
 
-	char* index_lleno_de_ceros = completar_con_ceros(123, superbloque.block_count);
-	log_info(logger, "Indice lleno de ceros %s", index_lleno_de_ceros);
+	bitarray_set_bit(bitarray, 0);
+	bitarray_set_bit(bitarray, 1);
+	char* index = obtener_puntero_bloque_libre(superbloque.block_count, bitarray);
+	log_info(logger, "El indice encontrado es %s", index);
 
 	char* ruta_archivo_bloques = config_get_string_value(config, "PATH_BLOQUES");
 	crear_archivo_bloques(superbloque.block_count, superbloque.block_size, ruta_archivo_bloques);

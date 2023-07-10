@@ -1,7 +1,5 @@
-#include "segmentos.h"
+#include "funciones_segmentos.h"
 
-// TODOS
-// Mejorar codigos de operacion
 
 Segmento *segmento_0;
 int huecos_libres = -1;
@@ -9,22 +7,7 @@ int cantidad_maxima_segmentos_por_proceso;
 char *string_algoritmo;
 char algoritmo;
 
-int get_index_of_list(t_list *lista, int id)
-{
 
-    int tamano_lista = list_size(lista);
-    for (int i = 0; i < tamano_lista; i++)
-    {
-        Segmento *segmento = list_get(lista, i);
-
-        if (segmento->id == id)
-        {
-            return i;
-        }
-    }
-
-    return -1;
-}
 Segmento *inicializar_segmento(int tamano)
 {
     Segmento *segmento = malloc(sizeof(Segmento));
@@ -99,7 +82,7 @@ Segmento *crear_segmento(int id, int tamano)
         {
             free(hueco_libre);
         }
-        list_add_in_index(lista_de_memoria, get_index_of_list(lista_de_memoria, hueco_libre->id), nuevo_segmento);
+        list_add_in_index(lista_de_memoria, obtener_segmento_por_id(hueco_libre->id, lista_de_memoria ), nuevo_segmento);
         return nuevo_segmento;
     }
     if (obtener_espacio_libre_total() >= tamano)

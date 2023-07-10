@@ -1,5 +1,5 @@
-#ifndef SEGMENTOS_H_
-#define SEGMENTOS_H_
+#ifndef FUNCIONES_SEGMENTOS_H_
+#define FUNCIONES_SEGMENTOS_H_
 
 #include <commons/collections/list.h>
 #include <commons/config.h>
@@ -11,12 +11,6 @@ extern t_list* lista_de_memoria;
 extern t_config* config;
 extern t_log* logger;
 extern void* espacio_de_memoria;
-
-typedef struct {
-    int tamano;
-    int id;
-    int desplazamiento;
-}Segmento;
 
 Segmento* inicializar_segmento(int );
 int obtener_espacio_libre_total();
@@ -33,4 +27,4 @@ t_list* compactar();
 
 
 
-#endif /* SEGMENTOS_H_ */
+#endif /* FUNCIONES_SEGMENTOS_H_ */

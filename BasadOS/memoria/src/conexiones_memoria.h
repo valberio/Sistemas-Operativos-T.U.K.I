@@ -3,8 +3,9 @@
 
 #include<loggers/loggers_utils.h>
 #include<sockets/server_utils.h>
-#include "segmentos.h"
+#include "funciones_segmentos.h"
 #include<pcb/pcb.h>
+#include<pcb/registros.h>
 #include <pthread.h>
 
 extern int cantidad_maxima_segmentos_por_proceso;

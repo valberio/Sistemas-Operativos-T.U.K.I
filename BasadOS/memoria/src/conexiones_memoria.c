@@ -1,6 +1,6 @@
 #include "conexiones_memoria.h"
 
-void *comunicacion_con_kernel(void *arg)
+void *comunicacion_con_kernel(void *arg) //crear su propio archivo
 {
     parametros_de_hilo *parametros = (parametros_de_hilo *)arg;
 
@@ -77,7 +77,7 @@ void *comunicacion_con_kernel(void *arg)
             char *id_a_eliminar = recibir_mensaje(conexion_kernel);
             log_info(logger, "El id es: %s", id_a_eliminar);
             int id_a_eliminar_int = atoi(id_a_eliminar);
-            int posicion = get_index_of_list(contexto->tabla_segmentos, id_a_eliminar_int);
+            int posicion = obtener_segmento_por_id(id_a_eliminar_int, contexto->tabla_segmentos);
             log_info(logger, "La posicion es: %d", posicion);
             eliminar_segmento(id_a_eliminar_int);
             list_remove(contexto->tabla_segmentos, posicion);
@@ -94,7 +94,7 @@ void *comunicacion_con_kernel(void *arg)
     return NULL;
 }
 
-void *comunicacion_con_cpu(void *arg)
+void *comunicacion_con_cpu(void *arg) //crear su propio archivo
 {
 
     parametros_de_hilo *parametros = (parametros_de_hilo *)arg;
@@ -198,7 +198,7 @@ op_code respuesta_a_kernel(Segmento *segmento, t_contexto_de_ejecucion *contexto
     return 0;
 }
 
-void guardar_en_registros(char *registro_char, char *datos, t_contexto_de_ejecucion *contexto)
+void guardar_en_registros(char *registro_char, char *datos, t_contexto_de_ejecucion *contexto) //mover a utils registro
 {
     enum Registros registro = string_a_registro(registro_char);
 

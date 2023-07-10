@@ -8,25 +8,11 @@
 #include<stdlib.h>
 #include<sys/time.h>
 #include<sockets/client_utils.h>
-#include"../../../memoria/src/segmentos.h"
+#include<segmentos/segmentos.h>
+#include<pcb/registros.h>
 
 
-typedef struct{
-    char AX[5];
-    char BX[5];
-    char CX[5];
-    char DX[5];
 
-    char EAX[9];
-    char EBX[9];
-    char ECX[9];
-    char EDX[9];
-
-    char RAX[17];
-    char RBX[17];
-    char RCX[17];
-    char RDX[17];
-}t_registros;
 
 typedef struct{
     uint32_t pid;
@@ -68,10 +54,6 @@ t_paquete* recibir_contexto_de_ejecucion(int socket_cliente);
 void instanciar_registros(t_registros* registro);
 t_buffer* serializar_contexto(t_contexto_de_ejecucion* contexto);
 t_contexto_de_ejecucion* deserializar_contexto_de_ejecucion(t_buffer* buffer);
-enum Registros string_a_registro(char *registro);
-char* leer_registro(char* registro, t_contexto_de_ejecucion* contexto);
-int tamanio_del_registro(char* registro);
-int traduccion_dir_logica_fisica(int dir_logica, t_list* tabla_segmentos);
 t_buffer *serializar_lista_segmentos(t_list *tabla);
 t_list *deserializar_lista_de_segmentos(t_buffer *buffer);
 int obtener_segmento_por_id(int id, t_list* tabla_segmentos);
@@ -84,23 +66,6 @@ enum Estados {
     RUNNING,
     BLOCKED, 
     EXITT
-};
-
-enum Registros{
-    rAX,
-    rBX,
-    rCX,
-    rDX,
-
-    rEAX,
-    rEBX,
-    rECX,
-    rEDX,
-
-    rRAX,
-    rRBX,
-    rRCX,
-    rRDX
 };
 
 #endif  /*PCB_H_ */

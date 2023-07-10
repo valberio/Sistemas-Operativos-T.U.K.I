@@ -9,7 +9,7 @@
 #include<pcb/pcb.h>
 #include<sockets/client_utils.h>
 #include<sockets/server_utils.h>
-#include"../../../../memoria/src/segmentos.h"
+#include<segmentos/segmentos.h>
 
 
 
@@ -30,7 +30,7 @@ int signal_instruccion(t_log* logger, t_contexto_de_ejecucion* contexto, int con
 int i_o(t_log* logger, t_contexto_de_ejecucion* contexto, int conexion_kernel_cpu, char** instrucciones);
 int create_segment(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_kernel_cpu);
 int delete_segment(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int id_segmento);
-enum Registros string_a_registro(char* registro);
+
 
 //La instruccion EXIT tiene una i para no pisarse con el estado de proceso EXIT
 enum Instrucciones{

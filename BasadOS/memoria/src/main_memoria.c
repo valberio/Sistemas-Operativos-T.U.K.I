@@ -1,24 +1,9 @@
 #include "main_memoria.h"
 
-/*------------------------------------------------------------------*/
-/*						CHECKPOINT 2								*/
-/*------------------------------------------------------------------*/
-/*		Espera las peticiones de los demás módulos y responde
-        con mensajes genéricos.
-                                                                    */
-/*------------------------------------------------------------------*/
-
 t_log *logger;
 t_config *config;
-
 t_list *lista_de_memoria;
-
 void *espacio_de_memoria;
-
-// Levantar algoritmo de config
-// Conectar con kernel
-// Conectar con cpu
-// Serializar lista de segmentos
 
 int main(int argc, char *argv[])
 {

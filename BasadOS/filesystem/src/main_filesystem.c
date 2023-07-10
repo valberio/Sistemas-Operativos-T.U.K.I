@@ -1,12 +1,11 @@
 #include "main_filesystem.h"
 
 /*------------------------------------------------------------------*/
-/*						CHECKPOINT 3								*/
+/*						FINAL										*/
 /*------------------------------------------------------------------*/
-/*		Espera las peticiones del Kernel y responde las mismas
-		con mensajes genéricos.
-		Levanta los archivos de Superbloque, bitmap y
-		archivo de bloques.
+/*		-Funcion que devuelva el proximo bloque libre
+		-Funcion que lea los punteros guardados en un bloque
+
 																	*/
 /*------------------------------------------------------------------*/
 
@@ -39,8 +38,18 @@ int main()
 
 	bitarray = crear_bitmap(ruta_bitmap, superbloque.block_count);
 
-	crear_archivo_bloques(superbloque.block_count, superbloque.block_size, "");
-	leer_archivo_de_bloques(superbloque.block_count, superbloque.block_size, "");
+	char* index_lleno_de_ceros = completar_con_ceros(123, superbloque.block_count);
+	log_info(logger, "Indice lleno de ceros %s", index_lleno_de_ceros);
+
+	char* ruta_archivo_bloques = config_get_string_value(config, "PATH_BLOQUES");
+	crear_archivo_bloques(superbloque.block_count, superbloque.block_size, ruta_archivo_bloques);
+
+	leer_bloque_completo(0, superbloque.block_size, ruta_archivo_bloques);
+	leer_bloque_desde_hasta(0, 5, 10, superbloque.block_size, ruta_archivo_bloques);
+
+	
+
+	//leer_archivo_de_bloques(superbloque.block_count, superbloque.block_size, "");
 	//Recorro el directorio de FCBs y creo estructuras
 	crear_estructuras_fcb(bitarray);
 	
@@ -103,7 +112,6 @@ void crear_estructuras_fcb(t_bitarray* bitarray)
                 free(ruta_fcb);
                 continue;
             }
-			printf("Archivo: %s\n", ruta_fcb);
 			crear_estructura_fcb(ruta_fcb);
 			free(ruta_fcb);
 		}

@@ -1,5 +1,10 @@
 #include "funciones_archivos.h"
 
+
+
+
+
+
 /*
 void leer_archivo(char* nombre_archivo,int direccion_logica, int cantidad_de_bytes){
     

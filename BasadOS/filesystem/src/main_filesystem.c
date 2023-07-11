@@ -52,8 +52,8 @@ int main()
 
 	//Recorro el directorio de FCBs y creo estructuras
 	recorrer_directorio_fcb(ruta_bitmap);
-	escribir_archivo("Notas1erParcialK9999", "Nacho mogolico de mierda", 0, 24);
-	char* datos = leer_archivo("Notas1erParcialK9999", 0, 24);
+	escribir_archivo("Notas1erParcialK9999", "UWU", 0, 3);
+	char* datos = leer_archivo("Notas1erParcialK9999", 0, 3);
 	log_info(logger, "Datos leidos %s", datos);
 	free(datos);
 

@@ -231,7 +231,7 @@ char* leer_archivo(char* nombre, int puntero, int cantidad_de_bytes)
     int bloque_puntero = floor(puntero/tamanio_bloque);
     int desplazamiento_dentro_del_bloque = puntero - (bloque_puntero * tamanio_bloque);
     int bytes_por_leer = cantidad_de_bytes;
-    char* datos = malloc(cantidad_de_bytes * sizeof(char));
+    char* datos = malloc((cantidad_de_bytes + 1)* sizeof(char));
     int bytes_a_leer_aca;
 
     FILE* archivo_de_bloques = fopen(ruta_archivo_bloques, "r");
@@ -271,7 +271,7 @@ char* leer_archivo(char* nombre, int puntero, int cantidad_de_bytes)
 
         log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: %i - Bloque File System %i", fcb_archivo->name, bloque_indirecto_contador, index_bloque_int);
 
-        char *datos_a_copiar = malloc((bytes_a_leer_aca + 1) * sizeof(char));
+        char *datos_a_copiar = malloc((bytes_a_leer_aca) * sizeof(char));
         fseek(archivo_de_bloques, (index_bloque_int * tamanio_bloque), SEEK_SET);
         fread(datos_a_copiar, sizeof(char), bytes_a_leer_aca, archivo_de_bloques);
         bytes_por_leer -= bytes_a_leer_aca;
@@ -287,6 +287,7 @@ char* leer_archivo(char* nombre, int puntero, int cantidad_de_bytes)
     return datos;
 }
 
+
 void escribir_archivo(char* nombre, char* datos_a_guardar, int puntero, int cantidad_de_bytes)
 {
     bool es_el_fcb(void *elemento)
@@ -300,12 +301,13 @@ void escribir_archivo(char* nombre, char* datos_a_guardar, int puntero, int cant
     t_fcb* fcb_archivo = list_find(fcb_list, es_el_fcb);
     if(fcb_archivo == NULL){
         log_info(logger, "No se encontró el archivo");
-        return;
+        return "ERROR";
     }
     int bloque_puntero = floor(puntero/tamanio_bloque);
     int desplazamiento_dentro_del_bloque = puntero - (bloque_puntero * tamanio_bloque);
     int bytes_por_copiar = cantidad_de_bytes;
     int bytes_a_copiar_aca;
+    int bytes_copiados = 0;
 
     FILE* archivo_de_bloques = fopen(ruta_archivo_bloques, "r+");
 
@@ -314,18 +316,19 @@ void escribir_archivo(char* nombre, char* datos_a_guardar, int puntero, int cant
 
         int bytes_restantes_bloque_directo = tamanio_bloque - desplazamiento_dentro_del_bloque;
         bytes_a_copiar_aca = MIN(bytes_restantes_bloque_directo, cantidad_de_bytes);
-         
 
-        fseek(archivo_de_bloques, (bloque_puntero * tamanio_bloque) + desplazamiento_dentro_del_bloque, SEEK_SET);
-        fwrite(datos_a_guardar, sizeof(char), bytes_por_copiar, archivo_de_bloques);
-        datos_a_guardar += bytes_a_copiar_aca;
+        fseek(archivo_de_bloques, (bloque_puntero * tamanio_bloque) + desplazamiento_dentro_del_bloque + bytes_copiados, SEEK_SET);
+        fwrite(datos_a_guardar + bytes_copiados, sizeof(char), bytes_por_copiar, archivo_de_bloques);
+        bytes_copiados += bytes_a_copiar_aca;
         bytes_por_copiar -= bytes_a_copiar_aca;
+        log_info(logger, "Bytes copiados %i", bytes_copiados);
+        
     }
     log_info(logger, "los bytes son: %i", bytes_por_copiar);
     int contador_puntero_indirecto = 0;
     int digitos_punteros = obtener_digitos_cant_bloque();
 
-    while(bytes_por_copiar > 0)
+    while(bytes_por_copiar > 0 && bytes_copiados < cantidad_de_bytes)
     {
         bytes_a_copiar_aca = MIN(tamanio_bloque, cantidad_de_bytes);
 
@@ -337,14 +340,11 @@ void escribir_archivo(char* nombre, char* datos_a_guardar, int puntero, int cant
         int index_bloque_int = atoi(index_bloque);
 
         fseek(archivo_de_bloques, (index_bloque_int * tamanio_bloque), SEEK_SET);
-        fread(datos_a_guardar, sizeof(char), bytes_a_copiar_aca, archivo_de_bloques);
+        fread(datos_a_guardar + bytes_copiados, sizeof(char), bytes_a_copiar_aca, archivo_de_bloques);
  
        
-        datos_a_guardar += bytes_a_copiar_aca;
-        
-        
-        
-        
+        bytes_copiados += bytes_a_copiar_aca;
+        log_info(logger, "Bytes copiados %i", bytes_copiados);
         bytes_por_copiar -= bytes_a_copiar_aca;
         contador_puntero_indirecto++;
         free(index_bloque);

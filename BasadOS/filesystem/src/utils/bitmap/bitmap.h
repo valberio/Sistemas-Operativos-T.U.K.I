@@ -12,10 +12,13 @@
 #include <sys/stat.h>
 #include <string.h>
 
+extern t_bitarray *bitarray;
+extern char *ruta_bitmap;
+
 t_bitarray* crear_bitmap (char* ruta, double block_count);
-char ver_bit(int index, t_bitarray* bitarray, char* ruta_bitmap);
-void limpiar_bit(int index, t_bitarray* bitarray, char* ruta_bitmap);
-void setear_bit(int index, t_bitarray* bitarray, char* ruta_bitmap);
+char ver_bit(int index);
+void limpiar_bit(int index);
+void setear_bit(int index);
 
 
 #endif /* BITMAP_H_ */

@@ -2,8 +2,7 @@
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
-
-void truncar_archivo(char *nombre_archivo, int nuevo_tamanio, char *ruta_bitmap, char* ruta_archivo_bloques)
+void truncar_archivo(char *nombre_archivo, int nuevo_tamanio)
 {
     bool es_el_fcb(void *elemento)
     {
@@ -16,35 +15,36 @@ void truncar_archivo(char *nombre_archivo, int nuevo_tamanio, char *ruta_bitmap,
     // REVISAR SI ESTA NULO O SI YA TIENE POINTERS
     if (fcb_archivo->size > nuevo_tamanio)
     {
-       // achicar_archivo(fcb_archivo, nuevo_tamanio);
+        achicar_archivo(fcb_archivo, nuevo_tamanio);
     }
     else if (fcb_archivo->size < nuevo_tamanio)
     {
-        agrandar_archivo(fcb_archivo, nuevo_tamanio,ruta_bitmap, ruta_archivo_bloques);
+        agrandar_archivo(fcb_archivo, nuevo_tamanio);
     }
 }
 
-
-int division_redondeada_hacia_arriba(int dividendo, int divisor) {
+int division_redondeada_hacia_arriba(int dividendo, int divisor)
+{
     int resultado = dividendo / divisor;
     int residuo = dividendo % divisor;
 
-    if (residuo > 0) {
+    if (residuo > 0)
+    {
         resultado++;
     }
 
     return resultado;
 }
-void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio, char *ruta_bitmap, char* ruta_archivo_bloques)
+void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
 {
     log_info(logger, "Tamanio inicial %i", fcb_archivo->size);
     uint32_t bytes_por_asignar = nuevo_tamanio - fcb_archivo->size;
 
-    //Agrego un caso mas: tengo un bloque incompleto en el que puedo asignar bytes
+    // Agrego un caso mas: tengo un bloque incompleto en el que puedo asignar bytes
     int cantidad_bytes_teoricos_archivo = division_redondeada_hacia_arriba(fcb_archivo->size, tamanio_bloque) * tamanio_bloque;
     int bytes_libres_en_bloque = cantidad_bytes_teoricos_archivo - fcb_archivo->size;
     log_info(logger, "Hay %i bytes libres en el bloque", bytes_libres_en_bloque);
-    if((bytes_libres_en_bloque) > 0)
+    if ((bytes_libres_en_bloque) > 0)
     {
         fcb_archivo->size += bytes_libres_en_bloque;
         bytes_por_asignar = bytes_por_asignar - bytes_libres_en_bloque;
@@ -53,10 +53,10 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio, char *ruta_bitmap, 
     if (bytes_por_asignar == 0)
     {
         log_info(logger, "Hay %i bytes por asignar y el tamaño final del fcb es %i", bytes_por_asignar, fcb_archivo->size);
-        return NULL;
+        return;
     }
 
-    int bloques_por_agregar = division_redondeada_hacia_arriba(bytes_por_asignar, tamanio_bloque); 
+    int bloques_por_agregar = division_redondeada_hacia_arriba(bytes_por_asignar, tamanio_bloque);
 
     log_info(logger, "Bytes por asignar %i Bloques por agregar %i", bytes_por_asignar, bloques_por_agregar);
 
@@ -64,51 +64,132 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio, char *ruta_bitmap, 
     { // NO TENGA NADA
         bloques_por_agregar--;
         bytes_por_asignar = MAX(bytes_por_asignar - tamanio_bloque, 0);
-        char *nuevo_bloque_directo = obtener_puntero_bloque_libre(cantidad_bloques, bitarray);
+        char *nuevo_bloque_directo = obtener_puntero_bloque_libre(cantidad_bloques);
         fcb_archivo->direct_pointer = atoi(nuevo_bloque_directo);
-        setear_bit(fcb_archivo->direct_pointer, bitarray, ruta_bitmap);
+        setear_bit(fcb_archivo->direct_pointer);
         fcb_archivo->size += MIN(bytes_por_asignar, tamanio_bloque);
         log_info(logger, "Tamaño del fcb %i bytes por asignar %i bloques por asignar %i", fcb_archivo->size, bytes_por_asignar, bloques_por_agregar);
     }
-    else if (fcb_archivo->direct_pointer > 0  && fcb_archivo->indirect_pointer < 0)
+    else if (fcb_archivo->direct_pointer > 0 && fcb_archivo->indirect_pointer < 0)
     { // TENGA UN SOLO BLOQUE
-        char *nuevo_bloque_indirecto = obtener_puntero_bloque_libre(cantidad_bloques, bitarray);
+        char *nuevo_bloque_indirecto = obtener_puntero_bloque_libre(cantidad_bloques);
         fcb_archivo->indirect_pointer = atoi(nuevo_bloque_indirecto);
-        setear_bit(fcb_archivo->indirect_pointer, bitarray, ruta_bitmap);
+        setear_bit(fcb_archivo->indirect_pointer);
         while (bloques_por_agregar > 0)
         {
-            char *nuevo_bloque_datos = obtener_puntero_bloque_libre(cantidad_bloques, bitarray);
-            setear_bit(atoi(nuevo_bloque_datos), bitarray, ruta_bitmap);
-            escribir_puntero_indirecto(fcb_archivo, nuevo_bloque_datos,ruta_archivo_bloques);
+            char *nuevo_bloque_datos = obtener_puntero_bloque_libre(cantidad_bloques);
+            setear_bit(atoi(nuevo_bloque_datos));
+            escribir_puntero_indirecto(fcb_archivo, nuevo_bloque_datos);
             fcb_archivo->size += MIN(bytes_por_asignar, tamanio_bloque);
             bytes_por_asignar = MAX(bytes_por_asignar - tamanio_bloque, 0);
             bloques_por_agregar--;
             log_info(logger, "Tamaño del fcb %i bytes por asignar %i bloques por asignar %i", fcb_archivo->size, bytes_por_asignar, bloques_por_agregar);
         }
     }
-    else{
-        while (bloques_por_agregar > 0) {
+    else
+    {
+        while (bloques_por_agregar > 0)
+        {
 
+            char *nuevo_bloque_datos = obtener_puntero_bloque_libre(cantidad_bloques);
 
+            setear_bit(atoi(nuevo_bloque_datos));
+            escribir_puntero_indirecto(fcb_archivo, nuevo_bloque_datos);
 
-            char *nuevo_bloque_datos = obtener_puntero_bloque_libre(cantidad_bloques, bitarray);
-            
-
-            setear_bit(atoi(nuevo_bloque_datos), bitarray, ruta_bitmap);
-            escribir_puntero_indirecto(fcb_archivo, nuevo_bloque_datos, ruta_archivo_bloques);
             fcb_archivo->size += MIN(bytes_por_asignar, tamanio_bloque);
             bytes_por_asignar = MAX(bytes_por_asignar - tamanio_bloque, 0);
             bloques_por_agregar--;
+
             log_info(logger, "Tamaño del fcb %i bytes por asignar %i bloques por asignar %i", fcb_archivo->size, bytes_por_asignar, bloques_por_agregar);
         }
     }
 }
 
-// void achicar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio, char* ruta)
-// {
-// }
+void remover_ultimo_bloque(t_fcb *fcb_archivo)
+{
+    int cant_bloques_asignados = division_redondeada_hacia_arriba(fcb_archivo->size, tamanio_bloque);
+    int digitos_punteros = obtener_digitos_cant_bloque(cantidad_bloques);
 
-void escribir_puntero_indirecto(t_fcb *fcb, char *puntero_a_escribir, char* ruta_archivo_bloques)
+    if (cant_bloques_asignados == 1)
+    {
+        log_info(logger, "Liberé el bloque directo %i", fcb_archivo->direct_pointer);
+        limpiar_bit(fcb_archivo->direct_pointer);
+        
+        fcb_archivo->direct_pointer = -1;
+    }
+    else{
+        uint32_t bloque_indirecto = fcb_archivo->indirect_pointer;
+        FILE* archivo_de_bloques = fopen(ruta_archivo_bloques, "rw");
+        fseek(archivo_de_bloques, (bloque_indirecto * tamanio_bloque) + ((cant_bloques_asignados - 1)* digitos_punteros), SEEK_SET);
+        //log_info(logger, "Digitos punteros %i", digitos_punteros);
+
+        char* ultimo_puntero = malloc(digitos_punteros * sizeof(char));
+        fread(ultimo_puntero, digitos_punteros * sizeof(char), 1, archivo_de_bloques);
+        ultimo_puntero[digitos_punteros] = '\0';
+
+        uint32_t ultimo_puntero_int = atoi(ultimo_puntero);
+        log_info(logger, "En el bloque de punteros indirectos %i, voy a borrar el puntero a %s", bloque_indirecto, ultimo_puntero);
+        limpiar_bit(ultimo_puntero_int);
+
+        //char* puntero_vacio = completar_con_ceros(0, cantidad_bloques);
+        char* puntero_vacio = "PEDO";
+        log_info(logger, "Punteros vacios contiene: %s", puntero_vacio);
+        fseek(archivo_de_bloques,(bloque_indirecto * tamanio_bloque), SEEK_SET);
+        fwrite(puntero_vacio, sizeof(char),digitos_punteros, archivo_de_bloques);
+        
+        fclose(archivo_de_bloques);
+        
+        leer_bloque_completo(bloque_indirecto, tamanio_bloque);
+
+        
+    }
+}
+
+void achicar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
+{
+    int bytes_por_sacar = fcb_archivo->size - nuevo_tamanio;
+    log_info(logger, "Tengo que sacarle %i bytes al archivo %s", bytes_por_sacar, fcb_archivo->name);
+
+    int cantidad_bloques_asignados = division_redondeada_hacia_arriba(fcb_archivo->size, tamanio_bloque);
+    int cant_bytes_teorica = cantidad_bloques_asignados * tamanio_bloque;
+    int bytes_bloque_incompleto = cant_bytes_teorica - fcb_archivo->size;
+
+    // Me fijo si la cantidad de bytes que tengo que remover es menor a un bloque
+    // Tengo que modificar el tamaño en el fcb unicamente
+    if (bytes_bloque_incompleto > 0)
+    {
+        fcb_archivo->size -= bytes_por_sacar;
+        log_info(logger, "Los bytes del bloque incompleto son %i", bytes_bloque_incompleto);
+        log_info(logger, "El tamaño del archivo es %i", fcb_archivo->size);
+
+        // Me fijo si tengo que sacar un bloque -> si el tamaño del archivo quedo como un multiplo del tamano del
+        // bloque, tengo que sacarle el ultimo bloque
+        if ((fcb_archivo->size % tamanio_bloque) == 0)
+        {
+            remover_ultimo_bloque(fcb_archivo);
+        }
+    }
+    while (bytes_por_sacar >= tamanio_bloque)
+    {
+        fcb_archivo->size -= tamanio_bloque;
+        bytes_por_sacar = -bytes_bloque_incompleto;
+        remover_ultimo_bloque(fcb_archivo);
+    }
+    if (bytes_por_sacar < tamanio_bloque && bytes_por_sacar > 0)
+    {
+        fcb_archivo->size -= bytes_por_sacar;
+        log_info(logger, "El tamaño del archivo es %i", fcb_archivo->size);
+
+        // Me fijo si tengo que sacar un bloque -> si el tamaño del archivo quedo como un multiplo del tamano del
+        // bloque, tengo que sacarle el ultimo bloque
+        if ((fcb_archivo->size % tamanio_bloque) == 0)
+        {
+            remover_ultimo_bloque(fcb_archivo);
+        }
+    }
+}
+
+void escribir_puntero_indirecto(t_fcb *fcb, char *puntero_a_escribir)
 {
     int cant_bloques_archivo = ceil(fcb->size / tamanio_bloque) - 1;
 

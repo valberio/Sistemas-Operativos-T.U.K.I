@@ -13,6 +13,10 @@
 #include <string.h>
 
 extern t_log* logger;
+extern t_bitarray *bitarray;
+extern char *ruta_superbloque;
+extern char *ruta_bitmap;
+extern char *ruta_archivo_bloques;
 
 typedef struct {
     int tamano;
@@ -27,11 +31,11 @@ typedef struct {
 }t_fcb; 
 
 
-void vaciar_archivo_bloques(double cant_bloques, double tamano_bloque, char* ruta_archivo_bloques);
-void leer_archivo_de_bloques(double cant_bloques, double tamano_bloque, char* ruta_archivo_bloques);
-void leer_bloque_completo(int nro_bloque, int tamano_bloque, char* ruta_archivo_bloques);
-char* leer_bloque_desde_hasta(uint32_t nro_bloque, uint32_t desde, uint32_t hasta, int tamano_bloque, char* ruta_archivo_bloque);
+void vaciar_archivo_bloques(double cant_bloques, double tamano_bloque);
+void leer_archivo_de_bloques(double cant_bloques, double tamano_bloque);
+void leer_bloque_completo(int nro_bloque, int tamano_bloque);
+char* leer_bloque_desde_hasta(uint32_t nro_bloque, uint32_t desde, uint32_t hasta, int tamano_bloque);
 char* completar_con_ceros(int index, int cant_bloques);
-char* obtener_puntero_bloque_libre(int cant_bloques, t_bitarray* bitarray);
+char* obtener_puntero_bloque_libre(int cant_bloques);
 void escribir_en_archivo_de_bloques(char* ruta);
 #endif /* BLOQUES_H_ */

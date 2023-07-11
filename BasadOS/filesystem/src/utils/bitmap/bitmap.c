@@ -22,7 +22,7 @@
     return bitarray;
  }
 
- void setear_bit(int index, t_bitarray* bitarray, char* ruta_bitmap)
+ void setear_bit(int index)
  {
     FILE* bitmap = fopen(ruta_bitmap, "w");
     bitarray_set_bit(bitarray, index);
@@ -33,7 +33,7 @@
     log_info(logger, "Acceso a Bitmap - Bloque: %i - Estado: 1", index);
  }
 
-void limpiar_bit(int index, t_bitarray* bitarray, char* ruta_bitmap)
+void limpiar_bit(int index)
  {
     FILE* bitmap = fopen(ruta_bitmap, "w");
     bitarray_clean_bit(bitarray, index);
@@ -45,7 +45,7 @@ void limpiar_bit(int index, t_bitarray* bitarray, char* ruta_bitmap)
 
  }
 
- char ver_bit(int index, t_bitarray* bitarray, char* ruta_bitmap)
+ char ver_bit(int index)
  {
     FILE* bitmap = fopen(ruta_bitmap, "r");
     fseek(bitmap, index, SEEK_SET);

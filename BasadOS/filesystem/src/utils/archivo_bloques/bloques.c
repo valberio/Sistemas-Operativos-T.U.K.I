@@ -1,6 +1,6 @@
 #include "bloques.h"
 
-void vaciar_archivo_bloques(double cant_bloques, double tamano_bloque, char* ruta_archivo_bloques)
+void vaciar_archivo_bloques(double cant_bloques, double tamano_bloque)
 {
     FILE* archivo_bloques = fopen(ruta_archivo_bloques, "w");
     fseek(archivo_bloques, 0, SEEK_SET);
@@ -24,7 +24,7 @@ void vaciar_archivo_bloques(double cant_bloques, double tamano_bloque, char* rut
 }
 
 
-void leer_archivo_de_bloques(double cant_bloques, double tamano_bloque, char* ruta_archivo_bloques)
+void leer_archivo_de_bloques(double cant_bloques, double tamano_bloque)
 {
     
     FILE* archivo_bloques = fopen(ruta_archivo_bloques, "r");
@@ -39,7 +39,7 @@ void leer_archivo_de_bloques(double cant_bloques, double tamano_bloque, char* ru
     fclose(archivo_bloques);
 }
 
-void leer_bloque_completo(int nro_bloque, int tamano_bloque, char* ruta_archivo_bloques)
+void leer_bloque_completo(int nro_bloque, int tamano_bloque)
 {
     
     FILE* archivo_bloques = fopen(ruta_archivo_bloques, "r");
@@ -52,15 +52,17 @@ void leer_bloque_completo(int nro_bloque, int tamano_bloque, char* ruta_archivo_
     fseek(archivo_bloques, desplazamiento_total * sizeof(char), SEEK_SET);
     fread(datos, tamano_bloque * sizeof(char), 1, archivo_bloques);
 
+    datos[tamano_bloque] = '\0';
+
     log_info(logger, "En el bloque %i hay %s", nro_bloque, datos);
 
     free(datos);
     fclose(archivo_bloques);
 }
 
-char* leer_bloque_desde_hasta(uint32_t nro_bloque, uint32_t desde, uint32_t hasta, int tamano_bloque, char* ruta_archivo_bloque)
+char* leer_bloque_desde_hasta(uint32_t nro_bloque, uint32_t desde, uint32_t hasta, int tamano_bloque)
 {
-    FILE* archivo_bloques = fopen(ruta_archivo_bloque, "r");
+    FILE* archivo_bloques = fopen(ruta_archivo_bloques, "r");
 
     //int desplazamiento = nro_bloque * tamano_bloque + desde;
     int bytes_a_leer = hasta - desde;
@@ -74,7 +76,7 @@ char* leer_bloque_desde_hasta(uint32_t nro_bloque, uint32_t desde, uint32_t hast
     return datos;
 }
 
-char* obtener_puntero_bloque_libre(int cant_bloques, t_bitarray* bitarray)
+char* obtener_puntero_bloque_libre(int cant_bloques)
 {
 
     int index = 0;

@@ -85,6 +85,7 @@ char* obtener_puntero_bloque_libre(int cant_bloques)
         index++;
     }
     char* puntero = completar_con_ceros(index, cant_bloques);
+    puntero[cant_bloques] = '\0';
     return puntero;
 }
 

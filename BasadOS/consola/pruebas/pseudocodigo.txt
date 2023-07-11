@@ -1,4 +1,4 @@
-F_OPEN SuperDuper
-F_TRUNCATE SuperDuper 145
-F_CLOSE SuperDuper
+F_OPEN DanteGato
+F_TRUNCATE DanteGato 145
+F_CLOSE DanteGato
 EXIT

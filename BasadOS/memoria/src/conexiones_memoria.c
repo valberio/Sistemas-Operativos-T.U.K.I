@@ -92,7 +92,6 @@ void *comunicacion_con_kernel(void *arg)
         default:
             break;
         }
-        liberar_contexto_de_ejecucion(contexto);
         eliminar_paquete(paquete);
     }
     return NULL;

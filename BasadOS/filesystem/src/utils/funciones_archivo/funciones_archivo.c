@@ -60,7 +60,7 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
 
     log_info(logger, "Bytes por asignar %i Bloques por agregar %i", bytes_por_asignar, bloques_por_agregar);
 
-    if (fcb_archivo->direct_pointer < 0)
+    if (fcb_archivo->direct_pointer == -1)
     { // NO TENGA NADA
         bloques_por_agregar--;
         bytes_por_asignar = MAX(bytes_por_asignar - tamanio_bloque, 0);
@@ -68,16 +68,19 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
         char *nuevo_bloque_directo = obtener_puntero_bloque_libre(cantidad_bloques);
         fcb_archivo->direct_pointer = atoi(nuevo_bloque_directo);
         setear_bit(fcb_archivo->direct_pointer);
-        
+        log_info(logger, "El bloque directo es %s", nuevo_bloque_directo);
+
         fcb_archivo->size += MIN(bytes_por_asignar, tamanio_bloque);
         log_info(logger, "Tamaño del fcb %i bytes por asignar %i bloques por asignar %i", fcb_archivo->size, bytes_por_asignar, bloques_por_agregar);
     }
-    else if (fcb_archivo->direct_pointer > 0 && fcb_archivo->indirect_pointer < 0)
+    if (fcb_archivo->direct_pointer > 0 && fcb_archivo->indirect_pointer == -1)
     { // TENGA UN SOLO BLOQUE
         
         char *nuevo_bloque_indirecto = obtener_puntero_bloque_libre(cantidad_bloques);
+        
         fcb_archivo->indirect_pointer = atoi(nuevo_bloque_indirecto);
         setear_bit(fcb_archivo->indirect_pointer);
+        log_info(logger, "El bloque indirecto es %s", nuevo_bloque_indirecto);
 
         log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 1 - Bloque File System %i", fcb_archivo->name, fcb_archivo->indirect_pointer);
         sleep(retardo);
@@ -208,3 +211,4 @@ void escribir_puntero_indirecto(t_fcb *fcb, char *puntero_a_escribir)
     fwrite(puntero_a_escribir, digitos_punteros * sizeof(char), 1, archivo_de_bloques);
     fclose(archivo_de_bloques);
 }
+

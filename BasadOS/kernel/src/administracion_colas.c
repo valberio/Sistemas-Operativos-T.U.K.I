@@ -331,11 +331,13 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				// LOGICA CON FILESYSTEM INTRODUCIR AQUI
 				log_info(logger, "PID: %i - Cerrar Archivo: %s", proceso_en_ejecucion->pid, parametros_retorno);
 				break;
+
 			case ACTUALIZAR_PUNTERO:
 				parametros_retorno = recibir_mensaje(cliente_cpu);
 				uint32_t valor_puntero = atoi(recibir_mensaje(cliente_cpu));
 				actualizar_puntero(proceso_en_ejecucion, parametros_retorno, valor_puntero);
 				break;
+
 			case TRUNCAR_ARCHIVO:
 				parametros_retorno = recibir_mensaje(cliente_cpu);
 				char *nuevo_tamano = recibir_mensaje(cliente_cpu);
@@ -349,18 +351,161 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				sem_post(&mutex_cola_blocked);
 				log_info(logger, "PID: %i - Estado Anterior: RUNNING - Estado Actual: BLOCKED", proceso_en_ejecucion->pid);
 				log_info(logger, "PID : %i - Bloqueado por: %s", proceso_en_ejecucion->pid, parametros_retorno);
+				sem_wait(&semaforo_peticiones_filesystem);
 				pthread_t hilo_truncador_de_archivos;
 				pthread_create(&hilo_truncador_de_archivos, NULL, solicitar_truncamiento, (void *)&parametros_hilo_kernel_filesystem);
 				pthread_detach(hilo_truncador_de_archivos);
 				ejecucion = 0;
 				break;
+
+			case PETICION_LECTURA:
+				char *nombre_lectura = recibir_mensaje(cliente_cpu);
+				char *direccion_fisica_lectura = recibir_mensaje(cliente_cpu);
+				char *cantidad_bytes_lectura = recibir_mensaje(cliente_cpu);
+				uint32_t puntero_lectura = buscar_puntero_de_archivo(proceso_en_ejecucion, nombre_lectura);
+				char puntero_str_lectura[12];
+				sprintf(puntero_str_lectura, "%u", puntero_lectura);
+				char *puntero_char_ptr_lectura = puntero_str_lectura;
+
+				parametros_hilo_kernel_filesystem.conexion = cliente_filesystem;
+				parametros_hilo_kernel_filesystem.mensaje = nombre_lectura;
+				parametros_hilo_kernel_filesystem.valor = cantidad_bytes_lectura;
+				parametros_hilo_kernel_filesystem.direccion_fisica = direccion_fisica_lectura;
+				parametros_hilo_kernel_filesystem.pid = proceso_en_ejecucion->pid;
+				parametros_hilo_kernel_filesystem.puntero = puntero_char_ptr_lectura;
+
+				sem_wait(&mutex_cola_blocked);
+				queue_push(cola_blocked, proceso_en_ejecucion);
+				sem_post(&mutex_cola_blocked);
+				log_info(logger, "PID: %i - Estado Anterior: RUNNING - Estado Actual: BLOCKED", proceso_en_ejecucion->pid);
+				log_info(logger, "PID : %i - Bloqueado por: %s", proceso_en_ejecucion->pid, nombre_lectura);
+				sem_wait(&semaforo_peticiones_filesystem);
+				pthread_t hilo_lector_de_archivos;
+				pthread_create(&hilo_lector_de_archivos, NULL, solicitar_lectura, (void *)&parametros_hilo_kernel_filesystem);
+				pthread_detach(hilo_lector_de_archivos);
+				ejecucion = 0;
+			
+			case PETICION_ESCRITURA:
+				char *nombre = recibir_mensaje(cliente_cpu);
+				char *direccion_fisica = recibir_mensaje(cliente_cpu);
+				char *cantidad_bytes = recibir_mensaje(cliente_cpu);
+				uint32_t puntero = buscar_puntero_de_archivo(proceso_en_ejecucion, nombre);
+				char puntero_str[12];
+				sprintf(puntero_str, "%u", puntero);
+				char *puntero_char_ptr = puntero_str;
+
+				parametros_hilo_kernel_filesystem.conexion = cliente_filesystem;
+				parametros_hilo_kernel_filesystem.mensaje = nombre;
+				parametros_hilo_kernel_filesystem.valor = cantidad_bytes;
+				parametros_hilo_kernel_filesystem.direccion_fisica = direccion_fisica;
+				parametros_hilo_kernel_filesystem.pid = proceso_en_ejecucion->pid;
+				parametros_hilo_kernel_filesystem.puntero = puntero_char_ptr;
+
+				sem_wait(&mutex_cola_blocked);
+				queue_push(cola_blocked, proceso_en_ejecucion);
+				sem_post(&mutex_cola_blocked);
+				log_info(logger, "PID: %i - Estado Anterior: RUNNING - Estado Actual: BLOCKED", proceso_en_ejecucion->pid);
+				log_info(logger, "PID : %i - Bloqueado por: %s", proceso_en_ejecucion->pid, nombre);
+				sem_wait(&semaforo_peticiones_filesystem);
+				pthread_t hilo_escritor_de_archivos;
+				pthread_create(&hilo_escritor_de_archivos, NULL, solicitar_escritura, (void *)&parametros_hilo_kernel_filesystem);
+				pthread_detach(hilo_escritor_de_archivos);
+				ejecucion = 0;
 			default:
 				break;
 			}
 			eliminar_paquete(paquete);
-
 		}
 	}
+}
+
+void* solicitar_escritura(void *arg)
+{
+	Parametros_de_hilo *args = (Parametros_de_hilo *)arg;
+	int cliente_filesystem = args->conexion;
+	char *nombre_archivo = args->mensaje;
+	char *cantidad_bytes = args->valor;
+	char* direccion_fisica = args->direccion_fisica;
+	char* puntero = args->puntero;
+	int pid = args->pid;
+	t_paquete *paquete = crear_paquete();
+	paquete->codigo_operacion = PETICION_LECTURA;
+	enviar_paquete(paquete, cliente_filesystem);
+	eliminar_paquete(paquete);
+	enviar_mensaje(puntero, cliente_filesystem);
+	enviar_mensaje(cantidad_bytes, cliente_filesystem);
+	enviar_mensaje(direccion_fisica, cliente_filesystem);
+	enviar_mensaje(nombre_archivo, cliente_filesystem);
+	char *respuesta = recibir_mensaje(cliente_filesystem);
+	if (strcmp(respuesta, "OK") != 0)
+	{
+		log_info(logger, "Fallo al escribir el Archivo %s", nombre_archivo);
+	}
+	bool existe_el_archivo(void *elemento)
+	{
+		t_pcb *proceso;
+		proceso = elemento;
+
+		return proceso->pid == pid;
+	}
+
+	t_pcb *proceso_a_recuperar = malloc(sizeof(t_pcb *));
+	sem_wait(&mutex_cola_blocked);
+	proceso_a_recuperar = list_find(cola_blocked->elements, existe_el_archivo);
+	list_remove_by_condition(cola_blocked->elements, existe_el_archivo);
+	sem_post(&mutex_cola_blocked);
+
+	sem_wait(&mutex_cola_ready);
+	queue_push(cola_ready, proceso_a_recuperar);
+	sem_post(&mutex_cola_ready);
+	sem_post(&semaforo_procesos_en_ready);
+	sem_post(&semaforo_peticiones_filesystem);
+	return NULL;
+}
+
+void* solicitar_lectura(void *arg)
+{
+	Parametros_de_hilo *args = (Parametros_de_hilo *)arg;
+	int cliente_filesystem = args->conexion;
+	char *nombre_archivo = args->mensaje;
+	char *cantidad_bytes = args->valor;
+	char* direccion_fisica = args->direccion_fisica;
+	char* puntero = args->puntero;
+	int pid = args->pid;
+	t_paquete *paquete = crear_paquete();
+	paquete->codigo_operacion = PETICION_LECTURA;
+	enviar_paquete(paquete, cliente_filesystem);
+	eliminar_paquete(paquete);
+	enviar_mensaje(puntero, cliente_filesystem);
+	enviar_mensaje(cantidad_bytes, cliente_filesystem);
+	enviar_mensaje(direccion_fisica, cliente_filesystem);
+	enviar_mensaje(nombre_archivo, cliente_filesystem);
+	char *respuesta = recibir_mensaje(cliente_filesystem);
+	if (strcmp(respuesta, "OK") != 0)
+	{
+		log_info(logger, "Fallo al leer el Archivo %s", nombre_archivo);
+	}
+	bool existe_el_archivo(void *elemento)
+	{
+		t_pcb *proceso;
+		proceso = elemento;
+
+		return proceso->pid == pid;
+	}
+
+	t_pcb *proceso_a_recuperar = malloc(sizeof(t_pcb *));
+	sem_wait(&mutex_cola_blocked);
+	proceso_a_recuperar = list_find(cola_blocked->elements, existe_el_archivo);
+	list_remove_by_condition(cola_blocked->elements, existe_el_archivo);
+	sem_post(&mutex_cola_blocked);
+
+	sem_wait(&mutex_cola_ready);
+	queue_push(cola_ready, proceso_a_recuperar);
+	sem_post(&mutex_cola_ready);
+	sem_post(&semaforo_procesos_en_ready);
+	sem_post(&semaforo_peticiones_filesystem);
+	return NULL;
+
 }
 
 void *solicitar_truncamiento(void *arg)
@@ -373,11 +518,13 @@ void *solicitar_truncamiento(void *arg)
 	t_paquete *paquete = crear_paquete();
 	paquete->codigo_operacion = TRUNCAR_ARCHIVO;
 	enviar_paquete(paquete, cliente_filesystem);
+	eliminar_paquete(paquete);
 	// ENVIO EL NOMBRE DEL ARCHIVO REQUERIDO
 	enviar_mensaje(nombre_archivo, cliente_filesystem);
 	enviar_mensaje(nuevo_tamano, cliente_filesystem);
 	char *respuesta = recibir_mensaje(cliente_filesystem);
-	if (strcmp(respuesta, "OK") != 0){
+	if (strcmp(respuesta, "OK") != 0)
+	{
 		log_info(logger, "Fallo al truncar el Archivo %s", nombre_archivo);
 	}
 	bool existe_el_archivo(void *elemento)
@@ -398,6 +545,7 @@ void *solicitar_truncamiento(void *arg)
 	queue_push(cola_ready, proceso_a_recuperar);
 	sem_post(&mutex_cola_ready);
 	sem_post(&semaforo_procesos_en_ready);
+	sem_post(&semaforo_peticiones_filesystem);
 
 	return NULL;
 }
@@ -510,6 +658,19 @@ void actualizar_puntero(t_pcb *proceso, char *nombre_archivo, uint32_t valor_pun
 	Archivo_de_proceso *archivo = list_find(proceso->tabla_archivos_abiertos, existe_el_archivo);
 	archivo->puntero = valor_puntero;
 	log_info(logger, "PID: %i - Actualizar puntero Archivo: %s - Puntero %i", proceso->pid, archivo->nombre, archivo->puntero);
+}
+
+uint32_t buscar_puntero_de_archivo(t_pcb *proceso, char *nombre_archivo)
+{
+	bool existe_el_archivo(void *elemento)
+	{
+		Archivo_de_proceso *archivo_en_tabla;
+		archivo_en_tabla = elemento;
+
+		return strcmp(archivo_en_tabla->nombre, nombre_archivo) == 0;
+	}
+	Archivo_de_proceso *archivo = list_find(proceso->tabla_archivos_abiertos, existe_el_archivo);
+	return archivo->puntero;
 }
 
 void actualizar_tablas_de_segmentos(t_list *segmentos_actualizados, t_list *segmentos_en_running)

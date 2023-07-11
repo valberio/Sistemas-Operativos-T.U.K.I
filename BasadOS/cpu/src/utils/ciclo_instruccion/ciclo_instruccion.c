@@ -37,6 +37,22 @@ char** decode(char* instruccion, int retardo_instruccion, int tam_max_segmento, 
 		log_info(logger, "Entré en DECODE - MOV OUT -> Traduccion de direccion lógica %i a física %s", dir_logica_int, dir_fisica_string);
 		strcpy(array[1], dir_fisica_string);
 	}
+	if(strcmp(array[0], "F_READ") == 0)
+	{
+		int dir_logica_int = atoi(array[2]); 
+		int dir_fisica_int = traduccion_dir_logica_fisica(dir_logica_int, tabla_de_segmentos, tam_max_segmento);
+		char* dir_fisica_string = int_a_string(dir_fisica_int);
+		log_info(logger, "Entré en DECODE - F_READ -> Traduccion de direccion lógica %i a física %s", dir_logica_int, dir_fisica_string);
+		strcpy(array[2], dir_fisica_string);
+	}
+	if(strcmp(array[0], "F_WRITE") == 0)
+	{
+		int dir_logica_int = atoi(array[2]); 
+		int dir_fisica_int = traduccion_dir_logica_fisica(dir_logica_int, tabla_de_segmentos, tam_max_segmento);
+		char* dir_fisica_string = int_a_string(dir_fisica_int);
+		log_info(logger, "Entré en DECODE - F_READ -> Traduccion de direccion lógica %i a física %s", dir_logica_int, dir_fisica_string);
+		strcpy(array[2], dir_fisica_string);
+	}
 	return array;
 }
 
@@ -68,10 +84,10 @@ int execute(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contex
 			resultado = f_seek(logger, instrucciones, contexto, conexion_cpu_kernel);
 			break;
 		case F_READ:
-			resultado = f_truncate(logger, instrucciones, contexto, conexion_cpu_kernel);
+			resultado = f_read(logger, instrucciones, contexto, conexion_cpu_kernel);
 			break;
 		case F_WRITE:
-			resultado = f_truncate(logger, instrucciones, contexto, conexion_cpu_kernel);
+			resultado = f_write(logger, instrucciones, contexto, conexion_cpu_kernel);
 			break;
 		case F_TRUNCATE:
 			resultado = f_truncate(logger, instrucciones, contexto, conexion_cpu_kernel);

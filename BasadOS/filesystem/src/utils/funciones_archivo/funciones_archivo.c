@@ -212,3 +212,144 @@ void escribir_puntero_indirecto(t_fcb *fcb, char *puntero_a_escribir)
     fclose(archivo_de_bloques);
 }
 
+char* leer_archivo(char* nombre, int puntero, int cantidad_de_bytes)
+{
+    bool es_el_fcb(void *elemento)
+    {
+        t_fcb *fcb_en_tabla;
+        fcb_en_tabla = elemento;
+
+        return strcmp(fcb_en_tabla->name, nombre) == 0;
+    }
+    
+    t_fcb* fcb_archivo = list_find(fcb_list, es_el_fcb);
+    if(fcb_archivo == NULL){
+        log_info(logger, "No se encontró el archivo");
+        return "ERROR";
+    }
+    //Me fijo en que bloque esta el puntero
+    int bloque_puntero = floor(puntero/tamanio_bloque);
+    int desplazamiento_dentro_del_bloque = puntero - (bloque_puntero * tamanio_bloque);
+    int bytes_por_leer = cantidad_de_bytes;
+    char* datos = malloc(cantidad_de_bytes * sizeof(char));
+    int bytes_a_leer_aca;
+
+    FILE* archivo_de_bloques = fopen(ruta_archivo_bloques, "r");
+
+    if (bloque_puntero == 0) //Accedo y leo del bloque directo
+    {
+        
+        int bytes_restantes_bloque_directo = tamanio_bloque - desplazamiento_dentro_del_bloque;
+        bytes_a_leer_aca = MIN(bytes_restantes_bloque_directo, cantidad_de_bytes);
+        log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 0 - Bloque File System %i", fcb_archivo->name, fcb_archivo->direct_pointer);
+
+        fseek(archivo_de_bloques, (bloque_puntero * tamanio_bloque) + desplazamiento_dentro_del_bloque, SEEK_SET);
+        fread(datos, sizeof(char), bytes_a_leer_aca, archivo_de_bloques);
+        
+        bytes_por_leer -= bytes_a_leer_aca;
+
+    }
+
+    int contador_puntero_indirecto = 0;
+    int digitos_punteros = obtener_digitos_cant_bloque();
+    if(bytes_por_leer > 0){
+        log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 1 - Bloque File System %i", fcb_archivo->name, fcb_archivo->indirect_pointer);
+
+    }
+    int bloque_indirecto_contador = 2; //Solo para el log, no tiene funcionalidad. 
+    while(bytes_por_leer > 0) //Leo bloques del indirecto
+    {
+        bytes_a_leer_aca = MIN(tamanio_bloque, cantidad_de_bytes);
+
+        char* index_bloque = malloc(sizeof(char) * digitos_punteros);
+        
+        //Entro al bloque indirecto, y leo el indice que corresponde
+        fseek(archivo_de_bloques, fcb_archivo->indirect_pointer * tamanio_bloque + contador_puntero_indirecto * digitos_punteros, SEEK_SET);
+        fread(index_bloque, sizeof(char), digitos_punteros, archivo_de_bloques);
+
+        int index_bloque_int = atoi(index_bloque);
+
+        log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: %i - Bloque File System %i", fcb_archivo->name, bloque_indirecto_contador, index_bloque_int);
+
+        char *datos_a_copiar = malloc((bytes_a_leer_aca + 1) * sizeof(char));
+        fseek(archivo_de_bloques, (index_bloque_int * tamanio_bloque), SEEK_SET);
+        fread(datos_a_copiar, sizeof(char), bytes_a_leer_aca, archivo_de_bloques);
+        bytes_por_leer -= bytes_a_leer_aca;
+        strcat(datos, datos_a_copiar);
+        free(datos_a_copiar);
+        contador_puntero_indirecto++;
+        free(index_bloque);
+    }
+    fclose(archivo_de_bloques);
+    free(fcb_archivo->name); 
+    free(fcb_archivo);
+    datos[cantidad_de_bytes] = '\0';
+    return datos;
+}
+
+void escribir_archivo(char* nombre, char* datos_a_guardar, int puntero, int cantidad_de_bytes)
+{
+    bool es_el_fcb(void *elemento)
+    {
+        t_fcb *fcb_en_tabla;
+        fcb_en_tabla = elemento;
+
+        return strcmp(fcb_en_tabla->name, nombre) == 0;
+    }
+    
+    t_fcb* fcb_archivo = list_find(fcb_list, es_el_fcb);
+    if(fcb_archivo == NULL){
+        log_info(logger, "No se encontró el archivo");
+        return;
+    }
+    int bloque_puntero = floor(puntero/tamanio_bloque);
+    int desplazamiento_dentro_del_bloque = puntero - (bloque_puntero * tamanio_bloque);
+    int bytes_por_copiar = cantidad_de_bytes;
+    int bytes_a_copiar_aca;
+
+    FILE* archivo_de_bloques = fopen(ruta_archivo_bloques, "r+");
+
+    if (bloque_puntero == 0)
+    {
+
+        int bytes_restantes_bloque_directo = tamanio_bloque - desplazamiento_dentro_del_bloque;
+        bytes_a_copiar_aca = MIN(bytes_restantes_bloque_directo, cantidad_de_bytes);
+         
+
+        fseek(archivo_de_bloques, (bloque_puntero * tamanio_bloque) + desplazamiento_dentro_del_bloque, SEEK_SET);
+        fwrite(datos_a_guardar, sizeof(char), bytes_por_copiar, archivo_de_bloques);
+        datos_a_guardar += bytes_a_copiar_aca;
+        bytes_por_copiar -= bytes_a_copiar_aca;
+    }
+    log_info(logger, "los bytes son: %i", bytes_por_copiar);
+    int contador_puntero_indirecto = 0;
+    int digitos_punteros = obtener_digitos_cant_bloque();
+
+    while(bytes_por_copiar > 0)
+    {
+        bytes_a_copiar_aca = MIN(tamanio_bloque, cantidad_de_bytes);
+
+        char* index_bloque = malloc(sizeof(char) * digitos_punteros);
+        
+        //Entro al bloque indirecto, y leo el indice que corresponde
+        fseek(archivo_de_bloques, fcb_archivo->indirect_pointer * tamanio_bloque + contador_puntero_indirecto * digitos_punteros, SEEK_SET);
+        fread(index_bloque, sizeof(char), digitos_punteros, archivo_de_bloques);
+        int index_bloque_int = atoi(index_bloque);
+
+        fseek(archivo_de_bloques, (index_bloque_int * tamanio_bloque), SEEK_SET);
+        fread(datos_a_guardar, sizeof(char), bytes_a_copiar_aca, archivo_de_bloques);
+ 
+       
+        datos_a_guardar += bytes_a_copiar_aca;
+        
+        
+        
+        
+        bytes_por_copiar -= bytes_a_copiar_aca;
+        contador_puntero_indirecto++;
+        free(index_bloque);
+    }
+    fclose(archivo_de_bloques);
+    
+
+}

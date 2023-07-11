@@ -14,6 +14,7 @@
 sem_t semaforo_de_procesos_para_ejecutar;
 sem_t semaforo_procesos_en_ready;
 sem_t semaforo_procesos_en_exit;
+sem_t semaforo_peticiones_filesystem;
 sem_t mutex_cola_new;
 sem_t mutex_cola_ready;
 sem_t mutex_cola_blocked;
@@ -55,6 +56,7 @@ int main(void)
 	sem_init(&semaforo_de_procesos_para_ejecutar, 0, 0);
 	sem_init(&semaforo_procesos_en_ready, 0, 0);
 	sem_init(&semaforo_procesos_en_exit, 0, 0);
+	sem_init(&semaforo_peticiones_filesystem, 0, 1);
 
 	sem_init(&mutex_cola_new, 0, 1);
 	sem_init(&mutex_cola_ready, 0, 1);

@@ -28,6 +28,7 @@ extern sem_t semaforo_procesos_en_exit;
 extern sem_t semaforo_procesos_en_ready;
 extern sem_t semaforo_multiprogramacion;
 extern sem_t semaforo_de_procesos_para_ejecutar;
+extern sem_t semaforo_peticiones_filesystem;
 extern sem_t mutex_cola_exit;
 extern sem_t mutex_cola_new;
 extern sem_t mutex_cola_ready;
@@ -58,6 +59,9 @@ void borrar_de_tabla_de_archivos(t_pcb* proceso, char* nombre_archivo);
 void actualizar_puntero(t_pcb* proceso, char* nombre_archivo, uint32_t valor_puntero);
 void* solicitar_truncamiento(void* arg);
 void actualizar_tablas_de_segmentos(t_list *,t_list* );
+uint32_t buscar_puntero_de_archivo(t_pcb *proceso, char *nombre_archivo);
+void* solicitar_lectura(void *arg);
+void* solicitar_escritura(void *arg);
 
 
 

@@ -299,9 +299,9 @@ int f_read(t_log *logger, char **instrucciones, t_contexto_de_ejecucion *context
     paquete->codigo_operacion = PETICION_LECTURA;
     paquete->buffer = serializar_contexto(contexto);
     enviar_paquete(paquete, conexion_kernel_cpu);
-    enviar_mensaje(instrucciones[1], conexion_kernel_cpu);
-    enviar_mensaje(instrucciones[2], conexion_kernel_cpu);
-    enviar_mensaje(instrucciones[3], conexion_kernel_cpu);
+    enviar_mensaje(instrucciones[1], conexion_kernel_cpu); //Envio nombre
+    enviar_mensaje(instrucciones[2], conexion_kernel_cpu); 
+    enviar_mensaje(instrucciones[3], conexion_kernel_cpu); //Envio cantidad de bytes a leer
     return 1;
 }
 
@@ -309,7 +309,7 @@ int f_write(t_log *logger, char **instrucciones, t_contexto_de_ejecucion *contex
 {
     log_info(logger, "PID: %i EJECUTANDO: %s PARAMETROS: %s, %s, %s", contexto->pid, instrucciones[0], instrucciones[1], instrucciones[2], instrucciones[3]);
     t_paquete *paquete = crear_paquete();
-    paquete->codigo_operacion = PETICION_LECTURA;
+    paquete->codigo_operacion = PETICION_ESCRITURA;
     paquete->buffer = serializar_contexto(contexto);
     enviar_paquete(paquete, conexion_kernel_cpu);
     enviar_mensaje(instrucciones[1], conexion_kernel_cpu);

@@ -6,6 +6,8 @@
         "server_utils.h": "c",
         "administracion_colas.h": "c",
         "loggers_utils.h": "c",
-        "main_filesystem.h": "c"
+        "main_filesystem.h": "c",
+        "stdint.h": "c",
+        "typeinfo": "c"
     }
 }

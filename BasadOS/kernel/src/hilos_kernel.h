@@ -11,6 +11,8 @@ typedef struct{
     int conexion;
     char* mensaje;
     char* valor;
+    char* puntero;
+    char* direccion_fisica;
     double estimacion;
     int pid;
 } Parametros_de_hilo;

@@ -42,11 +42,12 @@ int main()
 	bitarray = crear_bitmap(ruta_bitmap, cantidad_bloques);
 	
 	char* ruta_archivo_bloques = config_get_string_value(config, "PATH_BLOQUES");
-	crear_archivo_bloques(cantidad_bloques, tamanio_bloque, ruta_archivo_bloques);
+	vaciar_archivo_bloques(cantidad_bloques, tamanio_bloque, ruta_archivo_bloques);
 
 	//Recorro el directorio de FCBs y creo estructuras
 	recorrer_directorio_fcb(ruta_bitmap);
-	
+	truncar_archivo("Notas1erParcialK9999", 257, ruta_bitmap, ruta_archivo_bloques);
+	truncar_archivo("Notas1erParcialK9999", 320, ruta_bitmap, ruta_archivo_bloques);
 	
 	
 	// Conecto el filesystem como servidor del kernel

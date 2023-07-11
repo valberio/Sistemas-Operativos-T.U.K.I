@@ -27,7 +27,7 @@ typedef struct {
 }t_fcb; 
 
 
-void crear_archivo_bloques(double cant_bloques, double tamano_bloque, char* ruta_archivo_bloques);
+void vaciar_archivo_bloques(double cant_bloques, double tamano_bloque, char* ruta_archivo_bloques);
 void leer_archivo_de_bloques(double cant_bloques, double tamano_bloque, char* ruta_archivo_bloques);
 void leer_bloque_completo(int nro_bloque, int tamano_bloque, char* ruta_archivo_bloques);
 char* leer_bloque_desde_hasta(uint32_t nro_bloque, uint32_t desde, uint32_t hasta, int tamano_bloque, char* ruta_archivo_bloque);

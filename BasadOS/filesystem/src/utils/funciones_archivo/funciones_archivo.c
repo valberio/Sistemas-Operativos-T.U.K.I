@@ -23,16 +23,8 @@ void truncar_archivo(char *nombre_archivo, int nuevo_tamanio, char *ruta_bitmap,
         agrandar_archivo(fcb_archivo, nuevo_tamanio,ruta_bitmap, ruta_archivo_bloques);
     }
 }
-/*
-double mi_ceil(double x) {
-    int entero = (int)x; // Obtener la parte entera del número
 
-    if (entero >= x) {
-        return entero; // Si la parte entera es mayor o igual al número, es el techo
-    } else {
-        return entero + 1.0; // Si la parte entera es menor al número, sumar 1 para obtener el techo
-    }
-}*/
+
 int division_redondeada_hacia_arriba(int dividendo, int divisor) {
     int resultado = dividendo / divisor;
     int residuo = dividendo % divisor;
@@ -47,8 +39,24 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio, char *ruta_bitmap, 
 {
     log_info(logger, "Tamanio inicial %i", fcb_archivo->size);
     uint32_t bytes_por_asignar = nuevo_tamanio - fcb_archivo->size;
-    log_info(logger, "el tamanio de bloque es: %i", tamanio_bloque);
-    int bloques_por_agregar = division_redondeada_hacia_arriba(bytes_por_asignar, tamanio_bloque); // ESTA LINEA ESTA RANCIA
+
+    //Agrego un caso mas: tengo un bloque incompleto en el que puedo asignar bytes
+    int cantidad_bytes_teoricos_archivo = division_redondeada_hacia_arriba(fcb_archivo->size, tamanio_bloque) * tamanio_bloque;
+    int bytes_libres_en_bloque = cantidad_bytes_teoricos_archivo - fcb_archivo->size;
+    log_info(logger, "Hay %i bytes libres en el bloque", bytes_libres_en_bloque);
+    if((bytes_libres_en_bloque) > 0)
+    {
+        fcb_archivo->size += bytes_libres_en_bloque;
+        bytes_por_asignar = bytes_por_asignar - bytes_libres_en_bloque;
+    }
+
+    if (bytes_por_asignar == 0)
+    {
+        log_info(logger, "Hay %i bytes por asignar y el tamaño final del fcb es %i", bytes_por_asignar, fcb_archivo->size);
+        return NULL;
+    }
+
+    int bloques_por_agregar = division_redondeada_hacia_arriba(bytes_por_asignar, tamanio_bloque); 
 
     log_info(logger, "Bytes por asignar %i Bloques por agregar %i", bytes_por_asignar, bloques_por_agregar);
 
@@ -80,7 +88,11 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio, char *ruta_bitmap, 
     }
     else{
         while (bloques_por_agregar > 0) {
+
+
+
             char *nuevo_bloque_datos = obtener_puntero_bloque_libre(cantidad_bloques, bitarray);
+            
 
             setear_bit(atoi(nuevo_bloque_datos), bitarray, ruta_bitmap);
             escribir_puntero_indirecto(fcb_archivo, nuevo_bloque_datos, ruta_archivo_bloques);

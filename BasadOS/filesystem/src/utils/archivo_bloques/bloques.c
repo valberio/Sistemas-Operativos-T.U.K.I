@@ -1,8 +1,9 @@
 #include "bloques.h"
 
-void crear_archivo_bloques(double cant_bloques, double tamano_bloque, char* ruta_archivo_bloques)
+void vaciar_archivo_bloques(double cant_bloques, double tamano_bloque, char* ruta_archivo_bloques)
 {
     FILE* archivo_bloques = fopen(ruta_archivo_bloques, "w");
+    fseek(archivo_bloques, 0, SEEK_SET);
     if(archivo_bloques == NULL)
     {
         log_info(logger, "Error abriendo el archivo %s", ruta_archivo_bloques);

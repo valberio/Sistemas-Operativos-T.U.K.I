@@ -15,6 +15,8 @@ int iniciar_servidor(t_log* logger, char* puerto)
     socket_servidor = socket(servinfo->ai_family,
                          servinfo->ai_socktype,
                          servinfo->ai_protocol);
+	
+	
 
     if(bind(socket_servidor, servinfo->ai_addr, servinfo->ai_addrlen) == -1)
     {

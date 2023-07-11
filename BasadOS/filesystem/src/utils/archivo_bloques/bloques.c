@@ -85,7 +85,7 @@ char* obtener_puntero_bloque_libre(int cant_bloques)
         index++;
     }
     char* puntero = completar_con_ceros(index, cant_bloques);
-    puntero[cant_bloques] = '\0';
+
     return puntero;
 }
 
@@ -99,7 +99,7 @@ char* completar_con_ceros(int index, int cant_bloques)
     int cantidad_de_digitos_bloques = strlen(cadena_cant_bloques);
     int cantidad_de_digitos_index = strlen(cadena_index);
     
-    char* numero_bloque = malloc(cantidad_de_digitos_bloques); 
+    char* numero_bloque = malloc(cantidad_de_digitos_bloques + 1); 
     for(int i = 0; i < (cantidad_de_digitos_bloques - cantidad_de_digitos_index); i++){
         numero_bloque[i] = '0';
     }

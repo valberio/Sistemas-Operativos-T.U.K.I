@@ -48,12 +48,13 @@ int main()
 	bitarray = crear_bitmap(ruta_bitmap, cantidad_bloques);
 	
 	ruta_archivo_bloques = config_get_string_value(config, "PATH_BLOQUES");
-	//vaciar_archivo_bloques(cantidad_bloques, tamanio_bloque);
+	vaciar_archivo_bloques(cantidad_bloques, tamanio_bloque);
 
 	//Recorro el directorio de FCBs y creo estructuras
 	recorrer_directorio_fcb(ruta_bitmap);
-	escribir_archivo("Notas1erParcialK9999", "UWU", 0, 3);
-	char* datos = leer_archivo("Notas1erParcialK9999", 0, 3);
+	escribir_archivo("Notas1erParcialK9999", "UWUUWU", 127, 6);
+	char* datos = leer_archivo("Notas1erParcialK9999", 127, 6);
+	datos[6] = '\0';
 	log_info(logger, "Datos leidos %s", datos);
 	free(datos);
 
@@ -100,7 +101,7 @@ void recibir_ordenes_kernel(int conexion_filesystem_kernel, int cliente_filesyst
 				truncar_archivo(nombre_archivo, tamanio);
 				enviar_mensaje("OK", conexion_filesystem_kernel);
 
-			case PETICION_LECTURA:
+			case PETICION_LECTURA: //F_READ
 				puntero = recibir_mensaje(conexion_filesystem_kernel);
 				cantidad_bytes = recibir_mensaje(conexion_filesystem_kernel);
 				direccion_fisica = recibir_mensaje(conexion_filesystem_kernel);

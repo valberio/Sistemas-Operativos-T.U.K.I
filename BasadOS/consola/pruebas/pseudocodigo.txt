@@ -1,4 +1,4 @@
-SET AX HOLA
-F_OPEN DanteElReGato
-F_CLOSE DanteElReGato
+F_OPEN SuperDuper
+F_TRUNCATE SuperDuper 145
+F_CLOSE SuperDuper
 EXIT

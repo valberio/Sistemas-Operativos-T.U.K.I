@@ -347,6 +347,8 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				sem_wait(&mutex_cola_blocked);
 				queue_push(cola_blocked, proceso_en_ejecucion);
 				sem_post(&mutex_cola_blocked);
+				log_info(logger, "PID: %i - Estado Anterior: RUNNING - Estado Actual: BLOCKED", proceso_en_ejecucion->pid);
+				log_info(logger, "PID : %i - Bloqueado por: %s", proceso_en_ejecucion->pid, parametros_retorno);
 				pthread_t hilo_truncador_de_archivos;
 				pthread_create(&hilo_truncador_de_archivos, NULL, solicitar_truncamiento, (void *)&parametros_hilo_kernel_filesystem);
 				pthread_detach(hilo_truncador_de_archivos);
@@ -375,7 +377,9 @@ void *solicitar_truncamiento(void *arg)
 	enviar_mensaje(nombre_archivo, cliente_filesystem);
 	enviar_mensaje(nuevo_tamano, cliente_filesystem);
 	char *respuesta = recibir_mensaje(cliente_filesystem);
-
+	if (strcmp(respuesta, "OK") != 0){
+		log_info(logger, "Fallo al truncar el Archivo %s", nombre_archivo);
+	}
 	bool existe_el_archivo(void *elemento)
 	{
 		t_pcb *proceso;

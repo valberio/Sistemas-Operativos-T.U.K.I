@@ -47,7 +47,7 @@ int main()
 	//Recorro el directorio de FCBs y creo estructuras
 	recorrer_directorio_fcb(ruta_bitmap);
 	
-	truncar_archivo("Notas1erParcialK9999", 340, ruta_bitmap,ruta_archivo_bloques);
+	
 	
 	// Conecto el filesystem como servidor del kernel
 	char* puerto_a_kernel = config_get_string_value(config, "PUERTO_ESCUCHA");
@@ -58,7 +58,7 @@ int main()
 	log_info(logger, "Filesystem recibió la conexión del kernel!");
 	}
 	
-	//recibir_ordenes_kernel(conexion_filesystem_kernel, ruta_bitmap);
+	recibir_ordenes_kernel(conexion_filesystem_kernel, ruta_bitmap, ruta_archivo_bloques);
 
 	/*if (cliente_filesystem_a_memoria)
 	{
@@ -72,7 +72,7 @@ int main()
 
 
 
-void recibir_ordenes_kernel(int conexion_filesystem_kernel, char* ruta_bitmap){
+void recibir_ordenes_kernel(int conexion_filesystem_kernel, char* ruta_bitmap, char* ruta_archivo_bloques){
 	while(conexion_filesystem_kernel){
 		t_paquete* operacion = recibir_contexto_de_ejecucion(conexion_filesystem_kernel);
 		char* nombre_archivo = recibir_mensaje(conexion_filesystem_kernel);
@@ -82,7 +82,9 @@ void recibir_ordenes_kernel(int conexion_filesystem_kernel, char* ruta_bitmap){
 				break;
 			case TRUNCAR_ARCHIVO:
 				char* nuevo_tamano = recibir_mensaje(conexion_filesystem_kernel);
-
+				int tamanio = atoi(nuevo_tamano);
+				truncar_archivo(nombre_archivo, tamanio, ruta_bitmap, ruta_archivo_bloques);
+				enviar_mensaje("OK", conexion_filesystem_kernel);
 			default:
 				break;
 		}

@@ -21,7 +21,7 @@ extern t_log* logger;
 
 //void *crear_fcb(char *nombre_archivo);
 void recorrer_directorio_fcb(char* ruta_bitmap);
-void recibir_ordenes_kernel(int conexion_filesystem_kernel, char* ruta_bitmap);
+void recibir_ordenes_kernel(int conexion_filesystem_kernel, char* ruta_bitmap, char* ruta_archivo_bloques);
 void crear_estructura_fcb(char *nombre_archivo, char* ruta_bitmap);
 void* crear_archivo_fcb(char *nombre_archivo, char* ruta_bitmap);
 void abrir_o_crear_archivo(char *nombre_archivo, int conexion_filesystem_cliente, char* ruta_bitmap);

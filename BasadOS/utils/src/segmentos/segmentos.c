@@ -4,7 +4,7 @@
 int obtener_segmento_por_id(int id, t_list* tabla_segmentos)
 {
     int tam = list_size(tabla_segmentos);
-    int index = NULL;
+    int index;
     for (int i = 0; i < tam; i++)
     {
         Segmento* temp = list_get(tabla_segmentos, i);

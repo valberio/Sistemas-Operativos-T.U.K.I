@@ -174,7 +174,7 @@ Segmento *best_fit(int id, int tamano)
     Segmento *hueco_libre = malloc(sizeof(Segmento));
     t_list* lista_filtrada = list_filter(lista_de_memoria, huecos_con_tamano_necesario);
     hueco_libre = list_get_minimum(lista_filtrada, minimo_tamano);
-    //list_destroy_and_destroy_elements(lista_filtrada);
+    list_destroy_and_destroy_elements(lista_filtrada,free);
     return hueco_libre;
 }
 

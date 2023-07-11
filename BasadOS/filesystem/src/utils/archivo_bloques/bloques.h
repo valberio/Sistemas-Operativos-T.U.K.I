@@ -17,6 +17,7 @@ extern t_bitarray *bitarray;
 extern char *ruta_superbloque;
 extern char *ruta_bitmap;
 extern char *ruta_archivo_bloques;
+extern double retardo;
 
 typedef struct {
     int tamano;

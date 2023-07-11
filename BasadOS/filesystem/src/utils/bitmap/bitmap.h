@@ -14,6 +14,7 @@
 
 extern t_bitarray *bitarray;
 extern char *ruta_bitmap;
+extern double retardo;
 
 t_bitarray* crear_bitmap (char* ruta, double block_count);
 char ver_bit(int index);

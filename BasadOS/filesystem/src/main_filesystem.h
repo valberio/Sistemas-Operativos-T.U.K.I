@@ -19,6 +19,7 @@
 extern t_log* logger;
 
 
+
 //void *crear_fcb(char *nombre_archivo);
 void recorrer_directorio_fcb();
 void recibir_ordenes_kernel(int conexion_filesystem_kernel);

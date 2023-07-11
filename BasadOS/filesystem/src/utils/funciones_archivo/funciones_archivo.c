@@ -64,17 +64,22 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
     { // NO TENGA NADA
         bloques_por_agregar--;
         bytes_por_asignar = MAX(bytes_por_asignar - tamanio_bloque, 0);
+
         char *nuevo_bloque_directo = obtener_puntero_bloque_libre(cantidad_bloques);
         fcb_archivo->direct_pointer = atoi(nuevo_bloque_directo);
         setear_bit(fcb_archivo->direct_pointer);
+        
         fcb_archivo->size += MIN(bytes_por_asignar, tamanio_bloque);
         log_info(logger, "Tamaño del fcb %i bytes por asignar %i bloques por asignar %i", fcb_archivo->size, bytes_por_asignar, bloques_por_agregar);
     }
     else if (fcb_archivo->direct_pointer > 0 && fcb_archivo->indirect_pointer < 0)
     { // TENGA UN SOLO BLOQUE
+        
         char *nuevo_bloque_indirecto = obtener_puntero_bloque_libre(cantidad_bloques);
         fcb_archivo->indirect_pointer = atoi(nuevo_bloque_indirecto);
         setear_bit(fcb_archivo->indirect_pointer);
+        log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 1 - Bloque File System %i", fcb_archivo->name, fcb_archivo->indirect_pointer);
+        sleep(retardo);
         while (bloques_por_agregar > 0)
         {
             char *nuevo_bloque_datos = obtener_puntero_bloque_libre(cantidad_bloques);
@@ -90,7 +95,8 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
     {
         while (bloques_por_agregar > 0)
         {
-
+            log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 1 - Bloque File System %i", fcb_archivo->name, fcb_archivo->indirect_pointer);
+            sleep(retardo);
             char *nuevo_bloque_datos = obtener_puntero_bloque_libre(cantidad_bloques);
 
             setear_bit(atoi(nuevo_bloque_datos));
@@ -121,6 +127,8 @@ void remover_ultimo_bloque(t_fcb *fcb_archivo)
     {
         uint32_t bloque_indirecto = fcb_archivo->indirect_pointer;
         FILE *archivo_de_bloques = fopen(ruta_archivo_bloques, "r+");
+        log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 1 - Bloque File System %i", fcb_archivo->name, fcb_archivo->indirect_pointer);
+        sleep(retardo);
         fseek(archivo_de_bloques, (bloque_indirecto * tamanio_bloque) + ((cant_bloques_asignados - 1) * digitos_punteros), SEEK_SET);
         // log_info(logger, "Digitos punteros %i", digitos_punteros);
 
@@ -135,8 +143,8 @@ void remover_ultimo_bloque(t_fcb *fcb_archivo)
 
         char *puntero_vacio = completar_con_ceros(0, cantidad_bloques);
 
-        log_info(logger, "Punteros vacios contiene: %s", puntero_vacio);
         fseek(archivo_de_bloques, (bloque_indirecto * tamanio_bloque) + ((cant_bloques_asignados - 1) * digitos_punteros), SEEK_SET);
+        fwrite(puntero_vacio, sizeof(char)*digitos_punteros,1,archivo_de_bloques);
 
         fclose(archivo_de_bloques);
 
@@ -151,13 +159,15 @@ void achicar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
 
     int cantidad_bloques_asignados = division_redondeada_hacia_arriba(fcb_archivo->size, tamanio_bloque);
     int cant_bytes_teorica = cantidad_bloques_asignados * tamanio_bloque;
-    int bytes_bloque_incompleto = cant_bytes_teorica - fcb_archivo->size;
+    int bytes_bloque_incompleto = tamanio_bloque - (cant_bytes_teorica - fcb_archivo->size);
 
     // Me fijo si la cantidad de bytes que tengo que remover es menor a un bloque
     // Tengo que modificar el tamaño en el fcb unicamente
     if (bytes_bloque_incompleto > 0)
     {
-        fcb_archivo->size -= bytes_por_sacar;
+        fcb_archivo->size -= bytes_bloque_incompleto;
+        bytes_por_sacar -= bytes_bloque_incompleto;
+
         log_info(logger, "Los bytes del bloque incompleto son %i", bytes_bloque_incompleto);
         log_info(logger, "El tamaño del archivo es %i", fcb_archivo->size);
 
@@ -171,20 +181,17 @@ void achicar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
     while (bytes_por_sacar >= tamanio_bloque)
     {
         fcb_archivo->size -= tamanio_bloque;
-        bytes_por_sacar = -bytes_bloque_incompleto;
+        bytes_por_sacar -= tamanio_bloque;
+        log_info(logger, "Los bytes por sacar ahora son %i", bytes_por_sacar);
+        log_info(logger, "El nuevo tamanio del archivo ahora es %i", fcb_archivo->size);
+
+
         remover_ultimo_bloque(fcb_archivo);
     }
     if (bytes_por_sacar < tamanio_bloque && bytes_por_sacar > 0)
     {
         fcb_archivo->size -= bytes_por_sacar;
         log_info(logger, "El tamaño del archivo es %i", fcb_archivo->size);
-
-        // Me fijo si tengo que sacar un bloque -> si el tamaño del archivo quedo como un multiplo del tamano del
-        // bloque, tengo que sacarle el ultimo bloque
-        if ((fcb_archivo->size % tamanio_bloque) == 0)
-        {
-            remover_ultimo_bloque(fcb_archivo);
-        }
     }
 }
 

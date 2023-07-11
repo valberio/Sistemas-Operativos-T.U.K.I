@@ -16,6 +16,7 @@ t_log* logger;
 t_bitarray* bitarray;
 uint32_t cantidad_bloques;
 uint32_t tamanio_bloque;
+double retardo;
 char* ruta_superbloque;
 char* ruta_bitmap;
 char* ruta_archivo_bloques;
@@ -37,6 +38,7 @@ int main()
 	tamanio_bloque = config_get_double_value(superbloque_config, "BLOCK_SIZE");
 	cantidad_bloques = config_get_double_value(superbloque_config, "BLOCK_COUNT");
 
+	retardo = config_get_int_value(config, "RETARDO_ACCESO_BLOQUE") / 1000;
 
 	//tenemos tantos bits como bloques
 	//Bitmap
@@ -62,7 +64,7 @@ int main()
 	log_info(logger, "Filesystem recibió la conexión del kernel!");
 	}
 	
-	recibir_ordenes_kernel(conexion_filesystem_kernel);
+	//recibir_ordenes_kernel(conexion_filesystem_kernel);
 
 	/*if (cliente_filesystem_a_memoria)
 	{
@@ -141,10 +143,9 @@ void crear_estructura_fcb(char* ruta) //habria que llamarlo crear fcb
 	if (fcb->indirect_pointer == -1) {
 		return;
 	}
-	setear_bit(fcb->indirect_pointer);
-
 	//Actualizo los bloques que usa el fcb en el bitmap
 	setear_bit(fcb->direct_pointer);
+	setear_bit(fcb->indirect_pointer);
 	FILE* archivo_bloques = fopen("fs/bloques.dat", "rb+");
 	if (archivo_bloques == NULL) {
         printf("No se pudo abrir el archivo\n");
@@ -153,8 +154,10 @@ void crear_estructura_fcb(char* ruta) //habria que llamarlo crear fcb
 	int digitos_bloque = obtener_digitos_cant_bloque();
 
 	if (bytes_a_guardar > 0){
-		uint32_t bloques_necesarios = ceil(bytes_a_guardar / tamanio_bloque);
+		uint32_t bloques_necesarios = division_redondeada_hacia_arriba(bytes_a_guardar, tamanio_bloque);
 		//log_info(logger, "Los bloques necesarios son %i", bloques_necesarios);
+		log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 1 - Bloque File System %i", fcb->name, fcb->indirect_pointer);
+        sleep(retardo);
 		for (int i = 0; i < bloques_necesarios; i++)
 		{
 			char* index = obtener_puntero_bloque_libre(cantidad_bloques);

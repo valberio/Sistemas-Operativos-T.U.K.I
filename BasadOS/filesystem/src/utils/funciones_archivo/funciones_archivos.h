@@ -20,6 +20,7 @@ extern t_bitarray *bitarray;
 extern char *ruta_superbloque;
 extern char *ruta_bitmap;
 extern char *ruta_archivo_bloques;
+extern double retardo;
 
 void escribir_puntero_indirecto(t_fcb *, char *);
 void truncar_archivo(char *, int);

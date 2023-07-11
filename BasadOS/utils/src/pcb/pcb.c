@@ -83,17 +83,15 @@ t_list *string_a_lista(char *str) // Testeada y funcionando
 
 void liberar_pcb(t_pcb *pcb)
 {
-    list_destroy_and_destroy_elements(pcb->contexto_de_ejecucion->instrucciones, free);
+    liberar_contexto_de_ejecucion(pcb->contexto_de_ejecucion);
     list_destroy_and_destroy_elements(pcb->tabla_segmentos, free);
     list_destroy_and_destroy_elements(pcb->tabla_archivos_abiertos, free);
-    free(pcb->contexto_de_ejecucion->registros);
     free(pcb);
 }
 
 void liberar_contexto_de_ejecucion(t_contexto_de_ejecucion *contexto_de_ejecucion)
 {
-    list_clean(contexto_de_ejecucion->instrucciones);
-    list_destroy(contexto_de_ejecucion->instrucciones);
+    list_destroy_and_destroy_elements(contexto_de_ejecucion->instrucciones, free);
     free(contexto_de_ejecucion->registros);
     free(contexto_de_ejecucion);
 }

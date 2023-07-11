@@ -119,9 +119,7 @@ void *comunicacion_con_cpu(void *arg)
         t_paquete *paquete_respuesta = crear_paquete();
 
         char *registro;
-        char *direccion_logica;
         char* char_dir_fis;
-        int direccion_logica_int;
         int direccion_fisica;
 
         log_info(logger, "MEMORIA recibió una petición del CPU");
@@ -158,7 +156,7 @@ void *comunicacion_con_cpu(void *arg)
             direccion_fisica = atoi(char_dir_fis);
             registro = recibir_mensaje(conexion_cpu);
 
-            int tamanio_registro = tamanio_del_registro(contexto->registros);
+            int tamanio_registro = tamanio_del_registro(registro);
 
             log_info(logger, "Retardo el acceso a memoria %i segundos...", retardo_acceso_memoria);
             char* datos_en_registro = malloc(tamanio_registro * sizeof(char));

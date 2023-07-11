@@ -8,7 +8,7 @@ int main(void)
 	t_log *logger = iniciar_logger("log_cpu.log", "LOG_CPU");
 	t_config *config = iniciar_config("configs/cpu.config");
 	int retardo_instruccion = config_get_int_value(config, "RETARDO_INSTRUCCION") / 1000;
-	int tam_max_segmento = config_get_string_value(config, "TAM_MAX_SEGMENTO");
+	int tam_max_segmento = config_get_int_value(config, "TAM_MAX_SEGMENTO");
 
 	// CPU como cliente para memoria
 	int conexion_memoria_cpu = conectarse_a_memoria(config, logger);
@@ -32,6 +32,8 @@ int main(void)
 			if (contexto == NULL)
 			{
 				log_info(logger, "No recibi mas procesos del kernel");
+				liberar_contexto_de_ejecucion(contexto);
+				eliminar_paquete(paquete);
 				close(conexion_cpu_kernel);
 				conexion_cpu_kernel = 0;
 			}

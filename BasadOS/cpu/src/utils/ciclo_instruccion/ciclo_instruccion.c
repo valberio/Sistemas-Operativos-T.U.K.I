@@ -12,7 +12,8 @@ char** decode(char* instruccion, int retardo_instruccion, int tam_max_segmento, 
 	//Todavia no hay que hacer traducciones de memoria, asi que retorna
 	//el string de la instruccion en un array de chars, para facilitar
 	//el acceso a los datos en execute()
-	char ** array = string_split(instruccion, " ");
+	char* separador = " ";
+	char ** array = string_split(instruccion, separador);
 
 	if (strcmp(array[0], "SET") == 0)
 	{

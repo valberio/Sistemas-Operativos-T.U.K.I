@@ -38,6 +38,8 @@ int main(int argc, char* argv[]) {
         log_info(logger_consola, "Recibi la finalizacion de kernel\n");
     }
 
+    log_destroy(logger_consola);
+    eliminar_paquete(paquete);
     return 0;
 }
 

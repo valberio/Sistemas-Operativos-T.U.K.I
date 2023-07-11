@@ -53,7 +53,9 @@ int main()
 	//Recorro el directorio de FCBs y creo estructuras
 	recorrer_directorio_fcb(ruta_bitmap);
 	truncar_archivo("Notas1erParcialK9999", 192);
-	
+	//truncar_archivo("Notas1erParcialK9999", 256);
+	truncar_archivo("Notas1erParcialK9999", 512);
+	truncar_archivo("Notas1erParcialK9999", 0);
 	
 	// Conecto el filesystem como servidor del kernel
 	char* puerto_a_kernel = config_get_string_value(config, "PUERTO_ESCUCHA");

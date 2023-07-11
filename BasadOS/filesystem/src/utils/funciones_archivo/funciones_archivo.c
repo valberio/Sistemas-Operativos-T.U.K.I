@@ -78,6 +78,7 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
         char *nuevo_bloque_indirecto = obtener_puntero_bloque_libre(cantidad_bloques);
         fcb_archivo->indirect_pointer = atoi(nuevo_bloque_indirecto);
         setear_bit(fcb_archivo->indirect_pointer);
+
         log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 1 - Bloque File System %i", fcb_archivo->name, fcb_archivo->indirect_pointer);
         sleep(retardo);
         while (bloques_por_agregar > 0)
@@ -201,7 +202,7 @@ void escribir_puntero_indirecto(t_fcb *fcb, char *puntero_a_escribir)
 
     uint32_t puntero_indirecto = fcb->indirect_pointer;
     int digitos_punteros = obtener_digitos_cant_bloque();
-    FILE *archivo_de_bloques = fopen(ruta_archivo_bloques, "w+");
+    FILE *archivo_de_bloques = fopen(ruta_archivo_bloques, "r+");
 
     fseek(archivo_de_bloques, (puntero_indirecto * tamanio_bloque) + (cant_bloques_archivo * digitos_punteros), SEEK_SET);
     fwrite(puntero_a_escribir, digitos_punteros * sizeof(char), 1, archivo_de_bloques);

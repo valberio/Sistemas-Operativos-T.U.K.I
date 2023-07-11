@@ -114,34 +114,33 @@ void remover_ultimo_bloque(t_fcb *fcb_archivo)
     {
         log_info(logger, "Liberé el bloque directo %i", fcb_archivo->direct_pointer);
         limpiar_bit(fcb_archivo->direct_pointer);
-        
+
         fcb_archivo->direct_pointer = -1;
     }
-    else{
+    else
+    {
         uint32_t bloque_indirecto = fcb_archivo->indirect_pointer;
-        FILE* archivo_de_bloques = fopen(ruta_archivo_bloques, "rw");
-        fseek(archivo_de_bloques, (bloque_indirecto * tamanio_bloque) + ((cant_bloques_asignados - 1)* digitos_punteros), SEEK_SET);
-        //log_info(logger, "Digitos punteros %i", digitos_punteros);
+        FILE *archivo_de_bloques = fopen(ruta_archivo_bloques, "r+");
+        fseek(archivo_de_bloques, (bloque_indirecto * tamanio_bloque) + ((cant_bloques_asignados - 1) * digitos_punteros), SEEK_SET);
+        // log_info(logger, "Digitos punteros %i", digitos_punteros);
 
-        char* ultimo_puntero = malloc(digitos_punteros * sizeof(char));
+        char *ultimo_puntero = malloc(digitos_punteros * sizeof(char));
         fread(ultimo_puntero, digitos_punteros * sizeof(char), 1, archivo_de_bloques);
         ultimo_puntero[digitos_punteros] = '\0';
 
         uint32_t ultimo_puntero_int = atoi(ultimo_puntero);
         log_info(logger, "En el bloque de punteros indirectos %i, voy a borrar el puntero a %s", bloque_indirecto, ultimo_puntero);
         limpiar_bit(ultimo_puntero_int);
+        free(ultimo_puntero);
 
-        //char* puntero_vacio = completar_con_ceros(0, cantidad_bloques);
-        char* puntero_vacio = "PEDO";
+        char *puntero_vacio = completar_con_ceros(0, cantidad_bloques);
+
         log_info(logger, "Punteros vacios contiene: %s", puntero_vacio);
-        fseek(archivo_de_bloques,(bloque_indirecto * tamanio_bloque), SEEK_SET);
-        fwrite(puntero_vacio, sizeof(char),digitos_punteros, archivo_de_bloques);
-        
-        fclose(archivo_de_bloques);
-        
-        leer_bloque_completo(bloque_indirecto, tamanio_bloque);
+        fseek(archivo_de_bloques, (bloque_indirecto * tamanio_bloque) + ((cant_bloques_asignados - 1) * digitos_punteros), SEEK_SET);
 
-        
+        fclose(archivo_de_bloques);
+
+        leer_bloque_completo(bloque_indirecto, tamanio_bloque);
     }
 }
 

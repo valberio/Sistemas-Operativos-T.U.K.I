@@ -30,6 +30,7 @@ void *comunicacion_con_kernel(void *arg)
             paquete_inicializar_proceso->codigo_operacion = 0;
             paquete_inicializar_proceso->buffer = serializar_contexto(contexto);
             enviar_paquete(paquete_inicializar_proceso, conexion_kernel);
+            free(paquete_inicializar_proceso);
             break;
         case FINALIZAR_PROCESO:
             finalizar_proceso(contexto);
@@ -91,6 +92,8 @@ void *comunicacion_con_kernel(void *arg)
         default:
             break;
         }
+        liberar_contexto_de_ejecucion(contexto);
+        eliminar_paquete(paquete);
     }
     return NULL;
 }

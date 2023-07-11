@@ -30,8 +30,7 @@ int main(int argc, char* argv[]) {
     config_destroy(config);
 
     //Acá espero la respuesta de kernel
-    t_paquete* paquete = crear_paquete();
-    paquete = recibir_paquete(conexion_con_kernel);
+    t_paquete* paquete = recibir_paquete(conexion_con_kernel);
 
     if (paquete->codigo_operacion)
     {

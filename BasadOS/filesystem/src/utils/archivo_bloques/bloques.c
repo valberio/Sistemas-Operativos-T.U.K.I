@@ -6,7 +6,7 @@ void crear_archivo_bloques(double cant_bloques, double tamano_bloque, char* ruta
     if(archivo_bloques == NULL)
     {
         log_info(logger, "Error abriendo el archivo %s", ruta_archivo_bloques);
-        return NULL;
+        return;
     }
     
     for (int i = 0; i < cant_bloques; i++)
@@ -61,7 +61,7 @@ char* leer_bloque_desde_hasta(uint32_t nro_bloque, uint32_t desde, uint32_t hast
 {
     FILE* archivo_bloques = fopen(ruta_archivo_bloque, "r");
 
-    int desplazamiento = nro_bloque * tamano_bloque + desde;
+    //int desplazamiento = nro_bloque * tamano_bloque + desde;
     int bytes_a_leer = hasta - desde;
     char* datos = malloc((bytes_a_leer + 1) * sizeof(char));
 
@@ -69,6 +69,8 @@ char* leer_bloque_desde_hasta(uint32_t nro_bloque, uint32_t desde, uint32_t hast
     fread(datos, sizeof(char), bytes_a_leer, archivo_bloques);
     datos[bytes_a_leer] = '\0';
     log_info(logger, "Lei %s", datos);
+
+    return datos;
 }
 
 char* obtener_puntero_bloque_libre(int cant_bloques, t_bitarray* bitarray)
@@ -83,7 +85,7 @@ char* obtener_puntero_bloque_libre(int cant_bloques, t_bitarray* bitarray)
     return puntero;
 }
 
-char* completar_con_ceros(index, cant_bloques)
+char* completar_con_ceros(int index, int cant_bloques)
 {
     char cadena_cant_bloques[20];
     sprintf(cadena_cant_bloques, "%d", cant_bloques);

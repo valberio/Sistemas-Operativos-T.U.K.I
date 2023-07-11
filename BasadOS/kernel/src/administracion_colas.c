@@ -27,9 +27,9 @@ void administrar_procesos_de_exit(int conexion_kernel_memoria)
 		paquete->buffer = serializar_contexto(proceso_a_finalizar->contexto_de_ejecucion);
 
 		enviar_paquete(paquete_a_memoria, conexion_kernel_memoria);
-
+		eliminar_paquete(paquete_a_memoria);
 		enviar_paquete(paquete, proceso_a_finalizar->socket_consola);
-
+		eliminar_paquete(paquete);
 		sem_post(&semaforo_multiprogramacion);
 	}
 }
@@ -202,9 +202,12 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 
 				// Envio contexto
 				enviar_paquete(paquete_a_memoria, cliente_memoria);
+				eliminar_paquete(paquete_a_memoria);
 				// Envio parametros
 				enviar_mensaje(id, cliente_memoria);
+				free(id);
 				enviar_mensaje(tamanio, cliente_memoria);
+				free(tamanio);
 				log_info(logger, "Envie parametros");
 
 				// Espero el OK de memoria
@@ -217,6 +220,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				{
 				case SEGMENTO_CREADO:
 					t_contexto_de_ejecucion *contexto_respuesta = deserializar_contexto_de_ejecucion(paquete_respuesta->buffer);
+					eliminar_paquete(paquete_respuesta);
 					proceso_en_ejecucion->contexto_de_ejecucion = contexto_respuesta;
 					sem_wait(&mutex_cola_ready);
 					queue_push(cola_ready, proceso_en_ejecucion);
@@ -230,6 +234,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 
 					paquete_respuesta = recibir_paquete(cliente_memoria);
 					t_list *segmentos_actualizados = deserializar_lista_de_segmentos(paquete_respuesta->buffer);
+					eliminar_paquete(paquete_respuesta);
 					actualizar_tablas_de_segmentos(segmentos_actualizados, contexto_actualizado->tabla_segmentos);
 					paquete_a_memoria->buffer = serializar_contexto(contexto_actualizado);
 
@@ -240,6 +245,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 
 					paquete_respuesta = recibir_paquete(cliente_memoria);
 					contexto_respuesta = deserializar_contexto_de_ejecucion(paquete_respuesta->buffer);
+					eliminar_paquete(paquete_respuesta);
 					proceso_en_ejecucion->contexto_de_ejecucion = contexto_respuesta;
 
 					sem_wait(&mutex_cola_ready);
@@ -248,6 +254,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 					sem_post(&semaforo_procesos_en_ready);
 					break;
 				case OUT_OF_MEMORY:
+					eliminar_paquete(paquete_respuesta);
 					sem_wait(&mutex_cola_exit);
 					queue_push(cola_exit, proceso_en_ejecucion);
 					sem_post(&mutex_cola_exit);
@@ -348,6 +355,8 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 			default:
 				break;
 			}
+			eliminar_paquete(paquete);
+
 		}
 	}
 }

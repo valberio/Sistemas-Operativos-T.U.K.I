@@ -28,10 +28,11 @@ void crear_proceso(char *codigo_recibido, int socket_consola, double estimado_in
 	paquete->buffer = serializar_contexto(pcb->contexto_de_ejecucion);
 
 	enviar_paquete(paquete,conexion_kernel_memoria);
-
+	eliminar_paquete(paquete);
 	paquete = recibir_paquete(conexion_kernel_memoria);
 	t_contexto_de_ejecucion *contexto_actualizado = malloc(sizeof(t_contexto_de_ejecucion));
 	contexto_actualizado = deserializar_contexto_de_ejecucion(paquete->buffer);
+	eliminar_paquete(paquete);
 	pcb->contexto_de_ejecucion  = contexto_actualizado;
 
 	

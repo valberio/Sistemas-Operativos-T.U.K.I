@@ -11,25 +11,29 @@ void administrar_procesos_de_exit(int conexion_kernel_memoria)
 	while (1)
 	{
 		sem_wait(&semaforo_procesos_en_exit);
-		t_pcb *proceso_a_finalizar;
-		t_paquete *paquete = crear_paquete();
-		crear_buffer(paquete);
-		paquete->codigo_operacion = 1;
-
+		t_pcb* proceso_a_finalizar;
+		t_paquete* paquete = crear_paquete();
+		
 		sem_wait(&mutex_cola_exit);
 		proceso_a_finalizar = queue_pop(cola_exit);
 		sem_post(&mutex_cola_exit);
 
 		// ACA VA TU LOGICA DE MATARLOS
 
-		t_paquete *paquete_a_memoria = crear_paquete();
+		t_paquete* paquete_a_memoria = crear_paquete();
+		paquete_a_memoria->codigo_operacion = FINALIZAR_PROCESO;
+		paquete_a_memoria->buffer = serializar_contexto(proceso_a_finalizar->contexto_de_ejecucion);
+		enviar_paquete(paquete_a_memoria, conexion_kernel_memoria);
+		eliminar_paquete(paquete_a_memoria);
+		
 		paquete->codigo_operacion = FINALIZAR_PROCESO;
 		paquete->buffer = serializar_contexto(proceso_a_finalizar->contexto_de_ejecucion);
 
-		enviar_paquete(paquete_a_memoria, conexion_kernel_memoria);
-		eliminar_paquete(paquete_a_memoria);
 		enviar_paquete(paquete, proceso_a_finalizar->socket_consola);
 		eliminar_paquete(paquete);
+
+		list_clean_and_destroy_elements(proceso_a_finalizar->tabla_segmentos, free);
+		free(proceso_a_finalizar);
 		sem_post(&semaforo_multiprogramacion);
 	}
 }
@@ -297,12 +301,15 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 
 			case ABRIR_ARCHIVO:
 				// ENVIO EL TIPO DE OPERACION AL FS
+
 				parametros_retorno = recibir_mensaje(cliente_cpu);
 				int buscar_archivo = buscar_archivo_en_tabla_global(parametros_retorno);
+
 				// ACA CREO LA ESTRUCTURA DEL ARCHIVO PARA LA TABLA DEL PROCESO
 				Archivo_de_proceso *archivo = crear_archivo_para_tabla_proceso(parametros_retorno);
 				list_add(proceso_en_ejecucion->tabla_archivos_abiertos, archivo);
 				log_info(logger, "PID: %i - Abrir Archivo: %s", proceso_en_ejecucion->pid, parametros_retorno);
+
 				if (buscar_archivo == 0)
 				{ // caso de que el archivo no estuviese abierto
 					// Creo la estructura del archivo PARA LA TABLA GLOBAL
@@ -312,8 +319,11 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 					t_paquete *paquete = crear_paquete();
 					paquete->codigo_operacion = ABRIR_ARCHIVO;
 					enviar_paquete(paquete, cliente_filesystem);
+					eliminar_paquete(paquete);
 					// ENVIO EL NOMBRE DEL ARCHIVO REQUERIDO
 					enviar_mensaje(parametros_retorno, cliente_filesystem);
+					//Espero la respuesta de FS
+					recibir_mensaje(cliente_filesystem);
 					enviar_mensaje("0", cliente_cpu);
 				}
 				else
@@ -334,7 +344,8 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 
 			case ACTUALIZAR_PUNTERO:
 				parametros_retorno = recibir_mensaje(cliente_cpu);
-				uint32_t valor_puntero = atoi(recibir_mensaje(cliente_cpu));
+				char *puntero_seek = recibir_mensaje(cliente_cpu);
+				uint32_t valor_puntero = strtoul(puntero_seek, NULL, 10);
 				actualizar_puntero(proceso_en_ejecucion, parametros_retorno, valor_puntero);
 				break;
 
@@ -384,7 +395,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				pthread_create(&hilo_lector_de_archivos, NULL, solicitar_lectura, (void *)&parametros_hilo_kernel_filesystem);
 				pthread_detach(hilo_lector_de_archivos);
 				ejecucion = 0;
-			
+
 			case PETICION_ESCRITURA:
 				char *nombre = recibir_mensaje(cliente_cpu);
 				char *direccion_fisica = recibir_mensaje(cliente_cpu);
@@ -416,17 +427,19 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 			}
 			eliminar_paquete(paquete);
 		}
+		
 	}
+	
 }
 
-void* solicitar_escritura(void *arg)
+void *solicitar_escritura(void *arg)
 {
 	Parametros_de_hilo *args = (Parametros_de_hilo *)arg;
 	int cliente_filesystem = args->conexion;
 	char *nombre_archivo = args->mensaje;
 	char *cantidad_bytes = args->valor;
-	char* direccion_fisica = args->direccion_fisica;
-	char* puntero = args->puntero;
+	char *direccion_fisica = args->direccion_fisica;
+	char *puntero = args->puntero;
 	int pid = args->pid;
 	t_paquete *paquete = crear_paquete();
 	paquete->codigo_operacion = PETICION_LECTURA;
@@ -463,14 +476,14 @@ void* solicitar_escritura(void *arg)
 	return NULL;
 }
 
-void* solicitar_lectura(void *arg)
+void *solicitar_lectura(void *arg)
 {
 	Parametros_de_hilo *args = (Parametros_de_hilo *)arg;
 	int cliente_filesystem = args->conexion;
 	char *nombre_archivo = args->mensaje;
 	char *cantidad_bytes = args->valor;
-	char* direccion_fisica = args->direccion_fisica;
-	char* puntero = args->puntero;
+	char *direccion_fisica = args->direccion_fisica;
+	char *puntero = args->puntero;
 	int pid = args->pid;
 	t_paquete *paquete = crear_paquete();
 	paquete->codigo_operacion = PETICION_LECTURA;
@@ -481,6 +494,7 @@ void* solicitar_lectura(void *arg)
 	enviar_mensaje(direccion_fisica, cliente_filesystem);
 	enviar_mensaje(nombre_archivo, cliente_filesystem);
 	char *respuesta = recibir_mensaje(cliente_filesystem);
+	log_info(logger, "Filesystem respondió a mi petición de lectura %s", respuesta);
 	if (strcmp(respuesta, "OK") != 0)
 	{
 		log_info(logger, "Fallo al leer el Archivo %s", nombre_archivo);
@@ -505,7 +519,6 @@ void* solicitar_lectura(void *arg)
 	sem_post(&semaforo_procesos_en_ready);
 	sem_post(&semaforo_peticiones_filesystem);
 	return NULL;
-
 }
 
 void *solicitar_truncamiento(void *arg)
@@ -553,7 +566,7 @@ void *solicitar_truncamiento(void *arg)
 Archivo *crear_archivo(char *nombre_archivo)
 {
 	Archivo *archivo = malloc(sizeof(Archivo));
-	archivo->nombre_archivo = malloc(sizeof(nombre_archivo));
+	archivo->nombre_archivo = malloc(strlen(nombre_archivo) + 1);
 	strcpy(archivo->nombre_archivo, nombre_archivo);
 	archivo->procesos_bloqueados = queue_create();
 	return archivo;
@@ -562,7 +575,7 @@ Archivo *crear_archivo(char *nombre_archivo)
 Archivo_de_proceso *crear_archivo_para_tabla_proceso(char *nombre_archivo)
 {
 	Archivo_de_proceso *archivo = malloc(sizeof(Archivo_de_proceso));
-	archivo->nombre = malloc(sizeof(nombre_archivo));
+	archivo->nombre = malloc(strlen(nombre_archivo) + 1);
 	strcpy(archivo->nombre, nombre_archivo);
 	archivo->puntero = 0;
 	return archivo;
@@ -593,7 +606,7 @@ void aniadir_a_bloqueados(t_pcb *proceso, char *nombre_archivo)
 {
 	bool existe_el_archivo(void *elemento)
 	{
-		Archivo *archivo_en_tabla;
+		Archivo *archivo_en_tabla = malloc(sizeof(Archivo));
 		archivo_en_tabla = elemento;
 
 		return strcmp(archivo_en_tabla->nombre_archivo, nombre_archivo) == 0;
@@ -608,12 +621,15 @@ void gestionar_cierre_archivo(char *nombre_archivo)
 {
 	bool existe_el_archivo(void *elemento)
 	{
-		Archivo *archivo_en_tabla;
-		archivo_en_tabla = elemento;
-
+		//Archivo *archivo_en_tabla = malloc(sizeof(Archivo));
+		//archivo_en_tabla = elemento;
+		Archivo* archivo_en_tabla = (Archivo*) elemento;
 		return strcmp(archivo_en_tabla->nombre_archivo, nombre_archivo) == 0;
+		//free(archivo_en_tabla);
 	}
-	Archivo *archivo = list_find(lista_archivos_abiertos, existe_el_archivo);
+	Archivo *archivo = malloc(sizeof(Archivo));
+	archivo->nombre_archivo = malloc(strlen(nombre_archivo) + 1);
+	archivo = list_find(lista_archivos_abiertos, existe_el_archivo);
 	if (queue_size(archivo->procesos_bloqueados) == 0)
 	{
 		list_remove_by_condition(lista_archivos_abiertos, existe_el_archivo);
@@ -635,12 +651,14 @@ void borrar_de_tabla_de_archivos(t_pcb *proceso, char *nombre_archivo)
 {
 	bool existe_el_archivo(void *elemento)
 	{
-		Archivo_de_proceso *archivo_en_tabla;
+		Archivo_de_proceso *archivo_en_tabla = malloc(sizeof(Archivo_de_proceso));
 		archivo_en_tabla = elemento;
 
 		return strcmp(archivo_en_tabla->nombre, nombre_archivo) == 0;
 	}
-	Archivo_de_proceso *archivo = list_find(proceso->tabla_archivos_abiertos, existe_el_archivo);
+	Archivo_de_proceso *archivo = malloc(sizeof(Archivo_de_proceso));
+	archivo->nombre = malloc(strlen(nombre_archivo) + 1);
+	archivo = list_find(proceso->tabla_archivos_abiertos, existe_el_archivo);
 	list_remove_by_condition(proceso->tabla_archivos_abiertos, existe_el_archivo);
 	free(archivo->nombre);
 	free(archivo);
@@ -650,13 +668,20 @@ void actualizar_puntero(t_pcb *proceso, char *nombre_archivo, uint32_t valor_pun
 {
 	bool existe_el_archivo(void *elemento)
 	{
-		Archivo_de_proceso *archivo_en_tabla;
+		Archivo_de_proceso *archivo_en_tabla = malloc(sizeof(Archivo_de_proceso));
 		archivo_en_tabla = elemento;
 
 		return strcmp(archivo_en_tabla->nombre, nombre_archivo) == 0;
 	}
-	Archivo_de_proceso *archivo = list_find(proceso->tabla_archivos_abiertos, existe_el_archivo);
-	archivo->puntero = valor_puntero;
+	Archivo_de_proceso *archivo = malloc(sizeof(Archivo_de_proceso));
+	archivo->nombre = malloc((strlen(nombre_archivo) + 1) * sizeof(char));
+	archivo = list_find(proceso->tabla_archivos_abiertos, existe_el_archivo);
+	if (archivo == NULL)
+	{
+		log_info(logger, "El archivo no existe");
+		return;
+	}
+	archivo->puntero = valor_puntero; 
 	log_info(logger, "PID: %i - Actualizar puntero Archivo: %s - Puntero %i", proceso->pid, archivo->nombre, archivo->puntero);
 }
 
@@ -664,7 +689,7 @@ uint32_t buscar_puntero_de_archivo(t_pcb *proceso, char *nombre_archivo)
 {
 	bool existe_el_archivo(void *elemento)
 	{
-		Archivo_de_proceso *archivo_en_tabla;
+		Archivo_de_proceso *archivo_en_tabla = malloc(sizeof(Archivo_de_proceso));
 		archivo_en_tabla = elemento;
 
 		return strcmp(archivo_en_tabla->nombre, nombre_archivo) == 0;

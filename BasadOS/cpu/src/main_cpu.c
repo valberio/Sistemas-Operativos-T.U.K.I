@@ -62,13 +62,14 @@ int main(void)
 						log_info(logger, "Desalojé el proceso");
 
 						eliminar_paquete(paquete);
-						liberar_contexto_de_ejecucion(contexto);
+						
 						break;
 					case 0:
 						break;
 					}
 					free(instruccion_array);
 				}
+				liberar_contexto_de_ejecucion(contexto);
 			}
 		}
 		log_destroy(logger);

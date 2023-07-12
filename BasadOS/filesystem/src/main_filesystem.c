@@ -52,13 +52,7 @@ int main()
 
 	//Recorro el directorio de FCBs y creo estructuras
 	recorrer_directorio_fcb(ruta_bitmap);
-	escribir_archivo("Notas1erParcialK9999", "UWUUWU", 127, 6);
-	char* datos = leer_archivo("Notas1erParcialK9999", 127, 6);
-	datos[6] = '\0';
-	log_info(logger, "Datos leidos %s", datos);
-	free(datos);
 
-	//truncar_archivo("Notas1erParcialK9999", 145);
 	// Conecto el filesystem como servidor del kernel
 	char* puerto_a_kernel = config_get_string_value(config, "PUERTO_ESCUCHA");
 	int servidor_filesystem = iniciar_servidor(logger, puerto_a_kernel);
@@ -68,22 +62,16 @@ int main()
 	log_info(logger, "Filesystem recibió la conexión del kernel!");
 	}
 	
-	//recibir_ordenes_kernel(conexion_filesystem_kernel,cliente_filesystem_a_memoria);
+	recibir_ordenes_kernel(conexion_filesystem_kernel,cliente_filesystem_a_memoria);
 
-	/*if (cliente_filesystem_a_memoria)
-	{
-		log_info(logger, "Filesystem se conectó a memoria!");
-		t_contexto_de_ejecucion *contexto = malloc(sizeof(t_contexto_de_ejecucion));
-		contexto = recibir_contexto_de_ejecucion(cliente_filesystem_a_memoria);
-		printf("Recibi instruccion %s, %s\n", list_get(contexto->instrucciones, 0), list_get(contexto->instrucciones, 1));
-	}*/
 	bitarray_destroy(bitarray);
 }
 
 
 
 void recibir_ordenes_kernel(int conexion_filesystem_kernel, int cliente_filesystem_a_memoria){
-	while(conexion_filesystem_kernel){
+	
+	while(conexion_filesystem_kernel >= 0){
 		t_paquete* operacion = recibir_contexto_de_ejecucion(conexion_filesystem_kernel);
 		char* nombre_archivo;
 		char* puntero;
@@ -93,15 +81,18 @@ void recibir_ordenes_kernel(int conexion_filesystem_kernel, int cliente_filesyst
 		int puntero_int;
     	switch(operacion->codigo_operacion){
 			case ABRIR_ARCHIVO:
+				nombre_archivo = recibir_mensaje(conexion_filesystem_kernel);
 				abrir_o_crear_archivo(nombre_archivo, conexion_filesystem_kernel);
+				enviar_mensaje("Se abrió el archivo!", conexion_filesystem_kernel);
 				break;
 			case TRUNCAR_ARCHIVO:
 				char* nuevo_tamano = recibir_mensaje(conexion_filesystem_kernel);
 				int tamanio = atoi(nuevo_tamano);
 				truncar_archivo(nombre_archivo, tamanio);
 				enviar_mensaje("OK", conexion_filesystem_kernel);
-
+				break;
 			case PETICION_LECTURA: //F_READ
+				log_info(logger, "Voy a responder un F_READ");
 				puntero = recibir_mensaje(conexion_filesystem_kernel);
 				cantidad_bytes = recibir_mensaje(conexion_filesystem_kernel);
 				direccion_fisica = recibir_mensaje(conexion_filesystem_kernel);
@@ -110,12 +101,23 @@ void recibir_ordenes_kernel(int conexion_filesystem_kernel, int cliente_filesyst
 				puntero_int = atoi(puntero);
 
 				char* datos_de_archivo = leer_archivo(nombre_archivo, puntero_int, cantidad_bytes_int);
-				
+				log_info(logger, "Lei %s", datos_de_archivo);
+				//Le pido a memoria que guarde lo que leí
+				t_paquete* solicitud_a_memoria = crear_paquete();
+				solicitud_a_memoria->codigo_operacion = PETICION_ESCRITURA;
+				log_info(logger, "Pido a memoria que guarde %s", datos_de_archivo);
+
+				enviar_paquete(solicitud_a_memoria, cliente_filesystem_a_memoria);
 				enviar_mensaje(direccion_fisica, cliente_filesystem_a_memoria);
 				enviar_mensaje(datos_de_archivo, cliente_filesystem_a_memoria);
 
-				recibir_mensaje(cliente_filesystem_a_memoria);
+				//Espero la confirmación de memoria
+				char* respuesta_memoria = recibir_mensaje(cliente_filesystem_a_memoria);
+				log_info(logger, "Memoria me respondió: %s", respuesta_memoria);
+				enviar_mensaje("OK", conexion_filesystem_kernel);
+				break;
 			case PETICION_ESCRITURA:
+				log_info(logger, "Voy a responder una peticion de escritura");
 				puntero = recibir_mensaje(conexion_filesystem_kernel);
 				cantidad_bytes = recibir_mensaje(conexion_filesystem_kernel);
 				direccion_fisica = recibir_mensaje(conexion_filesystem_kernel);
@@ -126,10 +128,12 @@ void recibir_ordenes_kernel(int conexion_filesystem_kernel, int cliente_filesyst
 				enviar_mensaje(direccion_fisica, cliente_filesystem_a_memoria);
 				enviar_mensaje(cantidad_bytes, cliente_filesystem_a_memoria);
 
-				char *datos = recibir_mensaje(conexion_filesystem_kernel);
+				char *datos = recibir_mensaje(cliente_filesystem_a_memoria);
+				log_info(logger, "Memoria me envio %s", datos);
 
 				escribir_archivo(nombre_archivo, datos,puntero_int, cantidad_bytes_int);
-
+				enviar_mensaje("OK", conexion_filesystem_kernel);
+				break;
 			default:
 				break;
 		}

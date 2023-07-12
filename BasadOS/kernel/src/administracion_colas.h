@@ -4,6 +4,7 @@
 
 #include<pcb/pcb.h>
 #include<sockets/server_utils.h>
+#include<sockets/client_utils.h>
 #include<planificacion.h>
 #include<hilos_kernel.h>
 #include<commons/collections/queue.h>

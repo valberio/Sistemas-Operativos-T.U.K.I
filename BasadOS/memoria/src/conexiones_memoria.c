@@ -88,7 +88,6 @@ void *comunicacion_con_kernel(void *arg)
             enviar_paquete(paquete_a_kernel_eliminar, conexion_kernel);
             break;
 
-    
         default:
             break;
         }
@@ -121,7 +120,7 @@ void *comunicacion_con_cpu(void *arg)
         t_paquete *paquete_respuesta = crear_paquete();
 
         char *registro;
-        char* char_dir_fis;
+        char *char_dir_fis;
         int direccion_fisica;
 
         log_info(logger, "MEMORIA recibió una petición del CPU");
@@ -135,7 +134,6 @@ void *comunicacion_con_cpu(void *arg)
             char_dir_fis = recibir_mensaje(conexion_cpu);
             direccion_fisica = atoi(char_dir_fis);
 
-
             // Accedo a la memoria, copio los datos en una variable auxiliar
             sleep(retardo_acceso_memoria);
             log_info(logger, "Retardo el acceso a memoria %i segundos...", retardo_acceso_memoria);
@@ -144,7 +142,7 @@ void *comunicacion_con_cpu(void *arg)
 
             guardar_en_registros(registro, datos_leidos, contexto->registros);
 
-            log_info(logger, "Guarde en el registro %s", leer_registro(registro, contexto->registros)); //CORREGIR
+            log_info(logger, "Guarde en el registro %s", leer_registro(registro, contexto->registros));
 
             enviar_paquete(paquete_respuesta, conexion_cpu);
             log_info(logger, "MEMORIA respondió una petición de lectura del CPU");
@@ -161,7 +159,7 @@ void *comunicacion_con_cpu(void *arg)
             int tamanio_registro = tamanio_del_registro(registro);
 
             log_info(logger, "Retardo el acceso a memoria %i segundos...", retardo_acceso_memoria);
-            char* datos_en_registro = malloc(tamanio_registro * sizeof(char));
+            char *datos_en_registro = malloc(tamanio_registro * sizeof(char));
             datos_en_registro = leer_registro(registro, contexto->registros);
             log_info(logger, "MOV_OUT va a guardar %s", datos_en_registro);
 
@@ -181,6 +179,67 @@ void *comunicacion_con_cpu(void *arg)
         }
     }
     return NULL;
+}
+
+void *comunicacion_con_filesystem(void *arg)
+{
+    parametros_de_hilo *parametros = (parametros_de_hilo *)arg;
+
+    int conexion_filesystem = parametros->conexion;
+
+    if (conexion_filesystem == -1)
+    {
+        log_info(logger, "Error conectandose con el filesystem");
+        return NULL;
+    }
+    else
+    {
+        log_info(logger, "Se conectó el filesystem!");
+    }
+
+    while (conexion_filesystem >= 0)
+    {
+        t_paquete *peticion = recibir_paquete(conexion_filesystem);
+        t_contexto_de_ejecucion *contexto = deserializar_contexto_de_ejecucion(peticion->buffer);
+        t_paquete *paquete_respuesta = crear_paquete();
+
+        char* dir_fis;
+        int direccion_fisica;
+
+        switch (peticion->codigo_operacion)
+        {
+        case PETICION_ESCRITURA:
+            log_info(logger, "FILESYSTEM me pidió escribir");
+
+            dir_fis = recibir_mensaje(conexion_filesystem);
+            direccion_fisica = atoi(dir_fis);
+            char* datos_a_guardar = recibir_mensaje(conexion_filesystem);
+
+            memcpy(espacio_de_memoria + direccion_fisica, datos_a_guardar, sizeof(datos_a_guardar));
+
+            char *test = malloc(sizeof(datos_a_guardar));
+            memcpy(test, espacio_de_memoria + direccion_fisica, sizeof(datos_a_guardar));
+
+            log_info(logger, "Memoria guardo %s", test);
+
+            enviar_mensaje("OK!", conexion_filesystem);
+            break;
+
+        case PETICION_LECTURA: 
+            log_info(logger, "FILESYSTEM me pidió leer");
+
+            dir_fis = recibir_mensaje(conexion_filesystem);
+            direccion_fisica = atoi(dir_fis);
+            char* cant_b = recibir_mensaje(conexion_filesystem);
+            int cantidad_bytes = atoi(cant_b);
+
+            char* datos = malloc((cantidad_bytes + 1) * sizeof(char));
+            memcpy(datos, espacio_de_memoria, cantidad_bytes * sizeof(char));
+            log_info(logger, "Lei %s porque me lo pidio filesystem", datos);
+
+            enviar_mensaje(datos, conexion_filesystem);
+        }
+    }
 }
 
 // TODO: esto hay que cambiarlo a un enum

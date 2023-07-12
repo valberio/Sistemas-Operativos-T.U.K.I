@@ -50,7 +50,12 @@ int main(int argc, char *argv[])
 
     pthread_t hilo_comunicacion_kernel;
     pthread_create(&hilo_comunicacion_kernel, NULL, comunicacion_con_kernel, (void *)&parametros_kernel);
+    pthread_detach(hilo_comunicacion_kernel);
 
-    // pthread_join(hilo_comunicacion_cpu, NULL);
-    pthread_join(hilo_comunicacion_kernel, NULL);
+    parametros_de_hilo parametros_filesystem;
+    parametros_filesystem.conexion = conexion_filesystem;
+
+    pthread_t hilo_comunicacion_filesystem;
+    pthread_create(&hilo_comunicacion_filesystem, NULL, comunicacion_con_filesystem, (void *)&parametros_filesystem);
+    pthread_join(hilo_comunicacion_filesystem, NULL);
 }

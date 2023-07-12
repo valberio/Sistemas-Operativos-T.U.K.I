@@ -24,6 +24,7 @@ typedef struct
 
 void* comunicacion_con_cpu(void* );
 void* comunicacion_con_kernel(void*);
+void* comunicacion_con_filesystem(void* arg);
 op_code respuesta_a_kernel(Segmento*,t_contexto_de_ejecucion*);
 void finalizar_proceso(t_contexto_de_ejecucion* contexto_de_ejecucion);
 

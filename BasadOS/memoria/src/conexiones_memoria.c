@@ -37,9 +37,8 @@ void *comunicacion_con_kernel(void *arg)
             break;
         case CREAR_SEGMENTO:
             char *id = recibir_mensaje(conexion_kernel);
-            log_info(logger, "El id es: %s", id);
             char *tamanio = recibir_mensaje(conexion_kernel);
-            log_info(logger, "El tamanio es: %s", tamanio);
+            log_info(logger, "El id es: %s El tamanio es: %s", id, tamanio);
 
             int id_int = atoi(id);
             int tamanio_int = atoi(tamanio);
@@ -54,7 +53,7 @@ void *comunicacion_con_kernel(void *arg)
             for (int i = 0; i < list_size(contexto->tabla_segmentos); i++)
             {
                 Segmento *sas = list_get(contexto->tabla_segmentos, i);
-                log_info(logger, "SEGMENTO ID: %d, DESPLAZAMIENTO: %d", sas->id, sas->desplazamiento);
+                log_info(logger, "PROCESO %i SEGMENTO ID: %d, DESPLAZAMIENTO: %d", contexto->pid,sas->id, sas->desplazamiento);
             }
 
             enviar_paquete(paquete_a_kernel, conexion_kernel);
@@ -62,7 +61,7 @@ void *comunicacion_con_kernel(void *arg)
             if (segmento_nuevo->tamano == -1)
             {
                 recibir_mensaje(conexion_kernel);
-                log_info(logger, "SE pidio compactar");
+                log_info(logger, "Se pidió compactar");
                 t_list *segmentos_modificados = compactar();
                 paquete_a_kernel->codigo_operacion = 0;
                 paquete_a_kernel->buffer = serializar_lista_segmentos(segmentos_modificados);

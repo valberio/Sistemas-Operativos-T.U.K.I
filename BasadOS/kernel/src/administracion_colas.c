@@ -137,7 +137,6 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				// Actualizo el Proceso_en_ejecucion y lo mando a exit
 				// Mando un mensaje a la consola del proceso avisándole que completó la ejecución
 				// Mando un paquete con buffer vacio y código de operación EXIT
-
 				break;
 
 			case INTERRUPCION_BLOQUEANTE: // Caso I/O, tengo que recibir el tiempo que se bloquea el proceso
@@ -204,9 +203,10 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				char *tamanio = recibir_mensaje(cliente_cpu);
 				log_info(logger, "Recibi de CPU %s", tamanio);
 
-				// Envio contexto
+				// Envio contexto y código de operación
 				enviar_paquete(paquete_a_memoria, cliente_memoria);
 				eliminar_paquete(paquete_a_memoria);
+				
 				// Envio parametros
 				enviar_mensaje(id, cliente_memoria);
 				free(id);
@@ -230,12 +230,13 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 					queue_push(cola_ready, proceso_en_ejecucion);
 					sem_post(&mutex_cola_ready);
 					sem_post(&semaforo_procesos_en_ready);
+					log_info(logger, "PID: %i - Estado anterior: RUNNING - Estado actual: READY", proceso_en_ejecucion->pid);
 					break;
 				case COMPACTACION_NECESARIA:
 					// checkear operaciones entre filesystem y memoria
-
+					log_info(logger, "KERNEL solicita compactación");
 					enviar_mensaje("compactar", cliente_memoria);
-
+					sem_wait(&semaforo_para_compactacion);
 					paquete_respuesta = recibir_paquete(cliente_memoria);
 					t_list *segmentos_actualizados = deserializar_lista_de_segmentos(paquete_respuesta->buffer);
 					eliminar_paquete(paquete_respuesta);
@@ -249,6 +250,8 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 
 					paquete_respuesta = recibir_paquete(cliente_memoria);
 					contexto_respuesta = deserializar_contexto_de_ejecucion(paquete_respuesta->buffer);
+					//Termino compactacion
+					sem_post(&semaforo_para_compactacion);
 					eliminar_paquete(paquete_respuesta);
 					proceso_en_ejecucion->contexto_de_ejecucion = contexto_respuesta;
 
@@ -256,6 +259,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 					queue_push(cola_ready, proceso_en_ejecucion);
 					sem_post(&mutex_cola_ready);
 					sem_post(&semaforo_procesos_en_ready);
+					log_info(logger, "PID: %i - Estado anterior: RUNNING - Estado actual: READY", proceso_en_ejecucion->pid);
 					break;
 				case OUT_OF_MEMORY:
 					eliminar_paquete(paquete_respuesta);
@@ -391,6 +395,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				log_info(logger, "PID: %i - Estado Anterior: RUNNING - Estado Actual: BLOCKED", proceso_en_ejecucion->pid);
 				log_info(logger, "PID : %i - Bloqueado por: %s", proceso_en_ejecucion->pid, nombre_lectura);
 				sem_wait(&semaforo_peticiones_filesystem);
+				sem_wait(&semaforo_para_compactacion);
 				pthread_t hilo_lector_de_archivos;
 				pthread_create(&hilo_lector_de_archivos, NULL, solicitar_lectura, (void *)&parametros_hilo_kernel_filesystem);
 				pthread_detach(hilo_lector_de_archivos);
@@ -418,6 +423,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				log_info(logger, "PID: %i - Estado Anterior: RUNNING - Estado Actual: BLOCKED", proceso_en_ejecucion->pid);
 				log_info(logger, "PID : %i - Bloqueado por: %s", proceso_en_ejecucion->pid, nombre);
 				sem_wait(&semaforo_peticiones_filesystem);
+				sem_wait(&semaforo_para_compactacion);
 				pthread_t hilo_escritor_de_archivos;
 				pthread_create(&hilo_escritor_de_archivos, NULL, solicitar_escritura, (void *)&parametros_hilo_kernel_filesystem);
 				pthread_detach(hilo_escritor_de_archivos);
@@ -473,6 +479,7 @@ void *solicitar_escritura(void *arg)
 	sem_post(&mutex_cola_ready);
 	sem_post(&semaforo_procesos_en_ready);
 	sem_post(&semaforo_peticiones_filesystem);
+	sem_post(&semaforo_para_compactacion);
 	return NULL;
 }
 
@@ -518,6 +525,7 @@ void *solicitar_lectura(void *arg)
 	sem_post(&mutex_cola_ready);
 	sem_post(&semaforo_procesos_en_ready);
 	sem_post(&semaforo_peticiones_filesystem);
+	sem_post(&semaforo_para_compactacion);
 	return NULL;
 }
 

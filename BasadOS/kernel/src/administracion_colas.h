@@ -30,6 +30,7 @@ extern sem_t semaforo_procesos_en_ready;
 extern sem_t semaforo_multiprogramacion;
 extern sem_t semaforo_de_procesos_para_ejecutar;
 extern sem_t semaforo_peticiones_filesystem;
+extern sem_t semaforo_para_compactacion;
 extern sem_t mutex_cola_exit;
 extern sem_t mutex_cola_new;
 extern sem_t mutex_cola_ready;

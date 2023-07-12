@@ -169,6 +169,7 @@ void *comunicacion_con_cpu(void *arg)
 
             char *test = malloc(tamanio_registro);
             memcpy(test, espacio_de_memoria + direccion_fisica, tamanio_registro);
+            log_info(logger, "el tamanio del registro es: %i", tamanio_registro);
             log_info(logger, "Guarde en memoria %s", test);
 
             // Paso 3: informo a CPU que la escritura ocurrió exitosamente
@@ -202,8 +203,8 @@ void *comunicacion_con_filesystem(void *arg)
     while (conexion_filesystem >= 0)
     {
         t_paquete *peticion = recibir_paquete(conexion_filesystem);
-        // t_contexto_de_ejecucion *contexto = deserializar_contexto_de_ejecucion(peticion->buffer); ???
-        // t_paquete *paquete_respuesta = crear_paquete(); ????
+        // t_contexto_de_ejecucion *contexto = deserializar_contexto_de_ejecucion(peticion->buffer); 
+        // t_paquete *paquete_respuesta = crear_paquete(); 
 
         char *dir_fis;
         int direccion_fisica;
@@ -233,9 +234,10 @@ void *comunicacion_con_filesystem(void *arg)
             direccion_fisica = atoi(dir_fis);
             char *cant_b = recibir_mensaje(conexion_filesystem);
             int cantidad_bytes = atoi(cant_b);
+            log_info(logger, "La cantidad de bytes son: %i",cantidad_bytes);
 
             char *datos = malloc((cantidad_bytes + 1) * sizeof(char));
-            memcpy(datos, espacio_de_memoria, cantidad_bytes * sizeof(char));
+            memcpy(datos, espacio_de_memoria + direccion_fisica, cantidad_bytes * sizeof(char));
             log_info(logger, "Lei %s porque me lo pidio filesystem", datos);
 
             enviar_mensaje(datos, conexion_filesystem);

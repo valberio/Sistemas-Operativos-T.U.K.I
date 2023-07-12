@@ -24,7 +24,7 @@ extern t_log* logger;
 void recorrer_directorio_fcb();
 void recibir_ordenes_kernel(int conexion_filesystem_kernel, int cliente_filesystem_a_memoria);
 void crear_estructura_fcb(char *nombre_archivo);
-void* crear_archivo_fcb(char *nombre_archivo);
+void crear_archivo_fcb(char *nombre_archivo);
 void abrir_o_crear_archivo(char *nombre_archivo, int conexion_filesystem_cliente);
 int obtener_digitos_cant_bloque();
 

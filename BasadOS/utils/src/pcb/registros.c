@@ -44,7 +44,7 @@ enum Registros string_a_registro(char *registro)
     {
         return rRAX;
     }
-    if (strncmp(registro, "REX", 3) == 0)
+    if (strncmp(registro, "RBX", 3) == 0)
     {
         return rRBX;
     }

@@ -94,7 +94,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 		proceso_en_ejecucion->inicio_de_uso_de_cpu = clock(); // ACA SE INICIALIZA EL TIEMPO EN EJECUCION
 
 		// PLANIFICACION
-		log_info(logger, "EL ESTIMADO DE RAFAGA %f\n", proceso_en_ejecucion->estimado_rafaga);
+		//log_info(logger, "EL ESTIMADO DE RAFAGA %f\n", proceso_en_ejecucion->estimado_rafaga);
 		enviar_contexto_de_ejecucion(proceso_en_ejecucion->contexto_de_ejecucion, cliente_cpu);
 
 		int ejecucion = 1;
@@ -109,12 +109,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 			char *parametros_retorno;
 			t_paquete *paquete_respuesta;
 			log_info(logger, "PID:%i", proceso_en_ejecucion->pid);
-			for (int i = 0; i < list_size(contexto_actualizado->tabla_segmentos); i++)
-			{
-				Segmento *sas = list_get(contexto_actualizado->tabla_segmentos, i);
-				log_info(logger, "SEGMENTO ID: %d, DESPLAZAMIENTO: %d", sas->id, sas->desplazamiento);
-			}
-
+		
 			switch (paquete->codigo_operacion)
 			{
 
@@ -241,8 +236,8 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				case COMPACTACION_NECESARIA:
 					// checkear operaciones entre filesystem y memoria
 					log_info(logger, "KERNEL solicita compactación");
-					enviar_mensaje("compactar", cliente_memoria);
 					sem_wait(&semaforo_para_compactacion);
+					enviar_mensaje("compactar", cliente_memoria);
 					paquete_respuesta = recibir_paquete(cliente_memoria);
 					t_list *segmentos_actualizados = deserializar_lista_de_segmentos(paquete_respuesta->buffer);
 					eliminar_paquete(paquete_respuesta);
@@ -375,6 +370,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				sem_wait(&mutex_cola_blocked);
 				queue_push(cola_blocked, proceso_en_ejecucion);
 				sem_post(&mutex_cola_blocked);
+				log_info(logger, "PID: %i - Archivo: %s - Tamaño: %s", proceso_en_ejecucion->pid, parametros_retorno, nuevo_tamano);
 				log_info(logger, "PID: %i - Estado Anterior: RUNNING - Estado Actual: BLOCKED", proceso_en_ejecucion->pid);
 				log_info(logger, "PID : %i - Bloqueado por: %s", proceso_en_ejecucion->pid, parametros_retorno);
 				sem_wait(&semaforo_peticiones_filesystem);
@@ -411,7 +407,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				pthread_create(&hilo_lector_de_archivos, NULL, solicitar_lectura, (void *)&parametros_hilo_kernel_filesystem);
 				pthread_detach(hilo_lector_de_archivos);
 				ejecucion = 0;
-
+				break;
 			case PETICION_ESCRITURA:
 				char *nombre = recibir_mensaje(cliente_cpu);
 				char *direccion_fisica = recibir_mensaje(cliente_cpu);
@@ -439,6 +435,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				pthread_create(&hilo_escritor_de_archivos, NULL, solicitar_escritura, (void *)&parametros_hilo_kernel_filesystem);
 				pthread_detach(hilo_escritor_de_archivos);
 				ejecucion = 0;
+				break;
 			default:
 				break;
 			}
@@ -457,7 +454,7 @@ void *solicitar_escritura(void *arg)
 	char *puntero = args->puntero;
 	int pid = args->pid;
 	t_paquete *paquete = crear_paquete();
-	paquete->codigo_operacion = PETICION_LECTURA;
+	paquete->codigo_operacion = PETICION_ESCRITURA;
 	enviar_paquete(paquete, cliente_filesystem);
 	eliminar_paquete(paquete);
 	enviar_mensaje(puntero, cliente_filesystem);
@@ -486,6 +483,8 @@ void *solicitar_escritura(void *arg)
 	sem_wait(&mutex_cola_ready);
 	queue_push(cola_ready, proceso_a_recuperar);
 	sem_post(&mutex_cola_ready);
+
+	log_info(logger, "PID: %i - Estado Anterior: BLOCKED - Estado Actual: READY", proceso_a_recuperar->pid);
 	sem_post(&semaforo_procesos_en_ready);
 	sem_post(&semaforo_peticiones_filesystem);
 	sem_post(&semaforo_para_compactacion);
@@ -533,6 +532,8 @@ void *solicitar_lectura(void *arg)
 	queue_push(cola_ready, proceso_a_recuperar);
 	sem_post(&mutex_cola_ready);
 	sem_post(&semaforo_procesos_en_ready);
+	log_info(logger, "PID: %i - Estado Anterior: BLOCKED - Estado Actual: READY", proceso_a_recuperar->pid);
+
 	sem_post(&semaforo_peticiones_filesystem);
 	sem_post(&semaforo_para_compactacion);
 	return NULL;
@@ -576,6 +577,8 @@ void *solicitar_truncamiento(void *arg)
 	sem_post(&mutex_cola_ready);
 	sem_post(&semaforo_procesos_en_ready);
 	sem_post(&semaforo_peticiones_filesystem);
+	log_info(logger, "PID: %i - Estado Anterior: BLOCKED - Estado Actual: READY", proceso_a_recuperar->pid);
+
 
 	return NULL;
 }

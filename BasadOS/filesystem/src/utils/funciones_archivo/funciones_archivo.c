@@ -83,6 +83,7 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
         log_info(logger, "El bloque indirecto es %s", nuevo_bloque_indirecto);
 
         log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 1 - Bloque File System %i", fcb_archivo->name, fcb_archivo->indirect_pointer);
+        log_info(logger, "a mimir");
         sleep(retardo);
         while (bloques_por_agregar > 0)
         {
@@ -97,10 +98,12 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
     }
     else
     {
+        log_info(logger, "a mimir");
+        sleep(retardo);
         while (bloques_por_agregar > 0)
         {
             log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 1 - Bloque File System %i", fcb_archivo->name, fcb_archivo->indirect_pointer);
-            sleep(retardo);
+            
             char *nuevo_bloque_datos = obtener_puntero_bloque_libre(cantidad_bloques);
 
             setear_bit(atoi(nuevo_bloque_datos));
@@ -132,6 +135,7 @@ void remover_ultimo_bloque(t_fcb *fcb_archivo)
         uint32_t bloque_indirecto = fcb_archivo->indirect_pointer;
         FILE *archivo_de_bloques = fopen(ruta_archivo_bloques, "r+");
         log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 1 - Bloque File System %i", fcb_archivo->name, fcb_archivo->indirect_pointer);
+        log_info(logger, "a dormir");
         sleep(retardo);
         fseek(archivo_de_bloques, (bloque_indirecto * tamanio_bloque) + ((cant_bloques_asignados - 1) * digitos_punteros), SEEK_SET);
         // log_info(logger, "Digitos punteros %i", digitos_punteros);
@@ -282,8 +286,6 @@ char* leer_archivo(char* nombre, int puntero, int cantidad_de_bytes)
         bytes_leidos += bytes_a_leer_aca;
     }
     fclose(archivo_de_bloques);
-    free(fcb_archivo->name); 
-    free(fcb_archivo);
     datos[cantidad_de_bytes] = '\0';
     return datos;
 }
@@ -303,7 +305,7 @@ void escribir_archivo(char* nombre, char* datos_a_guardar, int puntero, int cant
     if(fcb_archivo == NULL){
         log_info(logger, "No se encontró el archivo");
         return ;
-    }
+    }                              
     int bloque_puntero = floor(puntero/tamanio_bloque);
     int desplazamiento_dentro_del_bloque = puntero - (bloque_puntero * tamanio_bloque);
     int bytes_por_copiar = cantidad_de_bytes;

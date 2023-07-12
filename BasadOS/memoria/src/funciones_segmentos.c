@@ -1,12 +1,10 @@
 #include "funciones_segmentos.h"
 
-
 Segmento *segmento_0;
 int huecos_libres = -1;
 int cantidad_maxima_segmentos_por_proceso;
 char *string_algoritmo;
 char algoritmo;
-
 
 Segmento *inicializar_segmento(int tamano)
 {
@@ -55,7 +53,7 @@ Segmento *crear_segmento(int id, int tamano)
     bool hay_hueco_libre(void *un_segmento)
     {
         Segmento *hueco_libre = un_segmento;
-        return (hueco_libre->tamano >= tamano) && (hueco_libre->id == huecos_libres);
+        return (hueco_libre->tamano >= tamano) && (hueco_libre->id < 0);
     }
 
     if (list_any_satisfy(lista_de_memoria, hay_hueco_libre))
@@ -78,11 +76,12 @@ Segmento *crear_segmento(int id, int tamano)
         nuevo_segmento->desplazamiento = hueco_libre->desplazamiento;
         hueco_libre->desplazamiento += tamano;
         hueco_libre->tamano -= tamano;
+
+        list_add_in_index(lista_de_memoria, obtener_segmento_por_id(hueco_libre->id, lista_de_memoria), nuevo_segmento);
         if (hueco_libre->tamano <= 0)
         {
-            free(hueco_libre);
+            list_remove_and_destroy_element(lista_de_memoria, obtener_segmento_por_id(hueco_libre->id, lista_de_memoria), free);
         }
-        list_add_in_index(lista_de_memoria, obtener_segmento_por_id(hueco_libre->id, lista_de_memoria ), nuevo_segmento);
         return nuevo_segmento;
     }
     if (obtener_espacio_libre_total() >= tamano)
@@ -97,16 +96,35 @@ Segmento *crear_segmento(int id, int tamano)
     }
 }
 
-void eliminar_segmento(int id)
+void eliminar_segmento(t_contexto_de_ejecucion *contexto_de_ejecucion, int id)
 {
     bool obtener_segmento(void *elemento)
     {
         Segmento *segmento = elemento;
         return segmento->id == id;
     }
-    Segmento *segmento = list_find(lista_de_memoria, obtener_segmento);
-    huecos_libres--;
-    segmento->id = huecos_libres;
+    log_info(logger, "El ID a eliminar es %i", id);
+    Segmento* segmento_a_eliminar = list_find(contexto_de_ejecucion->tabla_segmentos, obtener_segmento);
+    if (segmento_a_eliminar == NULL) {
+        log_info(logger, "El segmento no existe");
+        return;
+    }
+    int desplazamiento_segmento_a_eliminar = segmento_a_eliminar->desplazamiento; 
+    log_info(logger, "El desplazamiento del segmento a eliminar es %i", desplazamiento_segmento_a_eliminar);
+
+    bool buscar_segmento_en_lista_de_memoria(void *elemento) 
+    {
+
+        Segmento *segmento = elemento;
+        return segmento->desplazamiento == desplazamiento_segmento_a_eliminar;
+    }
+
+    Segmento *segmento_en_lista_de_memoria = list_find(lista_de_memoria, buscar_segmento_en_lista_de_memoria);
+    if (segmento_en_lista_de_memoria == NULL) {
+        log_info(logger, "El segmento no existe");
+        return;
+    }
+    segmento_en_lista_de_memoria->id = huecos_libres;
 
     unificacion_de_huecos_libres();
 }
@@ -117,6 +135,7 @@ void unificacion_de_huecos_libres()
     {
         Segmento *seg1 = list_get(lista_de_memoria, i);
         Segmento *seg2 = list_get(lista_de_memoria, i + 1);
+
         if ((seg1->id < 0) && (seg2->id < 0))
         {
             seg1->tamano += seg2->tamano;
@@ -130,7 +149,7 @@ Segmento *first_fit(int id, int tamano)
     bool hay_hueco_libre(void *un_segmento)
     {
         Segmento *hueco_libre = un_segmento;
-        return hueco_libre->tamano >= tamano && hueco_libre->id == huecos_libres;
+        return hueco_libre->tamano >= tamano && hueco_libre->id < 0;
     }
     Segmento *hueco_libre = malloc(sizeof(Segmento));
     hueco_libre = list_get(list_filter(lista_de_memoria, hay_hueco_libre), 0);
@@ -143,7 +162,7 @@ Segmento *worst_fit(int id, int tamano)
     {
         Segmento *hueco_libre = un_segmento;
         Segmento *otro_hueco_libre = otro_segmento;
-        if (hueco_libre->tamano > otro_hueco_libre->tamano)
+        if (hueco_libre->tamano > otro_hueco_libre->tamano && hueco_libre->id < 0 && otro_hueco_libre->id < 0)
         {
             return (void *)hueco_libre;
         }
@@ -172,7 +191,7 @@ Segmento *best_fit(int id, int tamano)
         return hueco_libre->tamano > tamano && hueco_libre->id < 0;
     }
     Segmento *hueco_libre = malloc(sizeof(Segmento));
-    t_list* lista_filtrada = list_filter(lista_de_memoria, huecos_con_tamano_necesario);
+    t_list *lista_filtrada = list_filter(lista_de_memoria, huecos_con_tamano_necesario);
     hueco_libre = list_get_minimum(lista_filtrada, minimo_tamano);
     list_destroy(lista_filtrada);
     return hueco_libre;
@@ -184,7 +203,7 @@ void inicializar_proceso(t_contexto_de_ejecucion *contexto_de_ejecucion, int con
     enviar_contexto_de_ejecucion(contexto_de_ejecucion, conexion_memoria_kernel);
 }
 
-t_list* compactar()
+t_list *compactar()
 {
     t_list *segmentos_actualizados = list_create();
     bool ordenar_por_desplazamiento(void *segmento, void *segmento_dos)
@@ -195,7 +214,7 @@ t_list* compactar()
     }
 
     int posicion_segmento_compactable;
-    while ((posicion_segmento_compactable = buscar_segmento_compactable()) >= 0)
+    while ((posicion_segmento_compactable = buscar_segmento_compactable()) > 0)
     {
         Segmento *segmento_compactable = list_get(lista_de_memoria, posicion_segmento_compactable);
         Segmento *hueco_libre = list_get(lista_de_memoria, posicion_segmento_compactable - 1);
@@ -223,4 +242,3 @@ int buscar_segmento_compactable()
     }
     return -1;
 }
-

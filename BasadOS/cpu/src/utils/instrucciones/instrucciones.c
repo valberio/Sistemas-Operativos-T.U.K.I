@@ -197,14 +197,13 @@ int mov_out(t_log *logger, char **instrucciones, t_contexto_de_ejecucion *contex
     log_info(logger, "CPU manda un contexto con %i segmentos", list_size(contexto->tabla_segmentos));
     enviar_paquete(paquete, conexion_memoria_cpu);
 
-    enviar_mensaje(instrucciones[1], conexion_memoria_cpu); //Envio direccion fisica
-    enviar_mensaje(instrucciones[2], conexion_memoria_cpu); //Envio registro
+    enviar_mensaje(instrucciones[1], conexion_memoria_cpu); // Envio direccion fisica
+    enviar_mensaje(instrucciones[2], conexion_memoria_cpu); // Envio registro
 
     // Memoria responde con un OK confirmado que escribió lo que debía
-    t_paquete *paquete_respuesta = recibir_paquete(conexion_memoria_cpu);
+    recibir_paquete(conexion_memoria_cpu);
 
-    log_info(logger, "PID: %i EJECUTANDO: %s - PARAMETROS: %s, %s - RTA RECIBIDA: %i", contexto->pid, instrucciones[0], instrucciones[1], instrucciones[2], paquete_respuesta->codigo_operacion);
-
+    log_info(logger, "PID: <PID> - Acción: <ESCRIBIR> - Segmento: <%i> - Dirección Física: <%s> - Valor: <ESCRITO>", contexto->pid, instrucciones[2]);
     return 0;
 }
 
@@ -299,9 +298,9 @@ int f_read(t_log *logger, char **instrucciones, t_contexto_de_ejecucion *context
     paquete->codigo_operacion = PETICION_LECTURA;
     paquete->buffer = serializar_contexto(contexto);
     enviar_paquete(paquete, conexion_kernel_cpu);
-    enviar_mensaje(instrucciones[1], conexion_kernel_cpu); //Envio nombre
-    enviar_mensaje(instrucciones[2], conexion_kernel_cpu); 
-    enviar_mensaje(instrucciones[3], conexion_kernel_cpu); //Envio cantidad de bytes a leer
+    enviar_mensaje(instrucciones[1], conexion_kernel_cpu); // Envio nombre
+    enviar_mensaje(instrucciones[2], conexion_kernel_cpu);
+    enviar_mensaje(instrucciones[3], conexion_kernel_cpu); // Envio cantidad de bytes a leer
     return 1;
 }
 

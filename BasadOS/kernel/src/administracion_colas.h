@@ -64,6 +64,8 @@ void actualizar_tablas_de_segmentos(t_list *,t_list* );
 uint32_t buscar_puntero_de_archivo(t_pcb *proceso, char *nombre_archivo);
 void* solicitar_lectura(void *arg);
 void* solicitar_escritura(void *arg);
+t_list *procesos_bloqueados_por_recursos();
+t_list *procesos_bloqueas_por_archivos();
 
 
 

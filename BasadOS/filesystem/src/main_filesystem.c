@@ -51,7 +51,7 @@ int main()
 	vaciar_archivo_bloques(cantidad_bloques, tamanio_bloque);
 
 	//Recorro el directorio de FCBs y creo estructuras
-	recorrer_directorio_fcb(ruta_bitmap);
+	//recorrer_directorio_fcb(ruta_bitmap);
 
 	// Conecto el filesystem como servidor del kernel
 	char* puerto_a_kernel = config_get_string_value(config, "PUERTO_ESCUCHA");

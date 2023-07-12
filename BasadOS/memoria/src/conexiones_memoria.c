@@ -21,7 +21,12 @@ void *comunicacion_con_kernel(void *arg)
         log_info(logger, "Recibi una peticion de KERNEL");
         t_paquete *paquete = recibir_paquete(conexion_kernel);
         t_contexto_de_ejecucion *contexto = deserializar_contexto_de_ejecucion(paquete->buffer);
-
+        log_info(logger, "LA LISTA DE MEMORIA TIENE:");
+        for (int i = 0; i < list_size(lista_de_memoria); i++)
+        {
+            Segmento *sas = list_get(lista_de_memoria, i);
+            log_info(logger, "\n SEGMENTO ID: %d, DESPLAZAMIENTO: %d", sas->id, sas->desplazamiento);
+        }
         switch (paquete->codigo_operacion)
         {
         case INICIALIZAR_PROCESO:
@@ -53,7 +58,7 @@ void *comunicacion_con_kernel(void *arg)
             for (int i = 0; i < list_size(contexto->tabla_segmentos); i++)
             {
                 Segmento *sas = list_get(contexto->tabla_segmentos, i);
-                log_info(logger, "PROCESO %i SEGMENTO ID: %d, DESPLAZAMIENTO: %d", contexto->pid,sas->id, sas->desplazamiento);
+                log_info(logger, "PROCESO %i SEGMENTO ID: %d, DESPLAZAMIENTO: %d", contexto->pid, sas->id, sas->desplazamiento);
             }
 
             enviar_paquete(paquete_a_kernel, conexion_kernel);
@@ -78,7 +83,7 @@ void *comunicacion_con_kernel(void *arg)
             int id_a_eliminar_int = atoi(id_a_eliminar);
             int posicion = obtener_segmento_por_id(id_a_eliminar_int, contexto->tabla_segmentos);
             log_info(logger, "La posicion es: %d", posicion);
-            eliminar_segmento(id_a_eliminar_int);
+            eliminar_segmento(contexto, id_a_eliminar_int);
             list_remove(contexto->tabla_segmentos, posicion);
 
             t_paquete *paquete_a_kernel_eliminar = crear_paquete();
@@ -121,9 +126,7 @@ void *comunicacion_con_cpu(void *arg)
         char *registro;
         char *char_dir_fis;
         int direccion_fisica;
-
-        log_info(logger, "MEMORIA recibió una petición del CPU");
-
+        
         switch (peticion->codigo_operacion)
         {
         case PETICION_LECTURA: // Caso lectura, mov_in, guardo en el registro lo que lei en la direccion de memoria
@@ -199,10 +202,10 @@ void *comunicacion_con_filesystem(void *arg)
     while (conexion_filesystem >= 0)
     {
         t_paquete *peticion = recibir_paquete(conexion_filesystem);
-        t_contexto_de_ejecucion *contexto = deserializar_contexto_de_ejecucion(peticion->buffer);
-        t_paquete *paquete_respuesta = crear_paquete();
+        // t_contexto_de_ejecucion *contexto = deserializar_contexto_de_ejecucion(peticion->buffer); ???
+        // t_paquete *paquete_respuesta = crear_paquete(); ????
 
-        char* dir_fis;
+        char *dir_fis;
         int direccion_fisica;
 
         switch (peticion->codigo_operacion)
@@ -212,33 +215,36 @@ void *comunicacion_con_filesystem(void *arg)
 
             dir_fis = recibir_mensaje(conexion_filesystem);
             direccion_fisica = atoi(dir_fis);
-            char* datos_a_guardar = recibir_mensaje(conexion_filesystem);
+            char *datos_a_guardar = recibir_mensaje(conexion_filesystem);
+            memcpy(espacio_de_memoria + direccion_fisica, datos_a_guardar, strlen(datos_a_guardar));
 
-            memcpy(espacio_de_memoria + direccion_fisica, datos_a_guardar, sizeof(datos_a_guardar));
-
-            char *test = malloc(sizeof(datos_a_guardar));
-            memcpy(test, espacio_de_memoria + direccion_fisica, sizeof(datos_a_guardar));
+            char *test = malloc(strlen(datos_a_guardar));
+            memcpy(test, espacio_de_memoria + direccion_fisica, strlen(datos_a_guardar));
 
             log_info(logger, "Memoria guardo %s", test);
 
             enviar_mensaje("OK!", conexion_filesystem);
             break;
 
-        case PETICION_LECTURA: 
+        case PETICION_LECTURA:
             log_info(logger, "FILESYSTEM me pidió leer");
 
             dir_fis = recibir_mensaje(conexion_filesystem);
             direccion_fisica = atoi(dir_fis);
-            char* cant_b = recibir_mensaje(conexion_filesystem);
+            char *cant_b = recibir_mensaje(conexion_filesystem);
             int cantidad_bytes = atoi(cant_b);
 
-            char* datos = malloc((cantidad_bytes + 1) * sizeof(char));
+            char *datos = malloc((cantidad_bytes + 1) * sizeof(char));
             memcpy(datos, espacio_de_memoria, cantidad_bytes * sizeof(char));
             log_info(logger, "Lei %s porque me lo pidio filesystem", datos);
 
             enviar_mensaje(datos, conexion_filesystem);
+            break;
+        default:
+            break;
         }
     }
+    return NULL;
 }
 
 // TODO: esto hay que cambiarlo a un enum
@@ -266,7 +272,10 @@ void finalizar_proceso(t_contexto_de_ejecucion *contexto_de_ejecucion)
     int tabla_size = list_size(contexto_de_ejecucion->tabla_segmentos);
     for (int i = tabla_size - 1; i > 0; i--)
     {
-        Segmento *segmento = list_remove(contexto_de_ejecucion->tabla_segmentos, i);
-        eliminar_segmento(segmento->id);
+        Segmento *segmento = list_get(contexto_de_ejecucion->tabla_segmentos, i);
+        log_info(logger,"El segmento es: %i",segmento->id);
+        eliminar_segmento(contexto_de_ejecucion,segmento->id);
     }
+    list_clean(contexto_de_ejecucion->tabla_segmentos);
+
 }

@@ -16,7 +16,7 @@ Segmento* inicializar_segmento(int );
 int obtener_espacio_libre_total();
 void reservar_espacio_de_memoria(int,int);
 Segmento* crear_segmento(int id ,int tamano);
-void eliminar_segmento(int );
+void eliminar_segmento(t_contexto_de_ejecucion* contexto_de_ejecucions, int id);
 int get_index_of_list(t_list* ,int );
 void unificacion_de_huecos_libres();
 Segmento* first_fit(int,int);

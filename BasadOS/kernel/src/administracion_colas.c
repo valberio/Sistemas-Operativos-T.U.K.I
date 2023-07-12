@@ -11,21 +11,21 @@ void administrar_procesos_de_exit(int conexion_kernel_memoria)
 	while (1)
 	{
 		sem_wait(&semaforo_procesos_en_exit);
-		t_pcb* proceso_a_finalizar;
-		t_paquete* paquete = crear_paquete();
-		
+		t_pcb *proceso_a_finalizar;
+		t_paquete *paquete = crear_paquete();
+
 		sem_wait(&mutex_cola_exit);
 		proceso_a_finalizar = queue_pop(cola_exit);
 		sem_post(&mutex_cola_exit);
 
 		// ACA VA TU LOGICA DE MATARLOS
 
-		t_paquete* paquete_a_memoria = crear_paquete();
+		t_paquete *paquete_a_memoria = crear_paquete();
 		paquete_a_memoria->codigo_operacion = FINALIZAR_PROCESO;
 		paquete_a_memoria->buffer = serializar_contexto(proceso_a_finalizar->contexto_de_ejecucion);
 		enviar_paquete(paquete_a_memoria, conexion_kernel_memoria);
 		eliminar_paquete(paquete_a_memoria);
-		
+
 		paquete->codigo_operacion = FINALIZAR_PROCESO;
 		paquete->buffer = serializar_contexto(proceso_a_finalizar->contexto_de_ejecucion);
 
@@ -108,6 +108,12 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 			proceso_en_ejecucion->contexto_de_ejecucion = contexto_actualizado;
 			char *parametros_retorno;
 			t_paquete *paquete_respuesta;
+			log_info(logger, "PID:%i", proceso_en_ejecucion->pid);
+			for (int i = 0; i < list_size(contexto_actualizado->tabla_segmentos); i++)
+			{
+				Segmento *sas = list_get(contexto_actualizado->tabla_segmentos, i);
+				log_info(logger, "SEGMENTO ID: %d, DESPLAZAMIENTO: %d", sas->id, sas->desplazamiento);
+			}
 
 			switch (paquete->codigo_operacion)
 			{
@@ -206,12 +212,10 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				// Envio contexto y código de operación
 				enviar_paquete(paquete_a_memoria, cliente_memoria);
 				eliminar_paquete(paquete_a_memoria);
-				
+
 				// Envio parametros
 				enviar_mensaje(id, cliente_memoria);
-				free(id);
 				enviar_mensaje(tamanio, cliente_memoria);
-				free(tamanio);
 				log_info(logger, "Envie parametros");
 
 				// Espero el OK de memoria
@@ -231,6 +235,8 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 					sem_post(&mutex_cola_ready);
 					sem_post(&semaforo_procesos_en_ready);
 					log_info(logger, "PID: %i - Estado anterior: RUNNING - Estado actual: READY", proceso_en_ejecucion->pid);
+					free(id);
+					free(tamanio);
 					break;
 				case COMPACTACION_NECESARIA:
 					// checkear operaciones entre filesystem y memoria
@@ -241,16 +247,19 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 					t_list *segmentos_actualizados = deserializar_lista_de_segmentos(paquete_respuesta->buffer);
 					eliminar_paquete(paquete_respuesta);
 					actualizar_tablas_de_segmentos(segmentos_actualizados, contexto_actualizado->tabla_segmentos);
+					paquete_a_memoria->codigo_operacion = CREAR_SEGMENTO;
 					paquete_a_memoria->buffer = serializar_contexto(contexto_actualizado);
 
 					enviar_paquete(paquete_a_memoria, cliente_memoria);
 					// Envio parametros
 					enviar_mensaje(id, cliente_memoria);
 					enviar_mensaje(tamanio, cliente_memoria);
+					free(id);
+					free(tamanio);
 
 					paquete_respuesta = recibir_paquete(cliente_memoria);
 					contexto_respuesta = deserializar_contexto_de_ejecucion(paquete_respuesta->buffer);
-					//Termino compactacion
+					// Termino compactacion
 					sem_post(&semaforo_para_compactacion);
 					eliminar_paquete(paquete_respuesta);
 					proceso_en_ejecucion->contexto_de_ejecucion = contexto_respuesta;
@@ -270,6 +279,8 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 					sem_post(&semaforo_procesos_en_exit);
 					log_info(logger, "PID: %i - Estado anterior: RUNNING - Estado actual: EXIT", proceso_en_ejecucion->pid);
 					log_info(logger, "Finaliza el proceso %i - Motivo: OUT_OF_MEMORY", proceso_en_ejecucion->pid);
+					free(id);
+					free(tamanio);
 					break;
 				default:
 					break;
@@ -326,7 +337,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 					eliminar_paquete(paquete);
 					// ENVIO EL NOMBRE DEL ARCHIVO REQUERIDO
 					enviar_mensaje(parametros_retorno, cliente_filesystem);
-					//Espero la respuesta de FS
+					// Espero la respuesta de FS
 					recibir_mensaje(cliente_filesystem);
 					enviar_mensaje("0", cliente_cpu);
 				}
@@ -433,9 +444,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 			}
 			eliminar_paquete(paquete);
 		}
-		
 	}
-	
 }
 
 void *solicitar_escritura(void *arg)
@@ -629,11 +638,11 @@ void gestionar_cierre_archivo(char *nombre_archivo)
 {
 	bool existe_el_archivo(void *elemento)
 	{
-		//Archivo *archivo_en_tabla = malloc(sizeof(Archivo));
-		//archivo_en_tabla = elemento;
-		Archivo* archivo_en_tabla = (Archivo*) elemento;
+		// Archivo *archivo_en_tabla = malloc(sizeof(Archivo));
+		// archivo_en_tabla = elemento;
+		Archivo *archivo_en_tabla = (Archivo *)elemento;
 		return strcmp(archivo_en_tabla->nombre_archivo, nombre_archivo) == 0;
-		//free(archivo_en_tabla);
+		// free(archivo_en_tabla);
 	}
 	Archivo *archivo = malloc(sizeof(Archivo));
 	archivo->nombre_archivo = malloc(strlen(nombre_archivo) + 1);
@@ -689,7 +698,7 @@ void actualizar_puntero(t_pcb *proceso, char *nombre_archivo, uint32_t valor_pun
 		log_info(logger, "El archivo no existe");
 		return;
 	}
-	archivo->puntero = valor_puntero; 
+	archivo->puntero = valor_puntero;
 	log_info(logger, "PID: %i - Actualizar puntero Archivo: %s - Puntero %i", proceso->pid, archivo->nombre, archivo->puntero);
 }
 
@@ -718,23 +727,95 @@ void actualizar_tablas_de_segmentos(t_list *segmentos_actualizados, t_list *segm
 		}
 
 		sem_wait(&mutex_cola_ready);
-		list_replace_by_condition(cola_ready->elements, reemplazar_si_coinciden_ids, segmento_actualizado);
+		int elementos_en_ready = list_size(cola_ready->elements);
+		for (int i = 0; i < elementos_en_ready; i++)
+		{
+			t_pcb *pcb = (t_pcb *)list_get(cola_ready->elements, i);
+			t_list *tabla_segmentos = pcb->contexto_de_ejecucion->tabla_segmentos;
+			list_replace_by_condition(tabla_segmentos, reemplazar_si_coinciden_ids, segmento_actualizado);
+		}
 		sem_post(&mutex_cola_ready);
 
 		sem_wait(&mutex_cola_exit);
-		list_replace_by_condition(cola_exit->elements, reemplazar_si_coinciden_ids, segmento_actualizado);
+		int elementos_en_exit = list_size(cola_exit->elements);
+		for (int i = 0; i < elementos_en_exit; i++)
+		{
+			t_pcb *pcb = (t_pcb *)list_get(cola_exit->elements, i);
+			t_list *tabla_segmentos = pcb->contexto_de_ejecucion->tabla_segmentos;
+			list_replace_by_condition(tabla_segmentos, reemplazar_si_coinciden_ids, segmento_actualizado);
+		}
 		sem_post(&mutex_cola_exit);
 
 		sem_wait(&mutex_cola_blocked);
-		list_replace_by_condition(cola_blocked->elements, reemplazar_si_coinciden_ids, segmento_actualizado);
+		int elementos_en_blocked = list_size(cola_blocked->elements);
+
+		for (int i = 0; i < elementos_en_blocked; i++)
+		{
+			t_pcb *pcb = (t_pcb *)list_get(cola_blocked->elements, i);
+			t_list *tabla_segmentos = pcb->contexto_de_ejecucion->tabla_segmentos;
+			list_replace_by_condition(tabla_segmentos, reemplazar_si_coinciden_ids, segmento_actualizado);
+		}
 		sem_post(&mutex_cola_blocked);
+
+		t_list *lista_de_procesos_bloqueados_por_recursos = procesos_bloqueados_por_recursos();
+
+		int elementos_bloqueados_por_recursos = list_size(lista_de_procesos_bloqueados_por_recursos);
+
+		for (int i = 0; i < elementos_bloqueados_por_recursos; i++)
+		{
+			t_pcb *pcb = (t_pcb *)list_get(lista_de_procesos_bloqueados_por_recursos, i);
+			t_list *tabla_segmentos = pcb->contexto_de_ejecucion->tabla_segmentos;
+			list_replace_by_condition(tabla_segmentos, reemplazar_si_coinciden_ids, segmento_actualizado);
+		}
+
+		t_list *lista_de_procesos_bloqueados_por_archivos = procesos_bloqueas_por_archivos();
+
+		int elementos_bloqueados_por_archivos = list_size(lista_de_procesos_bloqueados_por_archivos);
+
+		for (int i = 0; i < elementos_bloqueados_por_archivos; i++)
+		{
+			t_pcb *pcb = (t_pcb *)list_get(lista_de_procesos_bloqueados_por_archivos, i);
+			t_list *tabla_segmentos = pcb->contexto_de_ejecucion->tabla_segmentos;
+			list_replace_by_condition(tabla_segmentos, reemplazar_si_coinciden_ids, segmento_actualizado);
+		}
 
 		list_replace_by_condition(segmentos_en_running, reemplazar_si_coinciden_ids, segmento_actualizado);
 		list_remove(segmentos_actualizados, 0);
-		for (int i = 0; i < list_size(segmentos_en_running); i++)
+	}
+}
+
+t_list *procesos_bloqueados_por_recursos()
+{
+	t_list *procesos_bloqueados = list_create();
+	int cantidad_recursos = list_size(recursos);
+
+	for (int i = 0; i < cantidad_recursos; i++)
+	{
+		Recurso *recurso = list_get(recursos, i);
+		int cantidad_procesos_bloqueados = list_size(recurso->cola_de_bloqueados->elements);
+		for (int i = 0; i < cantidad_procesos_bloqueados; i++)
 		{
-			Segmento *sas = list_get(segmentos_en_running, i);
-			log_info(logger, "SEGMENTO ID: %d, DESPLAZAMIENTO: %d", sas->id, sas->desplazamiento);
+			t_pcb *proceso_bloqueado = list_get(recurso->cola_de_bloqueados->elements, i);
+			list_add(procesos_bloqueados, proceso_bloqueado);
 		}
 	}
+	return procesos_bloqueados;
+}
+
+t_list *procesos_bloqueas_por_archivos()
+{
+	int cantidad_de_archivos = list_size(lista_archivos_abiertos);
+	t_list *procesos_bloqueados = list_create();
+
+	for (int i = 0; i < cantidad_de_archivos; i++)
+	{
+		Archivo *archivo = list_get(lista_archivos_abiertos, i);
+		int cantidad_procesos_bloqueados = list_size(archivo->procesos_bloqueados->elements);
+		for (int i = 0; i < cantidad_procesos_bloqueados; i++)
+		{
+			t_pcb *proceso_bloqueado = list_get(archivo->procesos_bloqueados->elements, i);
+			list_add(procesos_bloqueados, proceso_bloqueado);
+		}
+	}
+	return procesos_bloqueados;
 }

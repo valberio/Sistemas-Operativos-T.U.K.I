@@ -302,7 +302,7 @@ void escribir_archivo(char* nombre, char* datos_a_guardar, int puntero, int cant
     t_fcb* fcb_archivo = list_find(fcb_list, es_el_fcb);
     if(fcb_archivo == NULL){
         log_info(logger, "No se encontró el archivo");
-        return "ERROR";
+        return ;
     }
     int bloque_puntero = floor(puntero/tamanio_bloque);
     int desplazamiento_dentro_del_bloque = puntero - (bloque_puntero * tamanio_bloque);

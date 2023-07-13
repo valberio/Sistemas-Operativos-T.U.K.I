@@ -42,7 +42,6 @@ int main()
 	// tenemos tantos bits como bloques
 	// Bitmap
 	ruta_bitmap = config_get_string_value(config, "PATH_BITMAP");
-
 	bitarray = crear_bitmap(ruta_bitmap, cantidad_bloques);
 
 	ruta_archivo_bloques = config_get_string_value(config, "PATH_BLOQUES");
@@ -168,7 +167,7 @@ void recorrer_directorio_fcb()
 			if (stat(ruta_fcb, &file_info) == -1)
 			{
 				log_info(logger, "Error al obtener información del archivo: %s\n", ent->d_name);
-				free(ruta_fcb);
+				//free(ruta_fcb);
 				continue;
 			}
 			crear_estructura_fcb(ruta_fcb);
@@ -191,9 +190,10 @@ void crear_estructura_fcb(char *ruta) // habria que llamarlo crear fcb
 	fcb->indirect_pointer = config_get_int_value(fcb_config, "PUNTERO_INDIRECTO");
 	fcb->size = config_get_int_value(fcb_config, "TAMANIO_ARCHIVO");
 	fcb->name = config_get_string_value(fcb_config, "NOMBRE_ARCHIVO");
-	fcb->ruta = ruta;
+	fcb->ruta = malloc(sizeof(ruta));
+	strcpy(fcb->ruta, ruta);
 	list_add(fcb_list, fcb);
-	if (fcb->indirect_pointer == -1)
+	if (fcb->direct_pointer == -1)
 	{
 		return;
 	}

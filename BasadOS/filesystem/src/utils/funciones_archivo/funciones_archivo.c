@@ -21,11 +21,13 @@ void truncar_archivo(char *nombre_archivo, int nuevo_tamanio)
     {
         agrandar_archivo(fcb_archivo, nuevo_tamanio);
     }
+    FILE *archivo = fopen(fcb_archivo->ruta, "wb");
     t_config* config = iniciar_config(fcb_archivo->ruta);
     config_set_value(config, "TAMANIO_ARCHIVO", convertir_a_char(fcb_archivo->size));
 	config_set_value(config, "PUNTERO_DIRECTO", convertir_a_char(fcb_archivo->direct_pointer));
 	config_set_value(config, "PUNTERO_INDIRECTO", convertir_a_char(fcb_archivo->indirect_pointer));
-	config_save(config);
+	//config_save(config);
+    fclose(archivo);
 }
 
 int division_redondeada_hacia_arriba(int dividendo, int divisor)
@@ -78,7 +80,7 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
         fcb_archivo->size += MIN(bytes_por_asignar, tamanio_bloque);
         log_info(logger, "Tamaño del fcb %i bytes por asignar %i bloques por asignar %i", fcb_archivo->size, bytes_por_asignar, bloques_por_agregar);
     }
-    if (fcb_archivo->direct_pointer > 0 && fcb_archivo->indirect_pointer == -1)
+    if (fcb_archivo->direct_pointer >= 0 && fcb_archivo->indirect_pointer == -1 && bytes_por_asignar > 0)
     { // TENGA UN SOLO BLOQUE
         
         char *nuevo_bloque_indirecto = obtener_puntero_bloque_libre(cantidad_bloques);
@@ -103,6 +105,7 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
     }
     else
     {
+        log_info(logger, "ENTRE EN EL QUE NO ERA");
         log_info(logger, "a mimir");
         sleep(retardo);
         while (bloques_por_agregar > 0)

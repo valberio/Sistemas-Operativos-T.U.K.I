@@ -76,7 +76,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 	{
 		// ESPERA A QUE HAYA POR LO MENOS 1 PROCESO EN READY
 		sem_wait(&semaforo_procesos_en_ready);
-
+		//log de cola de ready
 		t_pcb *proceso_en_ejecucion;
 		char *planificador = config_get_string_value(config, "ALGORITMO_PLANIFICACION");
 
@@ -234,7 +234,6 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 					break;
 				case COMPACTACION_NECESARIA:
 					// checkear operaciones entre filesystem y memoria
-					log_info(logger, "KERNEL solicita compactación");
 					log_info(logger, "Compactación: Esperando Fin de Operaciones de FS");
 					sem_wait(&semaforo_para_compactacion);
 					log_info(logger, "Compactación: Se solicitó compactación ");
@@ -374,7 +373,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				sem_post(&mutex_cola_blocked);
 				log_info(logger, "PID: %i - Archivo: %s - Tamaño: %s", proceso_en_ejecucion->pid, parametros_retorno, nuevo_tamano);
 				log_info(logger, "PID: %i - Estado Anterior: RUNNING - Estado Actual: BLOCKED", proceso_en_ejecucion->pid);
-				log_info(logger, "PID : %i - Bloqueado por: %s", proceso_en_ejecucion->pid, parametros_retorno);
+				log_info(logger, "PID: %i - Bloqueado por: %s", proceso_en_ejecucion->pid, parametros_retorno);
 				sem_wait(&semaforo_peticiones_filesystem);
 				pthread_t hilo_truncador_de_archivos;
 				pthread_create(&hilo_truncador_de_archivos, NULL, solicitar_truncamiento, (void *)&parametros_hilo_kernel_filesystem);
@@ -708,7 +707,6 @@ void actualizar_puntero(t_pcb *proceso, char *nombre_archivo, uint32_t valor_pun
 		return;
 	}
 	archivo->puntero = valor_puntero;
-	log_info(logger, "PID: %i - Actualizar puntero Archivo: %s - Puntero %i", proceso->pid, archivo->nombre, archivo->puntero);
 }
 
 uint32_t buscar_puntero_de_archivo(t_pcb *proceso, char *nombre_archivo)

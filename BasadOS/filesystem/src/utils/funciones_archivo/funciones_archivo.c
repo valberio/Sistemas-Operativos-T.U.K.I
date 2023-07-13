@@ -278,7 +278,7 @@ char *leer_archivo(char *nombre, int puntero, int cantidad_de_bytes)
         bytes_leidos += bytes_a_leer_aca;
     }
 
-    int contador_puntero_indirecto = bloque_puntero - 2;
+    int contador_puntero_indirecto = bloque_puntero - 1;
     int digitos_punteros = obtener_digitos_cant_bloque();
     if (bytes_por_leer > 0)
     {
@@ -306,6 +306,7 @@ char *leer_archivo(char *nombre, int puntero, int cantidad_de_bytes)
 
         bytes_por_leer -= bytes_a_leer_aca;
         contador_puntero_indirecto++;
+        bloque_indirecto_contador++;
         free(index_bloque);
         bytes_leidos += bytes_a_leer_aca;
     }
@@ -351,7 +352,7 @@ void escribir_archivo(char *nombre, char *datos_a_guardar, int puntero, int cant
         log_info(logger, "Bytes copiados %i", bytes_copiados);
     }
     log_info(logger, "los bytes son: %i", bytes_por_copiar);
-    int contador_puntero_indirecto = bloque_puntero - 2;
+    int contador_puntero_indirecto = bloque_puntero - 1;
     int digitos_punteros = obtener_digitos_cant_bloque();
 
     bool dormi_por_el_indirecto = false;
@@ -366,6 +367,7 @@ void escribir_archivo(char *nombre, char *datos_a_guardar, int puntero, int cant
         if (!dormi_por_el_indirecto)
         {
             log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 1 - Bloque File System %i", fcb_archivo->name, fcb_archivo->indirect_pointer);
+            log_info(logger, "a mimir");
             sleep(retardo);
             dormi_por_el_indirecto = true;
         }
@@ -376,7 +378,7 @@ void escribir_archivo(char *nombre, char *datos_a_guardar, int puntero, int cant
         index_bloque[digitos_punteros] = '\0';
         int index_bloque_int = atoi(index_bloque);
 
-        log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: %i - Bloque File System %i", fcb_archivo->name, contador_puntero_indirecto, index_bloque_int);
+        log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: %i - Bloque File System %i", fcb_archivo->name, contador_puntero_indirecto + 2, index_bloque_int);
         log_info(logger, "Accedo al puntero %s", index_bloque);
         log_info(logger, "Bytes a copiar aca %i", bytes_a_copiar_aca);
 

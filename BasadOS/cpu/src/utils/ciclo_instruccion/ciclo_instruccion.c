@@ -7,13 +7,17 @@ char * fetch(t_contexto_de_ejecucion * contexto)
 	return list_get(contexto->instrucciones, program_counter);
 }
 
-char** decode(char* instruccion, int retardo_instruccion, int tam_max_segmento, t_list* tabla_de_segmentos, t_log* logger) //Cambiar a SWITCH
+char** decode(char* instruccion, int retardo_instruccion, int tam_max_segmento, t_list* tabla_de_segmentos, t_log* logger, t_contexto_de_ejecucion* contexto) //Cambiar a SWITCH
 {
 	//Todavia no hay que hacer traducciones de memoria, asi que retorna
 	//el string de la instruccion en un array de chars, para facilitar
 	//el acceso a los datos en execute()
 	char* separador = " ";
 	char ** array = string_split(instruccion, separador);
+
+	int dir_fisica_int;
+	int dir_logica_int;
+	int bytes_a_escribir = 0;
 
 	if (strcmp(array[0], "SET") == 0)
 	{
@@ -22,8 +26,9 @@ char** decode(char* instruccion, int retardo_instruccion, int tam_max_segmento, 
 	}
 	if (strcmp(array[0], "MOV_IN") == 0)
 	{
-		int dir_logica_int = atoi(array[2]); 
-		int dir_fisica_int = traduccion_dir_logica_fisica(dir_logica_int, tabla_de_segmentos, tam_max_segmento);
+		dir_logica_int = atoi(array[2]); 
+		bytes_a_escribir = tamanio_del_registro(array[1]);
+		dir_fisica_int = traduccion_dir_logica_fisica(dir_logica_int, tabla_de_segmentos, tam_max_segmento, bytes_a_escribir);
 		char* dir_fisica_string = int_a_string(dir_fisica_int);
 		log_info(logger, "Entré en DECODE - MOV IN -> Traduccion de direccion lógica %i a física %s", dir_logica_int, dir_fisica_string);
 		strcpy(array[2], dir_fisica_string);
@@ -31,28 +36,37 @@ char** decode(char* instruccion, int retardo_instruccion, int tam_max_segmento, 
 	if (strcmp(array[0], "MOV_OUT") == 0)
 	{
 		
-		int dir_logica_int = atoi(array[1]); 
-		int dir_fisica_int = traduccion_dir_logica_fisica(dir_logica_int, tabla_de_segmentos, tam_max_segmento);
+		dir_logica_int = atoi(array[1]); 
+		bytes_a_escribir = tamanio_del_registro(array[2]);
+		dir_fisica_int = traduccion_dir_logica_fisica(dir_logica_int, tabla_de_segmentos, tam_max_segmento, bytes_a_escribir);
 		char* dir_fisica_string = int_a_string(dir_fisica_int);
 		log_info(logger, "Entré en DECODE - MOV OUT -> Traduccion de direccion lógica %i a física %s", dir_logica_int, dir_fisica_string);
 		strcpy(array[1], dir_fisica_string);
 	}
 	if(strcmp(array[0], "F_READ") == 0)
 	{
-		int dir_logica_int = atoi(array[2]); 
-		int dir_fisica_int = traduccion_dir_logica_fisica(dir_logica_int, tabla_de_segmentos, tam_max_segmento);
+		dir_logica_int = atoi(array[2]); 
+		dir_fisica_int = traduccion_dir_logica_fisica(dir_logica_int, tabla_de_segmentos, tam_max_segmento, array[3]);
 		char* dir_fisica_string = int_a_string(dir_fisica_int);
 		log_info(logger, "Entré en DECODE - F_READ -> Traduccion de direccion lógica %i a física %s", dir_logica_int, dir_fisica_string);
 		strcpy(array[2], dir_fisica_string);
 	}
 	if(strcmp(array[0], "F_WRITE") == 0)
 	{
-		int dir_logica_int = atoi(array[2]); 
-		int dir_fisica_int = traduccion_dir_logica_fisica(dir_logica_int, tabla_de_segmentos, tam_max_segmento);
+		dir_logica_int = atoi(array[2]); 
+		dir_fisica_int = traduccion_dir_logica_fisica(dir_logica_int, tabla_de_segmentos, tam_max_segmento, array[3]);
 		char* dir_fisica_string = int_a_string(dir_fisica_int);
 		log_info(logger, "Entré en DECODE - F_WRITE -> Traduccion de direccion lógica %i a física %s", dir_logica_int, dir_fisica_string);
 		strcpy(array[2], dir_fisica_string);
 	}
+
+	if (dir_fisica_int == -1)
+	{
+		strcpy(array[0], "SEGFAULT");
+		log_info(logger, "Error Segmentation Fault: “PID: %i - Error SEG_FAULT- Segmento: %i - Offset: %i - Tamaño: %i", 
+		contexto->pid, dir_logica_int, (dir_logica_int % tam_max_segmento), bytes_a_escribir);
+	}
+
 	return array;
 }
 

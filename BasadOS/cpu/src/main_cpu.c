@@ -48,7 +48,17 @@ int main(void)
 				{
 					char *instruccion = fetch(contexto);
 
-					char **instruccion_array = decode(instruccion, retardo_instruccion, tam_max_segmento, contexto->tabla_segmentos, logger);
+					char **instruccion_array = decode(instruccion, retardo_instruccion, tam_max_segmento, contexto->tabla_segmentos, logger, contexto);
+
+					if (strcmp(instruccion_array[0], "SEGFAULT") == 0)
+					{
+						cortar_ejecucion = true;
+						t_paquete* paquete = crear_paquete();
+						paquete->codigo_operacion = SEGMENTATATION_FAULT;
+						paquete->buffer = serializar_contexto(contexto);
+						enviar_paquete(paquete, conexion_cpu_kernel);
+						break;
+					}
 
 					contexto->program_counter++;
 

@@ -30,5 +30,6 @@ void remover_ultimo_bloque(t_fcb *);
 void achicar_archivo(t_fcb *, int);
 char *leer_archivo(char *, int puntero, int cantidad_de_bytes);
 void escribir_archivo(char *nombre, char *datos_a_guardar, int puntero, int cantidad_de_bytes);
+char* convertir_a_char(uint32_t numero);
 
 #endif /* FUNCIONES_ARCHIVOS_H_ */

@@ -21,6 +21,11 @@ void truncar_archivo(char *nombre_archivo, int nuevo_tamanio)
     {
         agrandar_archivo(fcb_archivo, nuevo_tamanio);
     }
+    t_config* config = iniciar_config(fcb_archivo->ruta);
+    config_set_value(config, "TAMANIO_ARCHIVO", convertir_a_char(fcb_archivo->size));
+	config_set_value(config, "PUNTERO_DIRECTO", convertir_a_char(fcb_archivo->direct_pointer));
+	config_set_value(config, "PUNTERO_INDIRECTO", convertir_a_char(fcb_archivo->indirect_pointer));
+	config_save(config);
 }
 
 int division_redondeada_hacia_arriba(int dividendo, int divisor)
@@ -68,7 +73,7 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
         char *nuevo_bloque_directo = obtener_puntero_bloque_libre(cantidad_bloques);
         fcb_archivo->direct_pointer = atoi(nuevo_bloque_directo);
         setear_bit(fcb_archivo->direct_pointer);
-        log_info(logger, "El bloque directo es %s", nuevo_bloque_directo);
+        log_info(logger, "El bloque directo es %i", fcb_archivo->direct_pointer);
 
         fcb_archivo->size += MIN(bytes_por_asignar, tamanio_bloque);
         log_info(logger, "Tamaño del fcb %i bytes por asignar %i bloques por asignar %i", fcb_archivo->size, bytes_por_asignar, bloques_por_agregar);
@@ -247,6 +252,7 @@ char* leer_archivo(char* nombre, int puntero, int cantidad_de_bytes)
         bytes_a_leer_aca = MIN(bytes_restantes_bloque_directo, cantidad_de_bytes);
         log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 0 - Bloque File System %i", fcb_archivo->name, fcb_archivo->direct_pointer);
 
+        sleep(retardo);
         fseek(archivo_de_bloques, (bloque_puntero * tamanio_bloque) + desplazamiento_dentro_del_bloque, SEEK_SET);
         fread(datos + bytes_leidos, sizeof(char), bytes_a_leer_aca, archivo_de_bloques);
         
@@ -254,7 +260,7 @@ char* leer_archivo(char* nombre, int puntero, int cantidad_de_bytes)
         bytes_leidos += bytes_a_leer_aca;
     }
 
-    int contador_puntero_indirecto = 0;
+    int contador_puntero_indirecto = bloque_puntero -2;
     int digitos_punteros = obtener_digitos_cant_bloque();
     if(bytes_por_leer > 0){
         log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 1 - Bloque File System %i", fcb_archivo->name, fcb_archivo->indirect_pointer);
@@ -328,8 +334,10 @@ void escribir_archivo(char* nombre, char* datos_a_guardar, int puntero, int cant
         
     }
     log_info(logger, "los bytes son: %i", bytes_por_copiar);
-    int contador_puntero_indirecto = 0;
+    int contador_puntero_indirecto = bloque_puntero - 2;
     int digitos_punteros = obtener_digitos_cant_bloque();
+
+    bool dormi_por_el_indirecto = false;
 
     while(bytes_por_copiar > 0 && bytes_copiados < cantidad_de_bytes)
     {
@@ -338,12 +346,25 @@ void escribir_archivo(char* nombre, char* datos_a_guardar, int puntero, int cant
         char* index_bloque = malloc(sizeof(char) * (digitos_punteros + 1));
         
         //Entro al bloque indirecto, y leo el indice que corresponde
+        if (!dormi_por_el_indirecto)
+        {
+            log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 1 - Bloque File System %i", fcb_archivo->name, fcb_archivo->indirect_pointer);
+            sleep(retardo);
+            dormi_por_el_indirecto = true;
+        }
+
         fseek(archivo_de_bloques, fcb_archivo->indirect_pointer * tamanio_bloque + contador_puntero_indirecto * digitos_punteros, SEEK_SET);
         fread(index_bloque, sizeof(char), digitos_punteros, archivo_de_bloques);
+
         index_bloque[digitos_punteros] = '\0';
         int index_bloque_int = atoi(index_bloque);
+
+        log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: %i - Bloque File System %i", fcb_archivo->name, contador_puntero_indirecto, index_bloque_int);
         log_info(logger, "Accedo al puntero %s", index_bloque);
         log_info(logger, "Bytes a copiar aca %i", bytes_a_copiar_aca );
+                
+        log_info(logger, "a mimir");
+        sleep(retardo);
         fseek(archivo_de_bloques, (index_bloque_int * tamanio_bloque), SEEK_SET);
         fwrite(datos_a_guardar + bytes_copiados, sizeof(char), bytes_a_copiar_aca, archivo_de_bloques);
  
@@ -355,6 +376,11 @@ void escribir_archivo(char* nombre, char* datos_a_guardar, int puntero, int cant
         free(index_bloque);
     }
     fclose(archivo_de_bloques);
-    
+}
 
+char* convertir_a_char(uint32_t numero){
+    char valor[10];
+    sprintf(valor, "%i", numero);
+    char* nuevo_valor = valor;
+    return nuevo_valor;
 }

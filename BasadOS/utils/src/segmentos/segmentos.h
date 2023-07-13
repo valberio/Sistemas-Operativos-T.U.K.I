@@ -11,6 +11,7 @@ typedef struct {
     int tamano;
     int id;
     int desplazamiento;
+    int pid;
 }Segmento;
 
 int obtener_segmento_por_id(int id, t_list* tabla_segmentos);

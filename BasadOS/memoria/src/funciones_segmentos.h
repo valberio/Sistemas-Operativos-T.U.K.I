@@ -15,7 +15,7 @@ extern void* espacio_de_memoria;
 Segmento* inicializar_segmento(int );
 int obtener_espacio_libre_total();
 void reservar_espacio_de_memoria(int,int);
-Segmento* crear_segmento(int id ,int tamano);
+Segmento *crear_segmento(int id, int tamano, int pid);
 void eliminar_segmento(t_contexto_de_ejecucion* contexto_de_ejecucions, int id);
 int get_index_of_list(t_list* ,int );
 void unificacion_de_huecos_libres();

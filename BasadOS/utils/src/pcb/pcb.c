@@ -183,7 +183,7 @@ t_buffer *serializar_contexto(t_contexto_de_ejecucion *contexto)
     }
 
     // 5. Tamaño de la TABLA de segmentos
-    tamano += sizeof(int) + (3 * sizeof(int)) * list_size(contexto->tabla_segmentos);
+    tamano += sizeof(int) + (4 * sizeof(int)) * list_size(contexto->tabla_segmentos);
 
     // Aloco la memoria para el buffer.
     buffer->size = tamano;
@@ -230,6 +230,8 @@ t_buffer *serializar_contexto(t_contexto_de_ejecucion *contexto)
         memcpy(stream + offset, &(segmento->id), sizeof(int));
         offset += sizeof(int);
         memcpy(stream + offset, &(segmento->desplazamiento), sizeof(int));
+        offset += sizeof(int);
+        memcpy(stream + offset, &(segmento->pid), sizeof(int));
         offset += sizeof(int);
     }
 
@@ -304,6 +306,8 @@ t_contexto_de_ejecucion *deserializar_contexto_de_ejecucion(t_buffer *buffer)
         stream += sizeof(int);
         memcpy(&(segmento->desplazamiento), stream, sizeof(int));
         stream += sizeof(int);
+        memcpy(&(segmento->pid), stream, sizeof(int));
+        stream += sizeof(int);
         list_add(contexto->tabla_segmentos, segmento);
     }
 
@@ -317,7 +321,7 @@ t_buffer *serializar_lista_segmentos(t_list *tabla)
     // Calculo el tamaño que necesito darle al buffer.
     uint32_t tamano = 0;
 
-    tamano += sizeof(int) + (3 * sizeof(int)) * list_size(tabla);
+    tamano += sizeof(int) + (4 * sizeof(int)) * list_size(tabla);
 
     // Aloco la memoria para el buffer.
     buffer->size = tamano;
@@ -336,6 +340,8 @@ t_buffer *serializar_lista_segmentos(t_list *tabla)
         memcpy(stream + offset, &(segmento->id), sizeof(int));
         offset += sizeof(int);
         memcpy(stream + offset, &(segmento->desplazamiento), sizeof(int));
+        offset += sizeof(int);
+        memcpy(stream + offset, &(segmento->pid), sizeof(int));
         offset += sizeof(int);
     }
 
@@ -358,6 +364,8 @@ t_list *deserializar_lista_de_segmentos(t_buffer *buffer)
         memcpy(&(segmento->tamano), stream, sizeof(int));
         stream += sizeof(int);
         memcpy(&(segmento->id), stream, sizeof(int));
+        stream += sizeof(int);
+        memcpy(&(segmento->desplazamiento), stream, sizeof(int));
         stream += sizeof(int);
         memcpy(&(segmento->desplazamiento), stream, sizeof(int));
         stream += sizeof(int);

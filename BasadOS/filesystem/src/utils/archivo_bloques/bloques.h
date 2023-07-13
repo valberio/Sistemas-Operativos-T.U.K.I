@@ -29,6 +29,7 @@ typedef struct {
     uint32_t size; //En bytes
     uint32_t direct_pointer; //Apunta al primer bloque de datos del archivo.
     uint32_t indirect_pointer; //Apunta a un bloque que contendrá los punteros a los siguientes bloques del archivo.
+    char* ruta;
 }t_fcb; 
 
 

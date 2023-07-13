@@ -23,7 +23,7 @@ void reservar_espacio_de_memoria(int tamano_memoria, int tamano_segmento_0)
     hueco_libre->id = huecos_libres;
     hueco_libre->desplazamiento = 0;
     list_add(lista_de_memoria, hueco_libre);
-    segmento_0 = crear_segmento(0, tamano_segmento_0);
+    segmento_0 = crear_segmento(0, tamano_segmento_0,-1);
 }
 
 int obtener_espacio_libre_total()
@@ -48,7 +48,7 @@ int obtener_espacio_libre_total()
     return espacio_libre_total;
 }
 
-Segmento *crear_segmento(int id, int tamano)
+Segmento *crear_segmento(int id, int tamano, int pid)
 {
     bool hay_hueco_libre(void *un_segmento)
     {
@@ -72,6 +72,7 @@ Segmento *crear_segmento(int id, int tamano)
             hueco_libre = worst_fit(id, tamano);
             break;
         }
+        nuevo_segmento->pid = pid;
         nuevo_segmento->id = id;
         nuevo_segmento->desplazamiento = hueco_libre->desplazamiento;
         hueco_libre->desplazamiento += tamano;

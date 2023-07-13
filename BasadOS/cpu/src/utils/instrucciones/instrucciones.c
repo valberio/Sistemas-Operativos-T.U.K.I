@@ -203,7 +203,18 @@ int mov_out(t_log *logger, char **instrucciones, t_contexto_de_ejecucion *contex
     // Memoria responde con un OK confirmado que escribió lo que debía
     recibir_paquete(conexion_memoria_cpu);
 
-    log_info(logger, "PID: <PID> - Acción: <ESCRIBIR> - Segmento: <%i> - Dirección Física: <%s> - Valor: <ESCRITO>", contexto->pid, instrucciones[2]);
+    char *valor_a_escribir = leer_registro(instrucciones[2], contexto->registros);
+    int id_segmento = -1;
+    for (int i = 0; i < list_size(contexto->tabla_segmentos); i++)
+    {
+        Segmento *segmento = list_get(contexto->tabla_segmentos, i);
+        if (segmento->desplazamiento < atoi(instrucciones[1]) && atoi(instrucciones[1]) < (segmento->desplazamiento + segmento->tamano))
+        {
+            id_segmento = segmento->id;
+        }
+    }
+
+    log_info(logger, "PID: %i - Acción: ESCRIBIR - Segmento: %i - Dirección Física: %s - Valor: %s", contexto->pid, id_segmento, instrucciones[1], valor_a_escribir);
     return 0;
 }
 

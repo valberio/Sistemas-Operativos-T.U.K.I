@@ -46,7 +46,7 @@ int main()
 	bitarray = crear_bitmap(ruta_bitmap, cantidad_bloques);
 
 	ruta_archivo_bloques = config_get_string_value(config, "PATH_BLOQUES");
-	vaciar_archivo_bloques(cantidad_bloques, tamanio_bloque);
+	//vaciar_archivo_bloques(cantidad_bloques, tamanio_bloque);
 
 	// Recorro el directorio de FCBs y creo estructuras
 	recorrer_directorio_fcb(ruta_bitmap);
@@ -191,6 +191,7 @@ void crear_estructura_fcb(char *ruta) // habria que llamarlo crear fcb
 	fcb->indirect_pointer = config_get_int_value(fcb_config, "PUNTERO_INDIRECTO");
 	fcb->size = config_get_int_value(fcb_config, "TAMANIO_ARCHIVO");
 	fcb->name = config_get_string_value(fcb_config, "NOMBRE_ARCHIVO");
+	fcb->ruta = ruta;
 	list_add(fcb_list, fcb);
 	if (fcb->indirect_pointer == -1)
 	{

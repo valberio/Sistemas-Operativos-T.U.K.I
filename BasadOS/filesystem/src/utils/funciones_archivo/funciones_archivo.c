@@ -21,7 +21,6 @@ void truncar_archivo(char *nombre_archivo, int nuevo_tamanio)
     {
         agrandar_archivo(fcb_archivo, nuevo_tamanio);
     }
-    // FILE *archivo = fopen(fcb_archivo->ruta, "");
     t_config *config = iniciar_config(fcb_archivo->ruta);
     char *size_str = convertir_a_char(fcb_archivo->size);
     char *direct_pointer_str = convertir_a_char(fcb_archivo->direct_pointer);
@@ -35,7 +34,6 @@ void truncar_archivo(char *nombre_archivo, int nuevo_tamanio)
     free(size_str);
     free(direct_pointer_str);
     free(indirect_pointer_str);
-    // fclose(archivo);
 }
 
 int division_redondeada_hacia_arriba(int dividendo, int divisor)

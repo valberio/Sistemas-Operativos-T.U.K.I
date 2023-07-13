@@ -94,7 +94,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 		proceso_en_ejecucion->inicio_de_uso_de_cpu = clock(); // ACA SE INICIALIZA EL TIEMPO EN EJECUCION
 
 		// PLANIFICACION
-		//log_info(logger, "EL ESTIMADO DE RAFAGA %f\n", proceso_en_ejecucion->estimado_rafaga);
+		// log_info(logger, "EL ESTIMADO DE RAFAGA %f\n", proceso_en_ejecucion->estimado_rafaga);
 		enviar_contexto_de_ejecucion(proceso_en_ejecucion->contexto_de_ejecucion, cliente_cpu);
 
 		int ejecucion = 1;
@@ -108,8 +108,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 			proceso_en_ejecucion->contexto_de_ejecucion = contexto_actualizado;
 			char *parametros_retorno;
 			t_paquete *paquete_respuesta;
-			log_info(logger, "PID:%i", proceso_en_ejecucion->pid);
-		
+
 			switch (paquete->codigo_operacion)
 			{
 
@@ -131,9 +130,10 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				queue_push(cola_exit, proceso_en_ejecucion);
 				sem_post(&mutex_cola_exit);
 
-				sem_post(&semaforo_procesos_en_exit);
 				log_info(logger, "PID: %i - Estado anterior: RUNNING - Estado actual: EXIT", proceso_en_ejecucion->pid);
 				log_info(logger, "Finaliza el proceso %i - Motivo: SUCCES", proceso_en_ejecucion->pid);
+
+				sem_post(&semaforo_procesos_en_exit);
 				ejecucion = 0;
 				// Actualizo el Proceso_en_ejecucion y lo mando a exit
 				// Mando un mensaje a la consola del proceso avisándole que completó la ejecución
@@ -201,7 +201,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				// Recibo parámetros de CPU
 				char *id = recibir_mensaje(cliente_cpu);
 				char *tamanio = recibir_mensaje(cliente_cpu);
-				log_info(logger,"PID: %i - Crear Segmento - Id: %s - Tamaño: %s",contexto_actualizado->pid,id,tamanio);
+				log_info(logger, "PID: %i - Crear Segmento - Id: %s - Tamaño: %s", contexto_actualizado->pid, id, tamanio);
 
 				// Envio contexto y código de operación
 				enviar_paquete(paquete_a_memoria, cliente_memoria);
@@ -235,9 +235,9 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				case COMPACTACION_NECESARIA:
 					// checkear operaciones entre filesystem y memoria
 					log_info(logger, "KERNEL solicita compactación");
-					log_info(logger,"Compactación: Esperando Fin de Operaciones de FS");
+					log_info(logger, "Compactación: Esperando Fin de Operaciones de FS");
 					sem_wait(&semaforo_para_compactacion);
-					log_info(logger,"Compactación: Se solicitó compactación ");
+					log_info(logger, "Compactación: Se solicitó compactación ");
 					enviar_mensaje("compactar", cliente_memoria);
 					paquete_respuesta = recibir_paquete(cliente_memoria);
 					t_list *segmentos_actualizados = deserializar_lista_de_segmentos(paquete_respuesta->buffer);
@@ -264,7 +264,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 					queue_push(cola_ready, proceso_en_ejecucion);
 					sem_post(&mutex_cola_ready);
 					sem_post(&semaforo_procesos_en_ready);
-					log_info(logger,"Se finalizó el proceso de compactación");
+					log_info(logger, "Se finalizó el proceso de compactación");
 					log_info(logger, "PID: %i - Estado anterior: RUNNING - Estado actual: READY", proceso_en_ejecucion->pid);
 					break;
 				case OUT_OF_MEMORY:
@@ -293,7 +293,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				paquete_a_memoria1->codigo_operacion = ELIMINAR_SEGMENTO;
 				paquete_a_memoria1->buffer = serializar_contexto(contexto_actualizado);
 				char *id_a_eliminar = recibir_mensaje(cliente_cpu);
-				log_info(logger,"PID: %i - Eliminar Segmento - Id Segmento: %s",contexto_actualizado->pid,id_a_eliminar);
+				log_info(logger, "PID: %i - Eliminar Segmento - Id Segmento: %s", contexto_actualizado->pid, id_a_eliminar);
 				enviar_paquete(paquete_a_memoria1, cliente_memoria);
 				eliminar_paquete(paquete_a_memoria1);
 				enviar_mensaje(id_a_eliminar, cliente_memoria);
@@ -358,7 +358,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				char *puntero_seek = recibir_mensaje(cliente_cpu);
 				uint32_t valor_puntero = strtoul(puntero_seek, NULL, 10);
 				actualizar_puntero(proceso_en_ejecucion, parametros_retorno, valor_puntero);
-				log_info(logger,"PID: %i - Actualizar puntero Archivo: %s - Puntero %i",contexto_actualizado->pid,parametros_retorno,valor_puntero);
+				log_info(logger, "PID: %i - Actualizar puntero Archivo: %s - Puntero %i", contexto_actualizado->pid, parametros_retorno, valor_puntero);
 				break;
 
 			case TRUNCAR_ARCHIVO:
@@ -390,7 +390,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				char puntero_str_lectura[12];
 				sprintf(puntero_str_lectura, "%u", puntero_lectura);
 				char *puntero_char_ptr_lectura = puntero_str_lectura;
-				log_info(logger,"PID: %i - Leer Archivo: %s - Puntero %i - Dirección Memoria %s- Tamaño %s",contexto_actualizado->pid,nombre_lectura,puntero_lectura,direccion_fisica_lectura,cantidad_bytes_lectura);
+				log_info(logger, "PID: %i - Leer Archivo: %s - Puntero %i - Dirección Memoria %s- Tamaño %s", contexto_actualizado->pid, nombre_lectura, puntero_lectura, direccion_fisica_lectura, cantidad_bytes_lectura);
 				parametros_hilo_kernel_filesystem.conexion = cliente_filesystem;
 				parametros_hilo_kernel_filesystem.mensaje = nombre_lectura;
 				parametros_hilo_kernel_filesystem.valor = cantidad_bytes_lectura;
@@ -405,6 +405,11 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				log_info(logger, "PID : %i - Bloqueado por: %s", proceso_en_ejecucion->pid, nombre_lectura);
 				sem_wait(&semaforo_peticiones_filesystem);
 				sem_wait(&semaforo_para_compactacion);
+
+				paquete->buffer = serializar_contexto(contexto_actualizado);
+				paquete->codigo_operacion = PETICION_LECTURA;
+				enviar_paquete(paquete, cliente_filesystem);
+				
 				pthread_t hilo_lector_de_archivos;
 				pthread_create(&hilo_lector_de_archivos, NULL, solicitar_lectura, (void *)&parametros_hilo_kernel_filesystem);
 				pthread_detach(hilo_lector_de_archivos);
@@ -418,7 +423,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				char puntero_str[12];
 				sprintf(puntero_str, "%u", puntero);
 				char *puntero_char_ptr = puntero_str;
-				log_info(logger,"PID: %i - Escribir Archivo: %s - Puntero %i - Dirección Memoria %s - Tamaño %s",contexto_actualizado->pid,nombre,puntero,direccion_fisica,cantidad_bytes);
+				log_info(logger, "PID: %i - Escribir Archivo: %s - Puntero %i - Dirección Memoria %s - Tamaño %s", contexto_actualizado->pid, nombre, puntero, direccion_fisica, cantidad_bytes);
 
 				parametros_hilo_kernel_filesystem.conexion = cliente_filesystem;
 				parametros_hilo_kernel_filesystem.mensaje = nombre;
@@ -432,8 +437,14 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				sem_post(&mutex_cola_blocked);
 				log_info(logger, "PID: %i - Estado Anterior: RUNNING - Estado Actual: BLOCKED", proceso_en_ejecucion->pid);
 				log_info(logger, "PID : %i - Bloqueado por: %s", proceso_en_ejecucion->pid, nombre);
+
 				sem_wait(&semaforo_peticiones_filesystem);
 				sem_wait(&semaforo_para_compactacion);
+
+				paquete->buffer = serializar_contexto(contexto_actualizado);
+				paquete->codigo_operacion = PETICION_ESCRITURA;
+				enviar_paquete(paquete, cliente_filesystem);
+		
 				pthread_t hilo_escritor_de_archivos;
 				pthread_create(&hilo_escritor_de_archivos, NULL, solicitar_escritura, (void *)&parametros_hilo_kernel_filesystem);
 				pthread_detach(hilo_escritor_de_archivos);
@@ -456,10 +467,7 @@ void *solicitar_escritura(void *arg)
 	char *direccion_fisica = args->direccion_fisica;
 	char *puntero = args->puntero;
 	int pid = args->pid;
-	t_paquete *paquete = crear_paquete();
-	paquete->codigo_operacion = PETICION_ESCRITURA;
-	enviar_paquete(paquete, cliente_filesystem);
-	eliminar_paquete(paquete);
+
 	enviar_mensaje(puntero, cliente_filesystem);
 	enviar_mensaje(cantidad_bytes, cliente_filesystem);
 	enviar_mensaje(direccion_fisica, cliente_filesystem);
@@ -503,10 +511,6 @@ void *solicitar_lectura(void *arg)
 	char *direccion_fisica = args->direccion_fisica;
 	char *puntero = args->puntero;
 	int pid = args->pid;
-	t_paquete *paquete = crear_paquete();
-	paquete->codigo_operacion = PETICION_LECTURA;
-	enviar_paquete(paquete, cliente_filesystem);
-	eliminar_paquete(paquete);
 	enviar_mensaje(puntero, cliente_filesystem);
 	enviar_mensaje(cantidad_bytes, cliente_filesystem);
 	enviar_mensaje(direccion_fisica, cliente_filesystem);
@@ -581,7 +585,6 @@ void *solicitar_truncamiento(void *arg)
 	sem_post(&semaforo_procesos_en_ready);
 	sem_post(&semaforo_peticiones_filesystem);
 	log_info(logger, "PID: %i - Estado Anterior: BLOCKED - Estado Actual: READY", proceso_a_recuperar->pid);
-
 
 	return NULL;
 }

@@ -21,12 +21,7 @@ void *comunicacion_con_kernel(void *arg)
         log_info(logger, "Recibi una peticion de KERNEL");
         t_paquete *paquete = recibir_paquete(conexion_kernel);
         t_contexto_de_ejecucion *contexto = deserializar_contexto_de_ejecucion(paquete->buffer);
-        log_info(logger, "LA LISTA DE MEMORIA TIENE:");
-        for (int i = 0; i < list_size(lista_de_memoria); i++)
-        {
-            Segmento *sas = list_get(lista_de_memoria, i);
-            log_info(logger, "\n SEGMENTO ID: %d, DESPLAZAMIENTO: %d", sas->id, sas->desplazamiento);
-        }
+        
         switch (paquete->codigo_operacion)
         {
         case INICIALIZAR_PROCESO:
@@ -202,7 +197,7 @@ void *comunicacion_con_filesystem(void *arg)
         t_paquete *peticion = recibir_paquete(conexion_filesystem);
         t_contexto_de_ejecucion *contexto = deserializar_contexto_de_ejecucion(peticion->buffer);
         // t_paquete *paquete_respuesta = crear_paquete();
-
+        
         char *dir_fis;
         int direccion_fisica;
 
@@ -214,7 +209,7 @@ void *comunicacion_con_filesystem(void *arg)
             direccion_fisica = atoi(dir_fis);
             char *datos_a_guardar = recibir_mensaje(conexion_filesystem);
             memcpy(espacio_de_memoria + direccion_fisica, datos_a_guardar, strlen(datos_a_guardar));
-            log_info(logger,"PID: %i - Acción: ESCRIBIR - Dirección física: %s - Tamaño: %li- Origen: FS",contexto->pid,dir_fis,strlen(datos_a_guardar));
+            log_info(logger,"PID: %i - Acción: ESCRIBIR - Dirección física: %s - Tamaño: %li- Origen: FS", contexto->pid, dir_fis, strlen(datos_a_guardar));
 
             char *test = malloc(strlen(datos_a_guardar));
             memcpy(test, espacio_de_memoria + direccion_fisica, strlen(datos_a_guardar));
@@ -225,18 +220,18 @@ void *comunicacion_con_filesystem(void *arg)
             break;
 
         case PETICION_LECTURA:
-
             dir_fis = recibir_mensaje(conexion_filesystem);
             direccion_fisica = atoi(dir_fis);
             char *cant_b = recibir_mensaje(conexion_filesystem);
             int cantidad_bytes = atoi(cant_b);
-            log_info(logger,"PID: %i - Acción: LECTURA - Dirección física: %s - Tamaño: %i- Origen: FS",contexto->pid,dir_fis,cantidad_bytes);
+            log_info(logger,"PID: %i - Acción: LECTURA - Dirección física: %s - Tamaño: %i- Origen: FS",contexto->pid, dir_fis,cantidad_bytes);
 
             char *datos = malloc((cantidad_bytes + 1) * sizeof(char));
             memcpy(datos, espacio_de_memoria + direccion_fisica, cantidad_bytes * sizeof(char));
             log_info(logger, "Lei %s porque me lo pidio filesystem", datos);
 
             enviar_mensaje(datos, conexion_filesystem);
+            free(datos);
             break;
         default:
             break;

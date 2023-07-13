@@ -70,6 +70,9 @@ void recibir_ordenes_kernel(int conexion_filesystem_kernel, int cliente_filesyst
 	while (conexion_filesystem_kernel >= 0)
 	{
 		t_paquete *operacion = recibir_contexto_de_ejecucion(conexion_filesystem_kernel);
+		t_contexto_de_ejecucion *contexto = malloc(sizeof(t_contexto_de_ejecucion));
+
+		contexto = deserializar_contexto_de_ejecucion(operacion->buffer);
 		char *nombre_archivo;
 		char *puntero;
 		char *cantidad_bytes;
@@ -103,7 +106,8 @@ void recibir_ordenes_kernel(int conexion_filesystem_kernel, int cliente_filesyst
 			char *datos_de_archivo = leer_archivo(nombre_archivo, puntero_int, cantidad_bytes_int);
 			log_info(logger, "Lei %s", datos_de_archivo);
 			// Le pido a memoria que guarde lo que leí
-
+	
+			solicitud_a_memoria->buffer = serializar_contexto(contexto);
 			solicitud_a_memoria->codigo_operacion = PETICION_ESCRITURA;
 			log_info(logger, "Pido a memoria que guarde %s", datos_de_archivo);
 
@@ -125,7 +129,8 @@ void recibir_ordenes_kernel(int conexion_filesystem_kernel, int cliente_filesyst
 			cantidad_bytes_int = atoi(cantidad_bytes);
 			puntero_int = atoi(puntero);
 			log_info(logger, "El puntero es: %s", puntero);
-
+			
+			solicitud_a_memoria->buffer =  serializar_contexto(contexto);
 			solicitud_a_memoria->codigo_operacion = PETICION_LECTURA;
 			enviar_paquete(solicitud_a_memoria, cliente_filesystem_a_memoria);
 

@@ -24,7 +24,12 @@ void truncar_archivo(char *nombre_archivo, int nuevo_tamanio)
     t_config *config = iniciar_config(fcb_archivo->ruta);
     char *size_str = convertir_a_char(fcb_archivo->size);
     char *direct_pointer_str = convertir_a_char(fcb_archivo->direct_pointer);
-    char *indirect_pointer_str = convertir_a_char(fcb_archivo->indirect_pointer);
+
+    char *indirect_pointer_str = "-1";
+    if (fcb_archivo->indirect_pointer != -1)
+    {
+        indirect_pointer_str = convertir_a_char(fcb_archivo->indirect_pointer);
+    };
 
     config_set_value(config, "TAMANIO_ARCHIVO", size_str);
     config_set_value(config, "PUNTERO_DIRECTO", direct_pointer_str);
@@ -33,7 +38,10 @@ void truncar_archivo(char *nombre_archivo, int nuevo_tamanio)
 
     free(size_str);
     free(direct_pointer_str);
-    free(indirect_pointer_str);
+    if (fcb_archivo->indirect_pointer != -1)
+    {
+        free(indirect_pointer_str);
+    }
 }
 
 int division_redondeada_hacia_arriba(int dividendo, int divisor)
@@ -76,6 +84,8 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
     if (fcb_archivo->direct_pointer == -1)
     { // NO TENGA NADA
         bloques_por_agregar--;
+        fcb_archivo->size += MIN(bytes_por_asignar, tamanio_bloque);
+
         bytes_por_asignar = MAX(bytes_por_asignar - tamanio_bloque, 0);
 
         char *nuevo_bloque_directo = obtener_puntero_bloque_libre(cantidad_bloques);
@@ -83,7 +93,6 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
         setear_bit(fcb_archivo->direct_pointer);
         log_info(logger, "El bloque directo es %i", fcb_archivo->direct_pointer);
 
-        fcb_archivo->size += MIN(bytes_por_asignar, tamanio_bloque);
         log_info(logger, "Tamaño del fcb %i bytes por asignar %i bloques por asignar %i", fcb_archivo->size, bytes_por_asignar, bloques_por_agregar);
     }
     if (fcb_archivo->direct_pointer >= 0 && fcb_archivo->indirect_pointer == -1 && bytes_por_asignar > 0)

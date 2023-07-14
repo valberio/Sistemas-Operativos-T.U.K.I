@@ -8,6 +8,7 @@ int crear_conexion_al_server(t_log *logger, char *ip, char *puerto)
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_PASSIVE;
 
 	int estado_addr = getaddrinfo(ip, puerto, &hints, &server_info);
 

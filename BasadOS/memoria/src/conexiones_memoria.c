@@ -65,6 +65,7 @@ void *comunicacion_con_kernel(void *arg)
                 recibir_mensaje(conexion_kernel);
                 log_info(logger, "Solicitud de Compactación");
                 t_list *segmentos_modificados = compactar();
+                sleep(retardo_compactacion);
                 for (int i = 0; i < list_size(lista_de_memoria); i++)
                 {
                     Segmento *segmento_a_loggear = list_get(lista_de_memoria, i);
@@ -268,7 +269,7 @@ void *comunicacion_con_filesystem(void *arg)
 // TODO: esto hay que cambiarlo a un enum
 op_code respuesta_a_kernel(Segmento *segmento, t_contexto_de_ejecucion *contexto)
 {
-    if (segmento->tamano == -2 || list_size(contexto->tabla_segmentos) > cantidad_maxima_segmentos_por_proceso)
+    if (segmento->tamano == -2 || list_size(contexto->tabla_segmentos) == cantidad_maxima_segmentos_por_proceso)
     {
         return OUT_OF_MEMORY;
     }

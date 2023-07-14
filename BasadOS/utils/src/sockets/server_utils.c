@@ -10,7 +10,7 @@ int iniciar_servidor(t_log *logger, char *puerto)
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 
-	getaddrinfo(IP, puerto, &hints, &servinfo);
+	getaddrinfo(NULL, puerto, &hints, &servinfo);
 
 	socket_servidor = socket(servinfo->ai_family,
 							 servinfo->ai_socktype,

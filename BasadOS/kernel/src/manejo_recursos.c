@@ -31,7 +31,7 @@ void crear_lista_de_recursos(t_list* recursos, char** recursos_array,char** inst
 		sem_post(&mutex_cola_exit);
 		
 		log_info(logger, "PID: %i - Estado Anterior: RUNNING - Estado Actual: EXIT", proceso->pid);
-		log_info(logger, "Finaliza el proceso %i - Motivo: SEG_FAULT", proceso->pid);
+		log_info(logger, "Finaliza el proceso %i - Motivo: INVALID_RESOURCE", proceso->pid);
 
 		sem_post(&semaforo_procesos_en_exit);
 
@@ -63,7 +63,7 @@ int signal_recurso(char* recurso,t_pcb* proceso){
 		queue_push(cola_exit,proceso);
 		sem_post(&mutex_cola_exit);
 		log_info(logger, "PID: %i - Estado Anterior: RUNNING - Estado Actual: EXIT", proceso->pid);
-		log_info(logger, "Finaliza el proceso %i - Motivo: SEG_FAULT", proceso->pid);
+		log_info(logger, "Finaliza el proceso %i - Motivo: INVALID_RESOURCE", proceso->pid);
 		sem_post(&semaforo_procesos_en_exit);
 		return 1;
 	} 

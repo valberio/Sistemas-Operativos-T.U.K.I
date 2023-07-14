@@ -53,7 +53,7 @@ int main(void)
 					{
 						cortar_ejecucion = true;
 						t_paquete* paquete = crear_paquete();
-						paquete->codigo_operacion = SEGMENTATATION_FAULT;
+						paquete->codigo_operacion = SEGMENTATION_FAULT;
 						paquete->buffer = serializar_contexto(contexto);
 						enviar_paquete(paquete, conexion_cpu_kernel);
 						break;

@@ -140,6 +140,22 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				// Mando un paquete con buffer vacio y código de operación EXIT
 				break;
 
+			case SEGMENTATION_FAULT: // Caso EXIT
+
+				sem_wait(&mutex_cola_exit);
+				queue_push(cola_exit, proceso_en_ejecucion);
+				sem_post(&mutex_cola_exit);
+
+				log_info(logger, "PID: %i - Estado anterior: RUNNING - Estado actual: EXIT", proceso_en_ejecucion->pid);
+				log_info(logger, "Finaliza el proceso %i - Motivo: SEG_FAULT", proceso_en_ejecucion->pid);
+
+				sem_post(&semaforo_procesos_en_exit);
+				ejecucion = 0;
+				// Actualizo el Proceso_en_ejecucion y lo mando a exit
+				// Mando un mensaje a la consola del proceso avisándole que completó la ejecución
+				// Mando un paquete con buffer vacio y código de operación EXIT
+				break;	
+
 			case INTERRUPCION_BLOQUEANTE: // Caso I/O, tengo que recibir el tiempo que se bloquea el proceso
 				parametros_retorno = recibir_mensaje(cliente_cpu);
 				pthread_t hilo_procesos_IO[50];

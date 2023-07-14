@@ -18,10 +18,10 @@ int obtener_segmento_por_id(int id, t_list *tabla_segmentos)
 int traduccion_dir_logica_fisica(int dir_logica, t_list *tabla_segmentos, int tam_max_segmento, int bytes_a_escribir)
 {
     int desplazamiento_segmento = dir_logica % tam_max_segmento;
-
+    
     if (list_size(tabla_segmentos) != 0)
     {
-        Segmento *segmento_a_encontrar;
+        Segmento *segmento_a_encontrar = NULL;
         for (int i = 0; i < list_size(tabla_segmentos); i++)
         {
             Segmento *segmento = list_get(tabla_segmentos, i);
@@ -31,11 +31,11 @@ int traduccion_dir_logica_fisica(int dir_logica, t_list *tabla_segmentos, int ta
                 segmento_a_encontrar = segmento;
             }
         };
-        int dir_fisica = segmento_a_encontrar->desplazamiento + desplazamiento_segmento;
+        int dir_fisica = -1; // Caso de SEGFAULT
 
-        if (segmento_a_encontrar == NULL) // Caso de SEGFAULT
+        if (segmento_a_encontrar != NULL) 
         {
-            dir_fisica = -1;
+            dir_fisica = segmento_a_encontrar->desplazamiento + desplazamiento_segmento;;
         }
         return dir_fisica;
     }

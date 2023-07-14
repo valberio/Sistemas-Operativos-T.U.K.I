@@ -40,7 +40,6 @@ typedef struct{
     double estimado_rafaga;
     double tiempo_de_la_ultima_rafaga;
 
-    t_list* tabla_segmentos;
     t_list* tabla_archivos_abiertos;
 } t_pcb;
 

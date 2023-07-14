@@ -21,10 +21,14 @@ char *ruta_superbloque;
 char *ruta_bitmap;
 char *ruta_archivo_bloques;
 
-int main()
+int main(int argc, char* argv[])
 {
+	if(argc < 2){
+        return EXIT_FAILURE;
+    }
+
 	logger = iniciar_logger("log_filesystem.log", "LOG_FILESYSTEM");
-	config = iniciar_config("configs/filesystem.config");
+	config = iniciar_config(argv[1]);
 	fcb_list = list_create();
 	// Conecto filesystem como cliente a memoria
 	char *puerto_a_memoria = config_get_string_value(config, "PUERTO_MEMORIA");
@@ -36,6 +40,7 @@ int main()
 
 	tamanio_bloque = config_get_double_value(superbloque_config, "BLOCK_SIZE");
 	cantidad_bloques = config_get_double_value(superbloque_config, "BLOCK_COUNT");
+	config_destroy(superbloque_config);
 
 	retardo = config_get_int_value(config, "RETARDO_ACCESO_BLOQUE") / 1000;
 
@@ -64,15 +69,18 @@ int main()
 	bitarray_destroy(bitarray);
 }
 
+
+
 void recibir_ordenes_kernel(int conexion_filesystem_kernel, int cliente_filesystem_a_memoria)
 {
 
-	while (conexion_filesystem_kernel >= 0)
+	while (conexion_filesystem_kernel)
 	{
-		t_paquete *operacion = recibir_contexto_de_ejecucion(conexion_filesystem_kernel);
-		t_contexto_de_ejecucion *contexto = malloc(sizeof(t_contexto_de_ejecucion));
-
-		contexto = deserializar_contexto_de_ejecucion(operacion->buffer);
+		t_paquete *operacion = recibir_paquete(conexion_filesystem_kernel);
+		if(operacion == NULL){
+			break;
+		}
+		t_contexto_de_ejecucion *contexto = deserializar_contexto_de_ejecucion(operacion->buffer);
 		char *nombre_archivo;
 		char *puntero;
 		char *cantidad_bytes;
@@ -80,6 +88,7 @@ void recibir_ordenes_kernel(int conexion_filesystem_kernel, int cliente_filesyst
 		int cantidad_bytes_int;
 		int puntero_int;
 		t_paquete *solicitud_a_memoria = crear_paquete();
+	
 		switch (operacion->codigo_operacion)
 		{
 		case ABRIR_ARCHIVO:
@@ -91,6 +100,7 @@ void recibir_ordenes_kernel(int conexion_filesystem_kernel, int cliente_filesyst
 			char *nombre_archivo = recibir_mensaje(conexion_filesystem_kernel);
 			char *nuevo_tamano = recibir_mensaje(conexion_filesystem_kernel);
 			int tamanio = atoi(nuevo_tamano);
+			log_info(logger, "Truncar Archivo: %s - Tamaño: %s", nombre_archivo, nuevo_tamanio)
 			truncar_archivo(nombre_archivo, tamanio);
 			enviar_mensaje("OK", conexion_filesystem_kernel);
 			break;
@@ -146,6 +156,8 @@ void recibir_ordenes_kernel(int conexion_filesystem_kernel, int cliente_filesyst
 		default:
 			break;
 		}
+		eliminar_paquete(operacion);
+		eliminar_paquete(solicitud_a_memoria);
 	}
 }
 

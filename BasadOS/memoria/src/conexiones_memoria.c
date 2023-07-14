@@ -1,5 +1,7 @@
 #include "conexiones_memoria.h"
 
+
+
 void *comunicacion_con_kernel(void *arg)
 {
     parametros_de_hilo *parametros = (parametros_de_hilo *)arg;
@@ -16,12 +18,15 @@ void *comunicacion_con_kernel(void *arg)
         log_info(logger, "Se conectó el kernel!");
     }
 
-    while (conexion_kernel >= 0)
+    while (conexion_kernel)
     {
         log_info(logger, "Recibi una peticion de KERNEL");
         t_paquete *paquete = recibir_paquete(conexion_kernel);
+        if(paquete == NULL){
+            break;
+        }
         t_contexto_de_ejecucion *contexto = deserializar_contexto_de_ejecucion(paquete->buffer);
-
+   
         switch (paquete->codigo_operacion)
         {
         case INICIALIZAR_PROCESO:
@@ -31,7 +36,7 @@ void *comunicacion_con_kernel(void *arg)
             paquete_inicializar_proceso->codigo_operacion = 0;
             paquete_inicializar_proceso->buffer = serializar_contexto(contexto);
             enviar_paquete(paquete_inicializar_proceso, conexion_kernel);
-            free(paquete_inicializar_proceso);
+            eliminar_paquete(paquete_inicializar_proceso);
             break;
         case FINALIZAR_PROCESO:
             log_info(logger, "Eliminación de Proceso PID: %i", contexto->pid);
@@ -54,7 +59,7 @@ void *comunicacion_con_kernel(void *arg)
             paquete_a_kernel->buffer = serializar_contexto(contexto);
 
             enviar_paquete(paquete_a_kernel, conexion_kernel);
-
+            eliminar_paquete(paquete_a_kernel);
             if (segmento_nuevo->tamano == -1)
             {
                 recibir_mensaje(conexion_kernel);
@@ -63,13 +68,15 @@ void *comunicacion_con_kernel(void *arg)
                 for (int i = 0; i < list_size(lista_de_memoria); i++)
                 {
                     Segmento *segmento_a_loggear = list_get(lista_de_memoria, i);
-                    log_info(logger, "PID: %i - Segmento: %i- Base: %i- Tamaño : %i", segmento_a_loggear->pid,segmento_a_loggear->id, segmento_a_loggear->desplazamiento,segmento_a_loggear->tamano);
+                    log_info(logger, "PID: %i - Segmento: %i - Base: %i- Tamaño : %i", segmento_a_loggear->pid,segmento_a_loggear->id, segmento_a_loggear->desplazamiento,segmento_a_loggear->tamano);
                 }
 
-                paquete_a_kernel->codigo_operacion = 0;
-                paquete_a_kernel->buffer = serializar_lista_segmentos(segmentos_modificados);
+                t_paquete *paquete_compactacion = crear_paquete();
+                paquete_compactacion->codigo_operacion = 0;
+                paquete_compactacion->buffer = serializar_lista_segmentos(segmentos_modificados);
 
-                enviar_paquete(paquete_a_kernel, conexion_kernel);
+                enviar_paquete(paquete_compactacion, conexion_kernel);
+                eliminar_paquete(paquete_compactacion);
             }
 
             break;
@@ -85,11 +92,13 @@ void *comunicacion_con_kernel(void *arg)
             paquete_a_kernel_eliminar->codigo_operacion = 0;
             paquete_a_kernel_eliminar->buffer = serializar_contexto(contexto);
             enviar_paquete(paquete_a_kernel_eliminar, conexion_kernel);
+            eliminar_paquete(paquete_a_kernel_eliminar);
             break;
 
         default:
             break;
         }
+
         eliminar_paquete(paquete);
     }
     return NULL;
@@ -112,16 +121,20 @@ void *comunicacion_con_cpu(void *arg)
         log_info(logger, "Se conectó el CPU!");
     }
 
-    while (conexion_cpu >= 0)
+    while (conexion_cpu)
     {
         t_paquete *peticion = recibir_paquete(conexion_cpu);
+        if(peticion == NULL){
+            break;
+        }
         t_contexto_de_ejecucion *contexto = deserializar_contexto_de_ejecucion(peticion->buffer);
         t_paquete *paquete_respuesta = crear_paquete();
 
         char *registro;
         char *char_dir_fis;
         int direccion_fisica;
-
+        
+  
         switch (peticion->codigo_operacion)
         {
         case PETICION_LECTURA: // Caso lectura, mov_in, guardo en el registro lo que lei en la direccion de memoria
@@ -175,6 +188,10 @@ void *comunicacion_con_cpu(void *arg)
         default:
             break;
         }
+        
+        eliminar_paquete(paquete_respuesta);
+        eliminar_paquete(peticion);
+
     }
     return NULL;
 }
@@ -195,9 +212,12 @@ void *comunicacion_con_filesystem(void *arg)
         log_info(logger, "Se conectó el filesystem!");
     }
 
-    while (conexion_filesystem >= 0)
+    while (conexion_filesystem)
     {
         t_paquete *peticion = recibir_paquete(conexion_filesystem);
+        if(peticion == NULL){
+            break;
+        }
         t_contexto_de_ejecucion *contexto = deserializar_contexto_de_ejecucion(peticion->buffer);
         // t_paquete *paquete_respuesta = crear_paquete();
 
@@ -239,6 +259,7 @@ void *comunicacion_con_filesystem(void *arg)
         default:
             break;
         }
+        eliminar_paquete(peticion);
     }
     return NULL;
 }
@@ -272,5 +293,4 @@ void finalizar_proceso(t_contexto_de_ejecucion *contexto_de_ejecucion)
         log_info(logger, "El segmento es: %i", segmento->id);
         eliminar_segmento(contexto_de_ejecucion, segmento->id);
     }
-    list_clean(contexto_de_ejecucion->tabla_segmentos);
 }

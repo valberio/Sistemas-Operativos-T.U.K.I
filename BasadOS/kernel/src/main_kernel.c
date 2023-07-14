@@ -34,11 +34,16 @@ t_list *lista_archivos_abiertos;
 t_log *logger;
 t_config *config;
 
-int main(void)
-{
-	logger = iniciar_logger("log_kernel.log", "LOG_KERNEL");
-	config = iniciar_config("configs/config_kernel.config");
 
+int main(int argc, char* argv[]) {
+    if(argc < 2){
+        return EXIT_FAILURE;
+    }
+
+    // Lectura e impresion de pseudocodigo
+    config = iniciar_config(argv[1]);
+	logger = iniciar_logger("log_kernel.log", "LOG_KERNEL");
+	
 	cola_new = queue_create();
 	cola_ready = queue_create();
 	cola_blocked = queue_create();

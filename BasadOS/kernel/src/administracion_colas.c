@@ -32,8 +32,7 @@ void administrar_procesos_de_exit(int conexion_kernel_memoria)
 		enviar_paquete(paquete, proceso_a_finalizar->socket_consola);
 		eliminar_paquete(paquete);
 
-		list_clean_and_destroy_elements(proceso_a_finalizar->tabla_segmentos, free);
-		free(proceso_a_finalizar);
+		liberar_pcb(proceso_a_finalizar);
 		sem_post(&semaforo_multiprogramacion);
 	}
 }
@@ -79,7 +78,6 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 		// log de cola de ready
 		t_pcb *proceso_en_ejecucion;
 		char *planificador = config_get_string_value(config, "ALGORITMO_PLANIFICACION");
-
 		if (strcmp(planificador, "HRRN") == 0)
 		{
 			proceso_en_ejecucion = salida_HRRN();
@@ -115,8 +113,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 			case INTERRUPCION_A_READY: // Caso YIELD
 				// Actualizo el Proceso_en_ejecucion y lo mando a ready
 				sem_wait(&mutex_cola_ready);
-				proceso_en_ejecucion->fin_de_uso_de_cpu = clock();
-				calcular_estimado_de_rafaga(proceso_en_ejecucion);
+
 				queue_push(cola_ready, proceso_en_ejecucion);
 				sem_post(&mutex_cola_ready);
 				sem_post(&semaforo_procesos_en_ready);
@@ -154,7 +151,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				// Actualizo el Proceso_en_ejecucion y lo mando a exit
 				// Mando un mensaje a la consola del proceso avisándole que completó la ejecución
 				// Mando un paquete con buffer vacio y código de operación EXIT
-				break;	
+				break;
 
 			case INTERRUPCION_BLOQUEANTE: // Caso I/O, tengo que recibir el tiempo que se bloquea el proceso
 				parametros_retorno = recibir_mensaje(cliente_cpu);
@@ -166,8 +163,6 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				parametros_IO.conexion = proceso_en_ejecucion->pid;
 
 				sem_wait(&mutex_cola_blocked);
-				proceso_en_ejecucion->fin_de_uso_de_cpu = clock();
-				calcular_estimado_de_rafaga(proceso_en_ejecucion);
 				queue_push(cola_blocked, proceso_en_ejecucion);
 				sem_post(&mutex_cola_blocked);
 
@@ -233,7 +228,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				paquete_respuesta = recibir_paquete(cliente_memoria);
 
 				log_info(logger, "Recibi la respuesta de memoria");
-				log_info(logger, "El PID %i ahora tiene %i segmentos", proceso_en_ejecucion->contexto_de_ejecucion->pid, list_size(proceso_en_ejecucion->contexto_de_ejecucion->tabla_segmentos));
+				log_info(logger, "El PID %i ahora tiene %i segmentos", proceso_en_ejecucion->pid, list_size(proceso_en_ejecucion->contexto_de_ejecucion->tabla_segmentos));
 				switch (paquete_respuesta->codigo_operacion)
 				{
 				case SEGMENTO_CREADO:
@@ -284,13 +279,15 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 					break;
 				case OUT_OF_MEMORY:
 					eliminar_paquete(paquete_respuesta);
+					log_info(logger, "PID: %i - Estado anterior: RUNNING - Estado actual: EXIT", proceso_en_ejecucion->pid);
+					log_info(logger, "Finaliza el proceso %i - Motivo: OUT_OF_MEMORY", proceso_en_ejecucion->pid);
 					sem_wait(&mutex_cola_exit);
+
 					queue_push(cola_exit, proceso_en_ejecucion);
 					sem_post(&mutex_cola_exit);
 
 					sem_post(&semaforo_procesos_en_exit);
-					log_info(logger, "PID: %i - Estado anterior: RUNNING - Estado actual: EXIT", proceso_en_ejecucion->pid);
-					log_info(logger, "Finaliza el proceso %i - Motivo: OUT_OF_MEMORY", proceso_en_ejecucion->pid);
+
 					free(id);
 					free(tamanio);
 					break;
@@ -470,6 +467,8 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 			}
 			eliminar_paquete(paquete);
 		}
+		proceso_en_ejecucion->fin_de_uso_de_cpu = clock();
+		calcular_estimado_de_rafaga(proceso_en_ejecucion);
 	}
 }
 
@@ -805,7 +804,6 @@ void actualizar_tablas_de_segmentos(t_list *segmentos_actualizados, t_list *segm
 		list_replace_by_condition(segmentos_en_running, reemplazar_si_coinciden_ids, segmento_actualizado);
 		list_remove(segmentos_actualizados, 0);
 	}
-
 }
 
 t_list *procesos_bloqueados_por_recursos()
@@ -843,4 +841,3 @@ t_list *procesos_bloqueas_por_archivos()
 	}
 	return procesos_bloqueados;
 }
-

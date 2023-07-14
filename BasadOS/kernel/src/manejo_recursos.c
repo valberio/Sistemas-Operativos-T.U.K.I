@@ -4,7 +4,7 @@ void crear_lista_de_recursos(t_list* recursos, char** recursos_array,char** inst
 	Recurso* recurso[cantidad_recursos];
 	for(int i = 0; i < cantidad_recursos; i++){
 		recurso[i] = malloc(sizeof(Recurso));
-		recurso[i]->recurso = malloc(sizeof(recursos_array[i])+1);
+		recurso[i]->recurso = malloc(strlen(recursos_array[i])+1);
 		strcpy(recurso[i]->recurso,recursos_array[i]);
 		recurso[i]->instancias = atoi(instancias_array[i]);
 		recurso[i]->cola_de_bloqueados = queue_create();

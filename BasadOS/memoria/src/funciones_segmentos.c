@@ -175,8 +175,19 @@ Segmento *worst_fit(int id, int tamano)
         }
         return (void *)otro_hueco_libre;
     }
+    bool huecos_con_tamano_necesario(void *un_segmento)
+    {
+        Segmento *hueco_libre = un_segmento;
+        return hueco_libre->tamano >= tamano && hueco_libre->id < 0;
+    }
     Segmento *hueco_libre = malloc(sizeof(Segmento));
-    hueco_libre = list_get_maximum(lista_de_memoria, maximo_tamano);
+    t_list *lista_filtrada = list_filter(lista_de_memoria, huecos_con_tamano_necesario);
+    if (list_size(lista_filtrada) > 1)
+    {
+        hueco_libre = list_get_maximum(lista_filtrada, maximo_tamano);
+    }
+    hueco_libre = list_get(lista_filtrada, 0);
+    list_destroy(lista_filtrada);
     return hueco_libre;
 }
 
@@ -195,11 +206,16 @@ Segmento *best_fit(int id, int tamano)
     bool huecos_con_tamano_necesario(void *un_segmento)
     {
         Segmento *hueco_libre = un_segmento;
-        return hueco_libre->tamano > tamano && hueco_libre->id < 0;
+        return hueco_libre->tamano >= tamano && hueco_libre->id < 0;
     }
     Segmento *hueco_libre = malloc(sizeof(Segmento));
     t_list *lista_filtrada = list_filter(lista_de_memoria, huecos_con_tamano_necesario);
-    hueco_libre = list_get_minimum(lista_filtrada, minimo_tamano);
+    if (list_size(lista_filtrada) > 1)
+    {
+        hueco_libre = list_get_minimum(lista_filtrada, minimo_tamano);
+    }
+    hueco_libre = list_get(lista_filtrada, 0);
+
     list_destroy(lista_filtrada);
     return hueco_libre;
 }
@@ -226,9 +242,9 @@ t_list *compactar()
         Segmento *segmento_compactable = list_get(lista_de_memoria, posicion_segmento_compactable);
         datos_a_copiar = malloc(segmento_compactable->tamano);
 
-        memcpy(datos_a_copiar,espacio_de_memoria+segmento_compactable->desplazamiento,segmento_compactable->tamano);
+        memcpy(datos_a_copiar, espacio_de_memoria + segmento_compactable->desplazamiento, segmento_compactable->tamano);
         Segmento *hueco_libre = list_get(lista_de_memoria, posicion_segmento_compactable - 1);
-        memcpy(espacio_de_memoria+hueco_libre->desplazamiento,datos_a_copiar,segmento_compactable->tamano);
+        memcpy(espacio_de_memoria + hueco_libre->desplazamiento, datos_a_copiar, segmento_compactable->tamano);
         free(datos_a_copiar);
         segmento_compactable->desplazamiento = hueco_libre->desplazamiento;
         hueco_libre->desplazamiento += segmento_compactable->tamano;

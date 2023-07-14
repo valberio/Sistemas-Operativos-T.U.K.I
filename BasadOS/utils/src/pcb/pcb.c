@@ -11,7 +11,6 @@ t_pcb *crear_pcb(char *instrucciones, int socket, double estimado_rafaga)
     pcb->contexto_de_ejecucion = crear_contexto_de_ejecucion(instrucciones);
     pcb->contexto_de_ejecucion->pid = contador;
     pcb->tabla_archivos_abiertos = list_create();
-    pcb->tabla_segmentos = list_create();
 
     pcb->estimado_rafaga = estimado_rafaga;
 
@@ -84,7 +83,6 @@ t_list *string_a_lista(char *str) // Testeada y funcionando
 void liberar_pcb(t_pcb *pcb)
 {
     liberar_contexto_de_ejecucion(pcb->contexto_de_ejecucion);
-    list_destroy_and_destroy_elements(pcb->tabla_segmentos, free);
     list_destroy_and_destroy_elements(pcb->tabla_archivos_abiertos, free);
     free(pcb);
 }
@@ -92,8 +90,10 @@ void liberar_pcb(t_pcb *pcb)
 void liberar_contexto_de_ejecucion(t_contexto_de_ejecucion *contexto_de_ejecucion)
 {
     list_destroy_and_destroy_elements(contexto_de_ejecucion->instrucciones, free);
+    free(contexto_de_ejecucion->largo_instruccion);
+    list_destroy_and_destroy_elements(contexto_de_ejecucion->tabla_segmentos, free);
     free(contexto_de_ejecucion->registros);
-    free(contexto_de_ejecucion);
+
 }
 
 void enviar_contexto_de_ejecucion(t_contexto_de_ejecucion *contexto, int conexion_socket)
@@ -248,6 +248,7 @@ t_contexto_de_ejecucion *deserializar_contexto_de_ejecucion(t_buffer *buffer)
     {
         return NULL;
     }
+
 
     t_contexto_de_ejecucion *contexto = malloc(sizeof(t_contexto_de_ejecucion));
     contexto->registros = malloc(sizeof(t_registros));

@@ -2,11 +2,14 @@
 
 
 
-int main(void)
-{
+int main(int argc, char* argv[]) {
 
+    if(argc < 2){
+        return EXIT_FAILURE;
+    }
+
+    t_config* config = iniciar_config(argv[1]);
 	t_log *logger = iniciar_logger("log_cpu.log", "LOG_CPU");
-	t_config *config = iniciar_config("configs/cpu.config");
 	int retardo_instruccion = config_get_int_value(config, "RETARDO_INSTRUCCION") / 1000;
 	int tam_max_segmento = config_get_int_value(config, "TAM_MAX_SEGMENTO");
 
@@ -48,7 +51,6 @@ int main(void)
 					char *instruccion = fetch(contexto);
 
 					char **instruccion_array = decode(instruccion, retardo_instruccion, tam_max_segmento, logger, contexto);
-
 					if (strcmp(instruccion_array[0], "SEGFAULT") == 0)
 					{
 						cortar_ejecucion = true;

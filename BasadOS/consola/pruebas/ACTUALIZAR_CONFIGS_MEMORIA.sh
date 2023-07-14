@@ -1,0 +1,49 @@
+#! /usr/bin/bash
+cd ../memoria
+> ./log_memoria.log
+echo "PUERTO_ESCUCHA=8002
+TAM_MEMORIA=1024
+TAM_SEGMENTO_0=128
+CANT_SEGMENTOS=16
+RETARDO_MEMORIA=1000
+RETARDO_COMPACTACION=60000
+ALGORITMO_ASIGNACION=WORST" > ./configs/memoria.config
+make
+cd ../filesystem
+> ./log_filesystem.log
+echo "IP_MEMORIA=127.0.0.1
+PUERTO_MEMORIA=8002
+PUERTO_ESCUCHA=8003
+RETARDO_ACCESO_BLOQUE=15000
+PATH_SUPERBLOQUE=./fs/sbloque.dat
+PATH_BITMAP=./fs/bitmap.dat
+PATH_BLOQUES=./fs/bloques.dat
+PATH_FCB=./fs/fcb" > ./configs/filesystem.config
+make
+cd ../cpu
+> ./log_cpu.log
+echo "RETARDO_INSTRUCCION=1000
+IP_MEMORIA=127.0.0.1
+PUERTO_MEMORIA=8002
+PUERTO_ESCUCHA=8001
+TAM_MAX_SEGMENTO=128" > ./configs/cpu.config
+make
+cd ../kernel
+> ./log_kernel.log
+echo "IP_MEMORIA=127.0.0.1
+PUERTO_MEMORIA=8002
+IP_FILESYSTEM=127.0.0.1
+PUERTO_FILESYSTEM=8003
+IP_CPU=127.0.0.1
+PUERTO_CPU=8001
+PUERTO_ESCUCHA=8000
+ALGORITMO_PLANIFICACION=FIFO
+ESTIMACION_INICIAL=10000
+HRRN_ALFA=0.5
+GRADO_MAX_MULTIPROGRAMACION=12
+RECURSOS=[RA, RB, RC]
+INSTANCIAS_RECURSOS=[1, 0, 0]" > ./configs/config_kernel.config
+make
+cd ../consola
+> ./log_consola.log
+make

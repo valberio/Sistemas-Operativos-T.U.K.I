@@ -32,7 +32,6 @@ int main(void)
 			if (contexto == NULL)
 			{
 				log_info(logger, "No recibi mas procesos del kernel");
-				liberar_contexto_de_ejecucion(contexto);
 				eliminar_paquete(paquete);
 				close(conexion_cpu_kernel);
 				conexion_cpu_kernel = 0;
@@ -48,7 +47,7 @@ int main(void)
 				{
 					char *instruccion = fetch(contexto);
 
-					char **instruccion_array = decode(instruccion, retardo_instruccion, tam_max_segmento, contexto->tabla_segmentos, logger, contexto);
+					char **instruccion_array = decode(instruccion, retardo_instruccion, tam_max_segmento, logger, contexto);
 
 					if (strcmp(instruccion_array[0], "SEGFAULT") == 0)
 					{

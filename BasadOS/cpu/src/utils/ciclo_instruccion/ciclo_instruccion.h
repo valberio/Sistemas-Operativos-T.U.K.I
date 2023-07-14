@@ -8,7 +8,7 @@
 #include "../instrucciones/instrucciones.h"
 
 char* fetch(t_contexto_de_ejecucion * contexto);
-char** decode(char* instruccion, int retardo_instruccion, int tam_max_segmento, t_list* tabla_de_segmentos, t_log* logger, t_contexto_de_ejecucion* contexto);
+char** decode(char* instruccion, int retardo_instruccion, int tam_max_segmento, t_log* logger, t_contexto_de_ejecucion* contexto);
 int execute(t_log* logger, char** instrucciones, t_contexto_de_ejecucion* contexto, int conexion_cpu_kernel, int conexion_memoria_cpu);
 enum Instrucciones string_a_instruccion(char* instruccion);
 

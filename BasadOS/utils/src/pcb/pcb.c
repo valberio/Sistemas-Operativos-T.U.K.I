@@ -367,7 +367,7 @@ t_list *deserializar_lista_de_segmentos(t_buffer *buffer)
         stream += sizeof(int);
         memcpy(&(segmento->desplazamiento), stream, sizeof(int));
         stream += sizeof(int);
-        memcpy(&(segmento->desplazamiento), stream, sizeof(int));
+        memcpy(&(segmento->pid), stream, sizeof(int));
         stream += sizeof(int);
         list_add(lista_segmentos, segmento);
     }

@@ -21,7 +21,7 @@ void *comunicacion_con_kernel(void *arg)
         log_info(logger, "Recibi una peticion de KERNEL");
         t_paquete *paquete = recibir_paquete(conexion_kernel);
         t_contexto_de_ejecucion *contexto = deserializar_contexto_de_ejecucion(paquete->buffer);
-        
+
         switch (paquete->codigo_operacion)
         {
         case INICIALIZAR_PROCESO:
@@ -45,16 +45,13 @@ void *comunicacion_con_kernel(void *arg)
             int tamanio_int = atoi(tamanio);
 
             Segmento *segmento_nuevo = crear_segmento(id_int, tamanio_int, contexto->pid);
-
-            log_info(logger, "PID: %i - Crear Segmento: %i - Base: %i - TAMAÑO: %i", contexto->pid, segmento_nuevo->id, segmento_nuevo->desplazamiento, segmento_nuevo->tamano);
+            if (segmento_nuevo->tamano > 0)
+            {
+                log_info(logger, "PID: %i - Crear Segmento: %i - Base: %i - TAMAÑO: %i", contexto->pid, segmento_nuevo->id, segmento_nuevo->desplazamiento, segmento_nuevo->tamano);
+            }
             t_paquete *paquete_a_kernel = crear_paquete();
             paquete_a_kernel->codigo_operacion = respuesta_a_kernel(segmento_nuevo, contexto);
             paquete_a_kernel->buffer = serializar_contexto(contexto);
-            for (int i = 0; i < list_size(contexto->tabla_segmentos); i++)
-            {
-                Segmento *sas = list_get(contexto->tabla_segmentos, i);
-                log_info(logger, "PROCESO %i SEGMENTO ID: %d, DESPLAZAMIENTO: %d", contexto->pid, sas->id, sas->desplazamiento);
-            }
 
             enviar_paquete(paquete_a_kernel, conexion_kernel);
 
@@ -63,6 +60,12 @@ void *comunicacion_con_kernel(void *arg)
                 recibir_mensaje(conexion_kernel);
                 log_info(logger, "Solicitud de Compactación");
                 t_list *segmentos_modificados = compactar();
+                for (int i = 0; i < list_size(lista_de_memoria); i++)
+                {
+                    Segmento *segmento_a_loggear = list_get(lista_de_memoria, i);
+                    log_info(logger, "PID: <PID> - Segmento: %i- Base: %i- Tamaño : %i", segmento_a_loggear->id, segmento_a_loggear->desplazamiento,segmento_a_loggear->tamano);
+                }
+
                 paquete_a_kernel->codigo_operacion = 0;
                 paquete_a_kernel->buffer = serializar_lista_segmentos(segmentos_modificados);
 
@@ -71,12 +74,10 @@ void *comunicacion_con_kernel(void *arg)
 
             break;
         case ELIMINAR_SEGMENTO:
-            log_info(logger, "PID: %i - Eliminar Segmento: %i - Base: %i- TAMAÑO: %i", contexto->pid, segmento_nuevo->id, segmento_nuevo->desplazamiento, segmento_nuevo->tamano);
             char *id_a_eliminar = recibir_mensaje(conexion_kernel);
-            log_info(logger, "El id es: %s", id_a_eliminar);
             int id_a_eliminar_int = atoi(id_a_eliminar);
             int posicion = obtener_segmento_por_id(id_a_eliminar_int, contexto->tabla_segmentos);
-            log_info(logger, "La posicion es: %d", posicion);
+
             eliminar_segmento(contexto, id_a_eliminar_int);
             list_remove(contexto->tabla_segmentos, posicion);
 
@@ -129,7 +130,7 @@ void *comunicacion_con_cpu(void *arg)
             registro = recibir_mensaje(conexion_cpu);
             char_dir_fis = recibir_mensaje(conexion_cpu);
             direccion_fisica = atoi(char_dir_fis);
-            log_info(logger,"PID: %i - Acción: LEER - Dirección física: %s - Tamaño: %i- Origen: CPU",contexto->pid,char_dir_fis,tamanio_del_registro(registro));
+            log_info(logger, "PID: %i - Acción: LEER - Dirección física: %s - Tamaño: %i- Origen: CPU", contexto->pid, char_dir_fis, tamanio_del_registro(registro));
 
             // Accedo a la memoria, copio los datos en una variable auxiliar
             sleep(retardo_acceso_memoria);
@@ -153,7 +154,7 @@ void *comunicacion_con_cpu(void *arg)
             registro = recibir_mensaje(conexion_cpu);
 
             int tamanio_registro = tamanio_del_registro(registro);
-            log_info(logger,"PID: %i - Acción: ESCRIBIR - Dirección física: %s - Tamaño: %i- Origen: CPU",contexto->pid,char_dir_fis,tamanio_del_registro(registro));
+            log_info(logger, "PID: %i - Acción: ESCRIBIR - Dirección física: %s - Tamaño: %i- Origen: CPU", contexto->pid, char_dir_fis, tamanio_del_registro(registro));
 
             char *datos_en_registro = malloc(tamanio_registro * sizeof(char));
             datos_en_registro = leer_registro(registro, contexto->registros);
@@ -162,7 +163,6 @@ void *comunicacion_con_cpu(void *arg)
 
             char *test = malloc(tamanio_registro);
             memcpy(test, espacio_de_memoria + direccion_fisica, tamanio_registro);
-         
 
             // Paso 3: informo a CPU que la escritura ocurrió exitosamente
             paquete_respuesta->codigo_operacion = 0;
@@ -197,7 +197,7 @@ void *comunicacion_con_filesystem(void *arg)
         t_paquete *peticion = recibir_paquete(conexion_filesystem);
         t_contexto_de_ejecucion *contexto = deserializar_contexto_de_ejecucion(peticion->buffer);
         // t_paquete *paquete_respuesta = crear_paquete();
-        
+
         char *dir_fis;
         int direccion_fisica;
 
@@ -209,7 +209,7 @@ void *comunicacion_con_filesystem(void *arg)
             direccion_fisica = atoi(dir_fis);
             char *datos_a_guardar = recibir_mensaje(conexion_filesystem);
             memcpy(espacio_de_memoria + direccion_fisica, datos_a_guardar, strlen(datos_a_guardar));
-            log_info(logger,"PID: %i - Acción: ESCRIBIR - Dirección física: %s - Tamaño: %li- Origen: FS", contexto->pid, dir_fis, strlen(datos_a_guardar));
+            log_info(logger, "PID: %i - Acción: ESCRIBIR - Dirección física: %s - Tamaño: %li- Origen: FS", contexto->pid, dir_fis, strlen(datos_a_guardar));
 
             char *test = malloc(strlen(datos_a_guardar));
             memcpy(test, espacio_de_memoria + direccion_fisica, strlen(datos_a_guardar));
@@ -224,7 +224,7 @@ void *comunicacion_con_filesystem(void *arg)
             direccion_fisica = atoi(dir_fis);
             char *cant_b = recibir_mensaje(conexion_filesystem);
             int cantidad_bytes = atoi(cant_b);
-            log_info(logger,"PID: %i - Acción: LECTURA - Dirección física: %s - Tamaño: %i- Origen: FS",contexto->pid, dir_fis,cantidad_bytes);
+            log_info(logger, "PID: %i - Acción: LECTURA - Dirección física: %s - Tamaño: %i- Origen: FS", contexto->pid, dir_fis, cantidad_bytes);
 
             char *datos = malloc((cantidad_bytes + 1) * sizeof(char));
             memcpy(datos, espacio_de_memoria + direccion_fisica, cantidad_bytes * sizeof(char));

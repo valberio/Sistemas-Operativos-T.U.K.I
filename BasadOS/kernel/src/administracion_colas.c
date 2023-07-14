@@ -76,7 +76,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 	{
 		// ESPERA A QUE HAYA POR LO MENOS 1 PROCESO EN READY
 		sem_wait(&semaforo_procesos_en_ready);
-		//log de cola de ready
+		// log de cola de ready
 		t_pcb *proceso_en_ejecucion;
 		char *planificador = config_get_string_value(config, "ALGORITMO_PLANIFICACION");
 
@@ -205,7 +205,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 
 				// Envio contexto y código de operación
 				enviar_paquete(paquete_a_memoria, cliente_memoria);
-				eliminar_paquete(paquete_a_memoria);
+				// eliminar_paquete(paquete_a_memoria);
 
 				// Envio parametros
 				enviar_mensaje(id, cliente_memoria);
@@ -408,7 +408,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				paquete->buffer = serializar_contexto(contexto_actualizado);
 				paquete->codigo_operacion = PETICION_LECTURA;
 				enviar_paquete(paquete, cliente_filesystem);
-				
+
 				pthread_t hilo_lector_de_archivos;
 				pthread_create(&hilo_lector_de_archivos, NULL, solicitar_lectura, (void *)&parametros_hilo_kernel_filesystem);
 				pthread_detach(hilo_lector_de_archivos);
@@ -443,7 +443,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				paquete->buffer = serializar_contexto(contexto_actualizado);
 				paquete->codigo_operacion = PETICION_ESCRITURA;
 				enviar_paquete(paquete, cliente_filesystem);
-		
+
 				pthread_t hilo_escritor_de_archivos;
 				pthread_create(&hilo_escritor_de_archivos, NULL, solicitar_escritura, (void *)&parametros_hilo_kernel_filesystem);
 				pthread_detach(hilo_escritor_de_archivos);
@@ -789,6 +789,7 @@ void actualizar_tablas_de_segmentos(t_list *segmentos_actualizados, t_list *segm
 		list_replace_by_condition(segmentos_en_running, reemplazar_si_coinciden_ids, segmento_actualizado);
 		list_remove(segmentos_actualizados, 0);
 	}
+
 }
 
 t_list *procesos_bloqueados_por_recursos()

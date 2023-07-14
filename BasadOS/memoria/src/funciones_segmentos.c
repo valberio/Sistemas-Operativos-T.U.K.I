@@ -43,6 +43,9 @@ int obtener_espacio_libre_total()
         return &espacio_libre;
     }
     lista_de_huecos_libres = list_filter(lista_de_memoria, obtener_espacios_libres_de_la_memoria);
+    if(list_is_empty(lista_de_huecos_libres)){
+        return 0;
+    }
     int espacio_libre_total = *(int *)list_fold1(lista_de_huecos_libres, calcular_espacio_libre);
     log_info(logger, "el espacio libre total es: %d", espacio_libre_total);
     return espacio_libre_total;
@@ -104,14 +107,14 @@ void eliminar_segmento(t_contexto_de_ejecucion *contexto_de_ejecucion, int id)
         Segmento *segmento = elemento;
         return segmento->id == id;
     }
-    log_info(logger, "El ID a eliminar es %i", id);
     Segmento* segmento_a_eliminar = list_find(contexto_de_ejecucion->tabla_segmentos, obtener_segmento);
     if (segmento_a_eliminar == NULL) {
         log_info(logger, "El segmento no existe");
         return;
     }
+    log_info(logger, "PID: %i - Eliminar Segmento: %i - Base: %i- TAMAÑO: %i", contexto_de_ejecucion->pid, segmento_a_eliminar->id, segmento_a_eliminar->desplazamiento, segmento_a_eliminar->tamano);
+
     int desplazamiento_segmento_a_eliminar = segmento_a_eliminar->desplazamiento; 
-    log_info(logger, "El desplazamiento del segmento a eliminar es %i", desplazamiento_segmento_a_eliminar);
 
     bool buscar_segmento_en_lista_de_memoria(void *elemento) 
     {

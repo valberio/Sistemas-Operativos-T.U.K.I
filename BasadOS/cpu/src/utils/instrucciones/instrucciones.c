@@ -208,7 +208,8 @@ int mov_out(t_log *logger, char **instrucciones, t_contexto_de_ejecucion *contex
     for (int i = 0; i < list_size(contexto->tabla_segmentos); i++)
     {
         Segmento *segmento = list_get(contexto->tabla_segmentos, i);
-        if (segmento->desplazamiento < atoi(instrucciones[1]) && atoi(instrucciones[1]) < (segmento->desplazamiento + segmento->tamano))
+
+        if (segmento->desplazamiento <= atoi(instrucciones[1]) && atoi(instrucciones[1]) <= (segmento->desplazamiento + segmento->tamano))
         {
             id_segmento = segmento->id;
         }

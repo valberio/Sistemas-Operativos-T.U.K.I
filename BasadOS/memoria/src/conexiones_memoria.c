@@ -251,6 +251,7 @@ void *comunicacion_con_filesystem(void *arg)
 
             char *datos = malloc((cantidad_bytes + 1) * sizeof(char));
             memcpy(datos, espacio_de_memoria + direccion_fisica, cantidad_bytes * sizeof(char));
+            datos[cantidad_bytes] = '\0'; 
             log_info(logger, "Lei %s porque me lo pidio filesystem", datos);
 
             enviar_mensaje(datos, conexion_filesystem);

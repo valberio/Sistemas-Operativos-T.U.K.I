@@ -467,8 +467,11 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 			}
 			eliminar_paquete(paquete);
 		}
-		proceso_en_ejecucion->fin_de_uso_de_cpu = clock();
-		calcular_estimado_de_rafaga(proceso_en_ejecucion);
+		if (proceso_en_ejecucion != NULL)
+		{
+			proceso_en_ejecucion->fin_de_uso_de_cpu = clock();
+			calcular_estimado_de_rafaga(proceso_en_ejecucion);
+		}
 	}
 }
 

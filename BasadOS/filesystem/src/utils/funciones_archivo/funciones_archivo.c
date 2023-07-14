@@ -120,7 +120,7 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
             log_info(logger, "Tamaño del fcb %i bytes por asignar %i bloques por asignar %i", fcb_archivo->size, bytes_por_asignar, bloques_por_agregar);
         }
     }
-    else if(bytes_por_asignar > 0)
+    else if (bytes_por_asignar > 0)
     {
         log_info(logger, "ENTRE EN EL QUE NO ERA");
         log_info(logger, "a mimir");
@@ -346,9 +346,11 @@ void escribir_archivo(char *nombre, char *datos_a_guardar, int puntero, int cant
 
         int bytes_restantes_bloque_directo = tamanio_bloque - desplazamiento_dentro_del_bloque;
         bytes_a_copiar_aca = MIN(bytes_restantes_bloque_directo, cantidad_de_bytes);
-
+        log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 0 - Bloque File System %i", fcb_archivo->name, fcb_archivo->direct_pointer);
+        log_info(logger, "a mimir");
+        sleep(retardo);
         fseek(archivo_de_bloques, (bloque_puntero * tamanio_bloque) + desplazamiento_dentro_del_bloque + bytes_copiados, SEEK_SET);
-        fwrite(datos_a_guardar + bytes_copiados, sizeof(char), bytes_por_copiar, archivo_de_bloques);
+        fwrite(datos_a_guardar + bytes_copiados, sizeof(char), bytes_a_copiar_aca, archivo_de_bloques);
         bytes_copiados += bytes_a_copiar_aca;
         bytes_por_copiar -= bytes_a_copiar_aca;
         log_info(logger, "Bytes copiados %i", bytes_copiados);
@@ -387,10 +389,19 @@ void escribir_archivo(char *nombre, char *datos_a_guardar, int puntero, int cant
         log_info(logger, "a mimir");
         sleep(retardo);
         fseek(archivo_de_bloques, (index_bloque_int * tamanio_bloque), SEEK_SET);
-        fwrite(datos_a_guardar + bytes_copiados, sizeof(char), bytes_a_copiar_aca, archivo_de_bloques);
+        log_info(logger, "DATOS A GUARDAR : %s - BYTES A COPIAR: %i", datos_a_guardar + bytes_copiados, bytes_a_copiar_aca); // ??
+        fwrite(datos_a_guardar + bytes_copiados, sizeof(char), bytes_a_copiar_aca, archivo_de_bloques); // ???
 
         bytes_copiados += bytes_a_copiar_aca;
         log_info(logger, "Bytes copiados %i", bytes_copiados);
+
+        char *test = malloc(sizeof(char) * (bytes_a_copiar_aca + 1));
+        fseek(archivo_de_bloques, (index_bloque_int * tamanio_bloque), SEEK_SET);
+        fread(test, sizeof(char), bytes_a_copiar_aca, archivo_de_bloques);
+        test[bytes_a_copiar_aca] = '\0';
+        log_info(logger, "Escribi en el bloque %s", test);
+        free(test);
+
         bytes_por_copiar -= bytes_a_copiar_aca;
         contador_puntero_indirecto++;
         free(index_bloque);

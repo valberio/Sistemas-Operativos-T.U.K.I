@@ -100,19 +100,18 @@ void recibir_ordenes_kernel(int conexion_filesystem_kernel, int cliente_filesyst
 			char *nombre_archivo = recibir_mensaje(conexion_filesystem_kernel);
 			char *nuevo_tamano = recibir_mensaje(conexion_filesystem_kernel);
 			int tamanio = atoi(nuevo_tamano);
-			log_info(logger, "Truncar Archivo: %s - Tamaño: %s", nombre_archivo, nuevo_tamanio);
+			log_info(logger, "Truncar Archivo: %s - Tamaño: %s", nombre_archivo, nuevo_tamano);
 			truncar_archivo(nombre_archivo, tamanio);
 			enviar_mensaje("OK", conexion_filesystem_kernel);
 			break;
 		case PETICION_LECTURA: // F_READ
-			log_info(logger, "Voy a responder un F_READ");
 			puntero = recibir_mensaje(conexion_filesystem_kernel);
 			cantidad_bytes = recibir_mensaje(conexion_filesystem_kernel);
 			direccion_fisica = recibir_mensaje(conexion_filesystem_kernel);
 			nombre_archivo = recibir_mensaje(conexion_filesystem_kernel);
 			cantidad_bytes_int = atoi(cantidad_bytes);
 			puntero_int = atoi(puntero);
-
+			log_info(logger, "Leer Archivo: %s - Puntero: %s - Memoria: %s - Tamaño: %s", nombre_archivo, puntero, direccion_fisica, cantidad_bytes);
 			char *datos_de_archivo = leer_archivo(nombre_archivo, puntero_int, cantidad_bytes_int);
 			log_info(logger, "Lei %s", datos_de_archivo);
 			// Le pido a memoria que guarde lo que leí
@@ -131,15 +130,14 @@ void recibir_ordenes_kernel(int conexion_filesystem_kernel, int cliente_filesyst
 			enviar_mensaje("OK", conexion_filesystem_kernel);
 			break;
 		case PETICION_ESCRITURA:
-			log_info(logger, "Voy a responder una peticion de escritura");
+			
 			puntero = recibir_mensaje(conexion_filesystem_kernel);
 			cantidad_bytes = recibir_mensaje(conexion_filesystem_kernel);
 			direccion_fisica = recibir_mensaje(conexion_filesystem_kernel);
 			nombre_archivo = recibir_mensaje(conexion_filesystem_kernel);
 			cantidad_bytes_int = atoi(cantidad_bytes);
 			puntero_int = atoi(puntero);
-			log_info(logger, "El puntero es: %s", puntero);
-			
+			log_info(logger, "Escribir Archivo: %s - Puntero: %s - Memoria: %s - Tamaño: %s", nombre_archivo, puntero, direccion_fisica, cantidad_bytes);
 			solicitud_a_memoria->buffer =  serializar_contexto(contexto);
 			solicitud_a_memoria->codigo_operacion = PETICION_LECTURA;
 			enviar_paquete(solicitud_a_memoria, cliente_filesystem_a_memoria);
@@ -312,7 +310,7 @@ void abrir_o_crear_archivo(char *nombre_archivo, int conexion_filesystem_kernel)
 
 void crear_archivo_fcb(char *nombre_archivo)
 {
-	char *ruta = malloc(sizeof(nombre_archivo) + 11);
+	char *ruta = malloc(strlen(nombre_archivo) + 12);
 	strcpy(ruta, "fs/fcb/");
 	strcat(ruta, nombre_archivo);
 	strcat(ruta, ".dat");

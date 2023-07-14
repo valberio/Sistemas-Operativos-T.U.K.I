@@ -13,7 +13,6 @@
 #include <errno.h>
 #include<assert.h>
 #include<sockets/client_utils.h>
-#define IP "127.0.0.1"
 
 extern t_log* logger;
 

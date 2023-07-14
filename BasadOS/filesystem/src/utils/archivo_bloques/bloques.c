@@ -116,7 +116,7 @@ char* completar_con_ceros(int index, int cant_bloques)
 
 void escribir_en_archivo_de_bloques(char* ruta)
 {
-    FILE* archivo_de_bloque = fopen(ruta, "w");
+    FILE* archivo_de_bloque = fopen(ruta, "r+");
 
     char* datos = "DALEEEEE FUNCIONAAAA";
     fwrite(datos, sizeof(datos), 1, archivo_de_bloque);

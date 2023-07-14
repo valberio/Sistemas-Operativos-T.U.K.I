@@ -36,6 +36,7 @@ void truncar_archivo(char *nombre_archivo, int nuevo_tamanio)
     config_set_value(config, "PUNTERO_INDIRECTO", indirect_pointer_str);
     config_save(config);
 
+    config_destroy(config);
     free(size_str);
     free(direct_pointer_str);
     if (fcb_archivo->indirect_pointer != -1)
@@ -56,6 +57,7 @@ int division_redondeada_hacia_arriba(int dividendo, int divisor)
 
     return resultado;
 }
+
 void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
 {
     log_info(logger, "Tamanio inicial %i", fcb_archivo->size);
@@ -118,7 +120,7 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
             log_info(logger, "Tamaño del fcb %i bytes por asignar %i bloques por asignar %i", fcb_archivo->size, bytes_por_asignar, bloques_por_agregar);
         }
     }
-    else
+    else if(bytes_por_asignar > 0)
     {
         log_info(logger, "ENTRE EN EL QUE NO ERA");
         log_info(logger, "a mimir");

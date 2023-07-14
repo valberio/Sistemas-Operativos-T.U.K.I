@@ -843,3 +843,4 @@ t_list *procesos_bloqueas_por_archivos()
 	}
 	return procesos_bloqueados;
 }
+

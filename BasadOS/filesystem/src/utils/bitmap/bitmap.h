@@ -11,6 +11,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <string.h>
+#include <unistd.h>
 
 extern t_bitarray *bitarray;
 extern char *ruta_bitmap;

@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 #include <string.h>
 #include "../../main_filesystem.h"
+#include <unistd.h>
 
 extern uint32_t tamanio_bloque;
 extern uint32_t cantidad_bloques;

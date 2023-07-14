@@ -27,6 +27,7 @@ void crear_estructura_fcb(char *nombre_archivo);
 void crear_archivo_fcb(char *nombre_archivo);
 void abrir_o_crear_archivo(char *nombre_archivo, int conexion_filesystem_cliente);
 int obtener_digitos_cant_bloque();
+void crear_archivo_de_bloques(char* ruta_archivo_bloques);
 
 
 #endif /* FILESYSTEM_H_ */

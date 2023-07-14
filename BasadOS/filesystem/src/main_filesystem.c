@@ -45,7 +45,7 @@ int main()
 	bitarray = crear_bitmap(ruta_bitmap, cantidad_bloques);
 
 	ruta_archivo_bloques = config_get_string_value(config, "PATH_BLOQUES");
-	//vaciar_archivo_bloques(cantidad_bloques, tamanio_bloque);
+	crear_archivo_de_bloques(ruta_archivo_bloques);
 
 	// Recorro el directorio de FCBs y creo estructuras
 	recorrer_directorio_fcb(ruta_bitmap);
@@ -195,40 +195,72 @@ void crear_estructura_fcb(char *ruta) // habria que llamarlo crear fcb
 	fcb->indirect_pointer = config_get_int_value(fcb_config, "PUNTERO_INDIRECTO");
 	fcb->size = config_get_int_value(fcb_config, "TAMANIO_ARCHIVO");
 	fcb->name = config_get_string_value(fcb_config, "NOMBRE_ARCHIVO");
-	fcb->ruta = malloc(sizeof(ruta));
+	fcb->ruta = malloc(strlen(ruta) + 1);
 	strcpy(fcb->ruta, ruta);
 	list_add(fcb_list, fcb);
+	
 	if (fcb->direct_pointer == -1)
 	{
 		return;
 	}
+	bitarray_set_bit(bitarray, fcb->direct_pointer);
+	
+	if (fcb->indirect_pointer == -1)
+	{
+		return;
+	}
 	// Actualizo los bloques que usa el fcb en el bitmap
-	setear_bit(fcb->direct_pointer);
-	setear_bit(fcb->indirect_pointer);
-	FILE *archivo_bloques = fopen("fs/bloques.dat", "rb+");
-	if (archivo_bloques == NULL)
-	{
-		printf("No se pudo abrir el archivo\n");
-	}
-	uint32_t bytes_a_guardar = fcb->size - tamanio_bloque;
-	int digitos_bloque = obtener_digitos_cant_bloque();
+	//setear_bit(fcb->direct_pointer);
+	//setear_bit(fcb->indirect_pointer);
+	bitarray_set_bit(bitarray, fcb->indirect_pointer);
 
-	if (bytes_a_guardar > 0)
-	{
-		uint32_t bloques_necesarios = division_redondeada_hacia_arriba(bytes_a_guardar, tamanio_bloque);
-		// log_info(logger, "Los bloques necesarios son %i", bloques_necesarios);
-		log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 1 - Bloque File System %i", fcb->name, fcb->indirect_pointer);
-		sleep(retardo);
-		for (int i = 0; i < bloques_necesarios; i++)
+	if (access(ruta, F_OK) != -1) // Si el archivo existe, lo abro como bitarray
+    {
+		uint32_t bytes_a_guardar = fcb->size - tamanio_bloque;
+
+		if (bytes_a_guardar > 0)
 		{
-			char *index = obtener_puntero_bloque_libre(cantidad_bloques);
-			int bloque_index = atoi(index);
-			setear_bit(bloque_index);
-			fseek(archivo_bloques, ((fcb->indirect_pointer * tamanio_bloque) + (i * digitos_bloque)) * sizeof(char), SEEK_SET);
-			fwrite(index, sizeof(char), digitos_bloque, archivo_bloques);
+			uint32_t bloques_necesarios = division_redondeada_hacia_arriba(bytes_a_guardar, tamanio_bloque);
+			// log_info(logger, "Los bloques necesarios son %i", bloques_necesarios);
+			log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 1 - Bloque File System %i", fcb->name, fcb->indirect_pointer);
+			for (int i = 0; i < bloques_necesarios; i++)
+			{
+				char *index = obtener_puntero_bloque_libre(cantidad_bloques);
+				int bloque_index = atoi(index);
+				//setear_bit(bloque_index);
+				bitarray_set_bit(bitarray, bloque_index);
+			}
 		}
-	}
+		return;
+	}	
+	else
+	{
+		FILE *archivo_bloques = fopen("fs/bloques.dat", "r+");
+		if (archivo_bloques == NULL)
+		{
+			printf("No se pudo abrir el archivo\n");
+		}
+		uint32_t bytes_a_guardar = fcb->size - tamanio_bloque;
+		int digitos_bloque = obtener_digitos_cant_bloque();
+
+		if (bytes_a_guardar > 0)
+		{
+			uint32_t bloques_necesarios = division_redondeada_hacia_arriba(bytes_a_guardar, tamanio_bloque);
+			// log_info(logger, "Los bloques necesarios son %i", bloques_necesarios);
+			log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 1 - Bloque File System %i", fcb->name, fcb->indirect_pointer);
+			//sleep(retardo);
+			for (int i = 0; i < bloques_necesarios; i++)
+			{
+				char *index = obtener_puntero_bloque_libre(cantidad_bloques);
+				int bloque_index = atoi(index);
+				//setear_bit(bloque_index);
+				bitarray_set_bit(bitarray, bloque_index);
+				fseek(archivo_bloques, ((fcb->indirect_pointer * tamanio_bloque) + (i * digitos_bloque)) * sizeof(char), SEEK_SET);
+				fwrite(index, sizeof(char), digitos_bloque, archivo_bloques);
+			}
+		}
 	fclose(archivo_bloques);
+	}
 }
 
 int obtener_digitos_cant_bloque()
@@ -272,7 +304,7 @@ void crear_archivo_fcb(char *nombre_archivo)
 	strcpy(ruta, "fs/fcb/");
 	strcat(ruta, nombre_archivo);
 	strcat(ruta, ".dat");
-	FILE *archivo = fopen(ruta, "wb");
+	FILE *archivo = fopen(ruta, "w");
 	if (archivo == NULL)
 	{
 		log_info(logger, "Error al crear el archivo.");
@@ -286,4 +318,20 @@ void crear_archivo_fcb(char *nombre_archivo)
 	crear_estructura_fcb(ruta);
 	free(ruta);
 	fclose(archivo);
+}
+
+void crear_archivo_de_bloques(char* ruta_archivo_bloques)
+{
+	if (access(ruta_archivo_bloques, F_OK) != -1) {
+		log_info(logger, "NO CREO EL ARCHIVO DE BLOQUES POR QUE YA EXISTE");
+        return;
+    } else {
+		log_info(logger, "CREO EL ARCHIVO DE BLOQUES");
+        FILE* archivo_bloques = fopen(ruta_archivo_bloques, "w");
+		if (archivo_bloques == NULL) {
+        printf("No se pudo crear el archivo.\n");
+		return;
+    	}
+		fclose(archivo_bloques);
+    }
 }

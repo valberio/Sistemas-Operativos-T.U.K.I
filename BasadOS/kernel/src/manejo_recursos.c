@@ -78,7 +78,7 @@ int signal_recurso(char* recurso,t_pcb* proceso){
 		queue_push(cola_ready, proceso_bloqueado_por_recurso);
 		//log_info(logger,"Cola Ready %i: [%s]");
 		sem_post(&mutex_cola_ready);
-		log_info(logger, "PID: %i - Estado Anterior: BLOCKED - Estado Actual: READY", proceso->pid);
+		log_info(logger, "PID: %i - Estado Anterior: BLOCKED - Estado Actual: READY", proceso_bloqueado_por_recurso->pid);
 
 		sem_post(&semaforo_procesos_en_ready);
 	}

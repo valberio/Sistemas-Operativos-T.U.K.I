@@ -26,7 +26,7 @@ echo "RETARDO_INSTRUCCION=1000
 IP_MEMORIA=127.0.0.1
 PUERTO_MEMORIA=8002
 PUERTO_ESCUCHA=8001
-TAM_MAX_SEGMENTO=128" > ./configs/cpu.config
+TAM_MAX_SEGMENTO=256" > ./configs/cpu.config
 make
 cd ../kernel
 > ./log_kernel.log

@@ -417,7 +417,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				queue_push(cola_blocked, proceso_en_ejecucion);
 				sem_post(&mutex_cola_blocked);
 				log_info(logger, "PID: %i - Estado Anterior: RUNNING - Estado Actual: BLOCKED", proceso_en_ejecucion->pid);
-				log_info(logger, "PID : %i - Bloqueado por: %s", proceso_en_ejecucion->pid, nombre_lectura);
+				log_info(logger, "PID: %i - Bloqueado por: %s", proceso_en_ejecucion->pid, nombre_lectura);
 				sem_wait(&semaforo_peticiones_filesystem);
 				sem_wait(&semaforo_para_compactacion);
 
@@ -451,7 +451,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				queue_push(cola_blocked, proceso_en_ejecucion);
 				sem_post(&mutex_cola_blocked);
 				log_info(logger, "PID: %i - Estado Anterior: RUNNING - Estado Actual: BLOCKED", proceso_en_ejecucion->pid);
-				log_info(logger, "PID : %i - Bloqueado por: %s", proceso_en_ejecucion->pid, nombre);
+				log_info(logger, "PID: %i - Bloqueado por: %s", proceso_en_ejecucion->pid, nombre);
 
 				sem_wait(&semaforo_peticiones_filesystem);
 				sem_wait(&semaforo_para_compactacion);

@@ -17,25 +17,18 @@ int obtener_segmento_por_id(int id, t_list *tabla_segmentos)
 
 int traduccion_dir_logica_fisica(int dir_logica, t_list *tabla_segmentos, int tam_max_segmento, int bytes_a_escribir)
 {
+    int num_segmento = floor(dir_logica / tam_max_segmento);
     int desplazamiento_segmento = dir_logica % tam_max_segmento;
-    
+
     if (list_size(tabla_segmentos) != 0)
     {
-        Segmento *segmento_a_encontrar = NULL;
-        for (int i = 0; i < list_size(tabla_segmentos); i++)
-        {
-            Segmento *segmento = list_get(tabla_segmentos, i);
+        int segmento_index = obtener_segmento_por_id(num_segmento, tabla_segmentos);
+        Segmento *segmento = list_get(tabla_segmentos, segmento_index);
+        int dir_fisica = segmento->desplazamiento + desplazamiento_segmento;
 
-            if (segmento->desplazamiento <= dir_logica && dir_logica <= (segmento->desplazamiento + segmento->tamano))
-            {
-                segmento_a_encontrar = segmento;
-            }
-        };
-        int dir_fisica = -1; // Caso de SEGFAULT
-
-        if (segmento_a_encontrar != NULL) 
+        if ((desplazamiento_segmento + bytes_a_escribir) > segmento->tamano) // Caso de SEGFAULT
         {
-            dir_fisica = segmento_a_encontrar->desplazamiento + desplazamiento_segmento;;
+            dir_fisica = -1;
         }
         return dir_fisica;
     }

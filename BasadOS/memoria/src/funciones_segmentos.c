@@ -23,7 +23,7 @@ void reservar_espacio_de_memoria(int tamano_memoria, int tamano_segmento_0)
     hueco_libre->id = huecos_libres;
     hueco_libre->desplazamiento = 0;
     list_add(lista_de_memoria, hueco_libre);
-    segmento_0 = crear_segmento(0, tamano_segmento_0,-1);
+    segmento_0 = crear_segmento(0, tamano_segmento_0, -1);
 }
 
 int obtener_espacio_libre_total()
@@ -43,7 +43,8 @@ int obtener_espacio_libre_total()
         return &espacio_libre;
     }
     lista_de_huecos_libres = list_filter(lista_de_memoria, obtener_espacios_libres_de_la_memoria);
-    if(list_is_empty(lista_de_huecos_libres)){
+    if (list_is_empty(lista_de_huecos_libres))
+    {
         return 0;
     }
     int espacio_libre_total = *(int *)list_fold1(lista_de_huecos_libres, calcular_espacio_libre);
@@ -107,16 +108,17 @@ void eliminar_segmento(t_contexto_de_ejecucion *contexto_de_ejecucion, int id)
         Segmento *segmento = elemento;
         return segmento->id == id;
     }
-    Segmento* segmento_a_eliminar = list_find(contexto_de_ejecucion->tabla_segmentos, obtener_segmento);
-    if (segmento_a_eliminar == NULL) {
+    Segmento *segmento_a_eliminar = list_find(contexto_de_ejecucion->tabla_segmentos, obtener_segmento);
+    if (segmento_a_eliminar == NULL)
+    {
         log_info(logger, "El segmento no existe");
         return;
     }
     log_info(logger, "PID: %i - Eliminar Segmento: %i - Base: %i- TAMAÑO: %i", contexto_de_ejecucion->pid, segmento_a_eliminar->id, segmento_a_eliminar->desplazamiento, segmento_a_eliminar->tamano);
 
-    int desplazamiento_segmento_a_eliminar = segmento_a_eliminar->desplazamiento; 
+    int desplazamiento_segmento_a_eliminar = segmento_a_eliminar->desplazamiento;
 
-    bool buscar_segmento_en_lista_de_memoria(void *elemento) 
+    bool buscar_segmento_en_lista_de_memoria(void *elemento)
     {
 
         Segmento *segmento = elemento;
@@ -124,7 +126,8 @@ void eliminar_segmento(t_contexto_de_ejecucion *contexto_de_ejecucion, int id)
     }
 
     Segmento *segmento_en_lista_de_memoria = list_find(lista_de_memoria, buscar_segmento_en_lista_de_memoria);
-    if (segmento_en_lista_de_memoria == NULL) {
+    if (segmento_en_lista_de_memoria == NULL)
+    {
         log_info(logger, "El segmento no existe");
         return;
     }
@@ -216,12 +219,17 @@ t_list *compactar()
         Segmento *otro_segmento = (Segmento *)segmento_dos;
         return un_segmento->desplazamiento < otro_segmento->desplazamiento;
     }
-
+    char *datos_a_copiar;
     int posicion_segmento_compactable;
     while ((posicion_segmento_compactable = buscar_segmento_compactable()) > 0)
     {
         Segmento *segmento_compactable = list_get(lista_de_memoria, posicion_segmento_compactable);
+        datos_a_copiar = malloc(segmento_compactable->tamano);
+
+        memcpy(datos_a_copiar,espacio_de_memoria+segmento_compactable->desplazamiento,segmento_compactable->tamano);
         Segmento *hueco_libre = list_get(lista_de_memoria, posicion_segmento_compactable - 1);
+        memcpy(espacio_de_memoria+hueco_libre->desplazamiento,datos_a_copiar,segmento_compactable->tamano);
+        free(datos_a_copiar);
         segmento_compactable->desplazamiento = hueco_libre->desplazamiento;
         hueco_libre->desplazamiento += segmento_compactable->tamano;
         list_add(segmentos_actualizados, segmento_compactable);

@@ -63,7 +63,7 @@ void *comunicacion_con_kernel(void *arg)
                 for (int i = 0; i < list_size(lista_de_memoria); i++)
                 {
                     Segmento *segmento_a_loggear = list_get(lista_de_memoria, i);
-                    log_info(logger, "PID: <PID> - Segmento: %i- Base: %i- Tamaño : %i", segmento_a_loggear->id, segmento_a_loggear->desplazamiento,segmento_a_loggear->tamano);
+                    log_info(logger, "PID: %i - Segmento: %i- Base: %i- Tamaño : %i", segmento_a_loggear->pid,segmento_a_loggear->id, segmento_a_loggear->desplazamiento,segmento_a_loggear->tamano);
                 }
 
                 paquete_a_kernel->codigo_operacion = 0;
@@ -135,9 +135,11 @@ void *comunicacion_con_cpu(void *arg)
             // Accedo a la memoria, copio los datos en una variable auxiliar
             sleep(retardo_acceso_memoria);
             log_info(logger, "Retardo el acceso a memoria %i segundos...", retardo_acceso_memoria);
-            char *datos_leidos = malloc(tamanio_del_registro(registro));
-            memcpy(datos_leidos, espacio_de_memoria + direccion_fisica, tamanio_del_registro(registro));
 
+            char *datos_leidos = malloc(tamanio_del_registro(registro));
+            
+            memcpy(datos_leidos, espacio_de_memoria + direccion_fisica, tamanio_del_registro(registro));
+            log_info(logger, "Lei de memoria %s", datos_leidos);
             guardar_en_registros(registro, datos_leidos, contexto->registros);
 
             log_info(logger, "Guarde en el registro %s", leer_registro(registro, contexto->registros));
@@ -156,14 +158,15 @@ void *comunicacion_con_cpu(void *arg)
             int tamanio_registro = tamanio_del_registro(registro);
             log_info(logger, "PID: %i - Acción: ESCRIBIR - Dirección física: %s - Tamaño: %i- Origen: CPU", contexto->pid, char_dir_fis, tamanio_del_registro(registro));
 
-            char *datos_en_registro = malloc(tamanio_registro * sizeof(char));
-            datos_en_registro = leer_registro(registro, contexto->registros);
+            char *datos_en_registro = leer_registro(registro, contexto->registros);
+            
 
             memcpy(espacio_de_memoria + direccion_fisica, datos_en_registro, tamanio_registro);
-
-            char *test = malloc(tamanio_registro);
+ 
+            char *test = malloc((tamanio_registro)* sizeof(char));
             memcpy(test, espacio_de_memoria + direccion_fisica, tamanio_registro);
-
+            log_info(logger, "MOV OUT escribio en memoria %s", test);
+            free(test);
             // Paso 3: informo a CPU que la escritura ocurrió exitosamente
             paquete_respuesta->codigo_operacion = 0;
             paquete_respuesta->buffer = serializar_contexto(contexto);

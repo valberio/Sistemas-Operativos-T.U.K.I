@@ -100,7 +100,7 @@ void recibir_ordenes_kernel(int conexion_filesystem_kernel, int cliente_filesyst
 			char *nombre_archivo = recibir_mensaje(conexion_filesystem_kernel);
 			char *nuevo_tamano = recibir_mensaje(conexion_filesystem_kernel);
 			int tamanio = atoi(nuevo_tamano);
-			log_info(logger, "Truncar Archivo: %s - Tamaño: %s", nombre_archivo, nuevo_tamanio)
+			log_info(logger, "Truncar Archivo: %s - Tamaño: %s", nombre_archivo, nuevo_tamanio);
 			truncar_archivo(nombre_archivo, tamanio);
 			enviar_mensaje("OK", conexion_filesystem_kernel);
 			break;

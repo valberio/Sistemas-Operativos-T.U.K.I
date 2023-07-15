@@ -8,5 +8,5 @@ fi
 new_ip_kernel="$1"
 
 for config_file in ./configs/*.config; do
-  sed -i "s/^IP_MEMORIA=.*/IP_KERNEL=$new_ip_kernel/" "$config_file"
+  sed -i "s/^IP=.*/IP=$new_ip_kernel/" "$config_file"
 done

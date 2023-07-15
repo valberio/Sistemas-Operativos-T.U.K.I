@@ -75,6 +75,7 @@ int signal_recurso(char* recurso,t_pcb* proceso){
 		proceso_bloqueado_por_recurso = queue_pop(recurso_solicitado->cola_de_bloqueados);
 		
 		sem_wait(&mutex_cola_ready);
+		time(&(proceso_bloqueado_por_recurso->tiempo_de_llegada_a_ready));
 		queue_push(cola_ready, proceso_bloqueado_por_recurso);
 		//log_info(logger,"Cola Ready %i: [%s]");
 		sem_post(&mutex_cola_ready);

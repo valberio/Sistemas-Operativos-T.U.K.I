@@ -8,7 +8,7 @@ void *administrar_procesos_de_exit_wrapper(void *arg)
 }
 void administrar_procesos_de_exit(int conexion_kernel_memoria)
 {
-	while (1)
+	while (conexion_kernel_memoria)
 	{
 		sem_wait(&semaforo_procesos_en_exit);
 		t_pcb *proceso_a_finalizar;
@@ -46,7 +46,7 @@ void *administrar_procesos_de_new_wrapper(void *arg)
 }
 
 void administrar_procesos_de_new(int cliente_cpu)
-{ // TODO: mandarle los procesos en NEW a memoria para que les ponga el segm. 0
+{ 
 	while (cliente_cpu)
 	{
 
@@ -113,7 +113,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 			case INTERRUPCION_A_READY: // Caso YIELD
 				// Actualizo el Proceso_en_ejecucion y lo mando a ready
 				sem_wait(&mutex_cola_ready);
-
+				time(&(proceso_en_ejecucion->tiempo_de_llegada_a_ready));
 				queue_push(cola_ready, proceso_en_ejecucion);
 				sem_post(&mutex_cola_ready);
 				sem_post(&semaforo_procesos_en_ready);
@@ -233,6 +233,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 					eliminar_paquete(paquete_respuesta);
 					proceso_en_ejecucion->contexto_de_ejecucion = contexto_respuesta;
 					sem_wait(&mutex_cola_ready);
+					time(&(proceso_en_ejecucion->tiempo_de_llegada_a_ready));
 					queue_push(cola_ready, proceso_en_ejecucion);
 					sem_post(&mutex_cola_ready);
 					sem_post(&semaforo_procesos_en_ready);
@@ -273,6 +274,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 					proceso_en_ejecucion->contexto_de_ejecucion = contexto_respuesta;
 
 					sem_wait(&mutex_cola_ready);
+					time(&(proceso_en_ejecucion->tiempo_de_llegada_a_ready));
 					queue_push(cola_ready, proceso_en_ejecucion);
 					sem_post(&mutex_cola_ready);
 					sem_post(&semaforo_procesos_en_ready);
@@ -318,6 +320,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				ejecucion = 0;
 
 				sem_wait(&mutex_cola_ready);
+				time(&(proceso_en_ejecucion->tiempo_de_llegada_a_ready));
 				queue_push(cola_ready, proceso_en_ejecucion);
 				sem_post(&mutex_cola_ready);
 				sem_post(&semaforo_procesos_en_ready);
@@ -511,6 +514,7 @@ void *solicitar_escritura(void *arg)
 	sem_post(&mutex_cola_blocked);
 
 	sem_wait(&mutex_cola_ready);
+	time(&(proceso_a_recuperar->tiempo_de_llegada_a_ready));
 	queue_push(cola_ready, proceso_a_recuperar);
 	sem_post(&mutex_cola_ready);
 
@@ -554,6 +558,7 @@ void *solicitar_lectura(void *arg)
 	sem_post(&mutex_cola_blocked);
 
 	sem_wait(&mutex_cola_ready);
+	time(&(proceso_a_recuperar->tiempo_de_llegada_a_ready));
 	queue_push(cola_ready, proceso_a_recuperar);
 	sem_post(&mutex_cola_ready);
 	sem_post(&semaforo_procesos_en_ready);
@@ -598,6 +603,7 @@ void *solicitar_truncamiento(void *arg)
 	sem_post(&mutex_cola_blocked);
 
 	sem_wait(&mutex_cola_ready);
+	time(&(proceso_a_recuperar->tiempo_de_llegada_a_ready));
 	queue_push(cola_ready, proceso_a_recuperar);
 	sem_post(&mutex_cola_ready);
 	sem_post(&semaforo_procesos_en_ready);
@@ -684,6 +690,7 @@ void gestionar_cierre_archivo(char *nombre_archivo)
 	{
 		t_pcb *proceso_bloqueado = queue_pop(archivo->procesos_bloqueados);
 		sem_wait(&mutex_cola_ready);
+		time(&(proceso_bloqueado->tiempo_de_llegada_a_ready));
 		queue_push(cola_ready, proceso_bloqueado);
 		sem_post(&mutex_cola_ready);
 		sem_post(&semaforo_procesos_en_ready);

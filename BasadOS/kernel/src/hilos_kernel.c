@@ -101,6 +101,7 @@ void manipulador_de_IO(char *tiempo_en_blocked, int pid)
 	sem_post(&mutex_cola_blocked);
 
 	sem_wait(&mutex_cola_ready);
+	time(&(pcb->tiempo_de_llegada_a_ready));
 	queue_push(cola_ready, pcb);
 	sem_post(&mutex_cola_ready);
 	log_info(logger, "PID: %i - Estado Anterior: BLOCKED - Estado Actual: READY", pcb->pid);

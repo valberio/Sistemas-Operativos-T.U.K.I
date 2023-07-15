@@ -135,15 +135,18 @@ void eliminar_segmento(t_contexto_de_ejecucion *contexto_de_ejecucion, int id)
 
 void unificacion_de_huecos_libres()
 {
-    for (int i = 0; i + 1 < list_size(lista_de_memoria); i++)
+    int tamano_lista = list_size(lista_de_memoria);
+    for (int i = 0; i + 1 < tamano_lista; i++)
     {
         Segmento *seg1 = list_get(lista_de_memoria, i);
         Segmento *seg2 = list_get(lista_de_memoria, i + 1);
 
-        if ((seg1->id < 0) && (seg2->id < 0))
+        if (seg1->id < 0 && seg2->id < 0)
         {
             seg1->tamano += seg2->tamano;
-            list_remove_and_destroy_element(lista_de_memoria, i + 1, free);
+            list_remove(lista_de_memoria, i + 1);
+            i--;
+            tamano_lista--;
         }
     }
 }
@@ -155,8 +158,8 @@ Segmento *first_fit(int id, int tamano)
         Segmento *hueco_libre = un_segmento;
         return hueco_libre->tamano >= tamano && hueco_libre->id < 0;
     }
-    Segmento *hueco_libre = malloc(sizeof(Segmento));
-    hueco_libre = list_get(list_filter(lista_de_memoria, hay_hueco_libre), 0);
+    t_list *lista_filtrada = list_filter(lista_de_memoria, hay_hueco_libre);
+    Segmento *hueco_libre = list_get(lista_filtrada, 0);
     return hueco_libre;
 }
 
@@ -166,24 +169,16 @@ Segmento *worst_fit(int id, int tamano)
     {
         Segmento *hueco_libre = un_segmento;
         Segmento *otro_hueco_libre = otro_segmento;
-        if (hueco_libre->tamano > otro_hueco_libre->tamano && hueco_libre->id < 0 && otro_hueco_libre->id < 0)
-        {
-            return (void *)hueco_libre;
-        }
-        return (void *)otro_hueco_libre;
+        return hueco_libre->tamano > otro_hueco_libre->tamano ? un_segmento : otro_segmento;
     }
     bool huecos_con_tamano_necesario(void *un_segmento)
     {
         Segmento *hueco_libre = un_segmento;
         return hueco_libre->tamano >= tamano && hueco_libre->id < 0;
     }
-    Segmento *hueco_libre = malloc(sizeof(Segmento));
     t_list *lista_filtrada = list_filter(lista_de_memoria, huecos_con_tamano_necesario);
-    if (list_size(lista_filtrada) > 1)
-    {
-        hueco_libre = list_get_maximum(lista_filtrada, maximo_tamano);
-    }
-    hueco_libre = list_get(lista_filtrada, 0);
+
+    Segmento *hueco_libre = (list_size(lista_filtrada) > 1) ? list_get_maximum(lista_filtrada, maximo_tamano) : list_get(lista_filtrada, 0);
     list_destroy(lista_filtrada);
     return hueco_libre;
 }
@@ -194,33 +189,19 @@ Segmento *best_fit(int id, int tamano)
     {
         Segmento *hueco_libre = un_segmento;
         Segmento *otro_hueco_libre = otro_segmento;
-        if (hueco_libre->tamano < otro_hueco_libre->tamano)
-        {
-            return (void *)hueco_libre;
-        }
-        return (void *)otro_hueco_libre;
+        return hueco_libre->tamano < otro_hueco_libre->tamano ? un_segmento : otro_segmento;
     }
     bool huecos_con_tamano_necesario(void *un_segmento)
     {
         Segmento *hueco_libre = un_segmento;
         return hueco_libre->tamano >= tamano && hueco_libre->id < 0;
     }
-    Segmento *hueco_libre = malloc(sizeof(Segmento));
     t_list *lista_filtrada = list_filter(lista_de_memoria, huecos_con_tamano_necesario);
-    if (list_size(lista_filtrada) > 1)
-    {
-        hueco_libre = list_get_minimum(lista_filtrada, minimo_tamano);
-    }
-    hueco_libre = list_get(lista_filtrada, 0);
+
+    Segmento *hueco_libre = (list_size(lista_filtrada) > 1) ? list_get_minimum(lista_filtrada, minimo_tamano) : list_get(lista_filtrada, 0);
 
     list_destroy(lista_filtrada);
     return hueco_libre;
-}
-
-void inicializar_proceso(t_contexto_de_ejecucion *contexto_de_ejecucion, int conexion_memoria_kernel)
-{
-    list_add(contexto_de_ejecucion->tabla_segmentos, segmento_0);
-    enviar_contexto_de_ejecucion(contexto_de_ejecucion, conexion_memoria_kernel);
 }
 
 t_list *compactar()
@@ -228,12 +209,14 @@ t_list *compactar()
     t_list *segmentos_actualizados = list_create();
     bool ordenar_por_desplazamiento(void *segmento, void *segmento_dos)
     {
-        Segmento *un_segmento = (Segmento *)segmento;
-        Segmento *otro_segmento = (Segmento *)segmento_dos;
+        Segmento *un_segmento = segmento;
+        Segmento *otro_segmento = segmento_dos;
         return un_segmento->desplazamiento < otro_segmento->desplazamiento;
     }
     char *datos_a_copiar;
     int posicion_segmento_compactable;
+    list_sort(lista_de_memoria, ordenar_por_desplazamiento);
+
     while ((posicion_segmento_compactable = buscar_segmento_compactable()) > 0)
     {
         Segmento *segmento_compactable = list_get(lista_de_memoria, posicion_segmento_compactable);
@@ -246,9 +229,8 @@ t_list *compactar()
         segmento_compactable->desplazamiento = hueco_libre->desplazamiento;
         hueco_libre->desplazamiento += segmento_compactable->tamano;
         list_add(segmentos_actualizados, segmento_compactable);
-        list_sort(lista_de_memoria, ordenar_por_desplazamiento);
-        unificacion_de_huecos_libres();
     }
+    unificacion_de_huecos_libres();
 
     return segmentos_actualizados;
 }

@@ -141,7 +141,7 @@ void recibir_ordenes_kernel(int conexion_filesystem_kernel, int cliente_filesyst
 			enviar_mensaje(direccion_fisica, cliente_filesystem_a_memoria);
 			enviar_mensaje(cantidad_bytes, cliente_filesystem_a_memoria);
 
-			char *datos = recibir_mensaje(cliente_filesystem_a_memoria);
+			recibir_mensaje(cliente_filesystem_a_memoria);
 			escribir_archivo(nombre_archivo, datos, puntero_int, cantidad_bytes_int);
 			enviar_mensaje("OK", conexion_filesystem_kernel);
 			break;

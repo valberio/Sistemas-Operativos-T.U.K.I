@@ -70,7 +70,6 @@ int main(int argc, char* argv[]) {
 					{
 					case 1:
 						cortar_ejecucion = true;
-						log_info(logger, "Desalojé el proceso");
 
 						eliminar_paquete(paquete);
 						

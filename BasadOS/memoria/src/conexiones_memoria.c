@@ -20,7 +20,6 @@ void *comunicacion_con_kernel(void *arg)
 
     while (conexion_kernel)
     {
-        log_info(logger, "Recibi una peticion de KERNEL");
         t_paquete *paquete = recibir_paquete(conexion_kernel);
         if(paquete == NULL){
             break;
@@ -148,18 +147,13 @@ void *comunicacion_con_cpu(void *arg)
 
             // Accedo a la memoria, copio los datos en una variable auxiliar
             sleep(retardo_acceso_memoria);
-            log_info(logger, "Retardo el acceso a memoria %i segundos...", retardo_acceso_memoria);
 
             char *datos_leidos = malloc(tamanio_del_registro(registro));
             
             memcpy(datos_leidos, espacio_de_memoria + direccion_fisica, tamanio_del_registro(registro));
-            log_info(logger, "Lei de memoria %s", datos_leidos);
             guardar_en_registros(registro, datos_leidos, contexto->registros);
 
-            log_info(logger, "Guarde en el registro %s", leer_registro(registro, contexto->registros));
-
             enviar_paquete(paquete_respuesta, conexion_cpu);
-            log_info(logger, "MEMORIA respondió una petición de lectura del CPU");
 
             break;
 
@@ -177,10 +171,7 @@ void *comunicacion_con_cpu(void *arg)
 
             memcpy(espacio_de_memoria + direccion_fisica, datos_en_registro, tamanio_registro);
  
-            char *test = malloc((tamanio_registro)* sizeof(char));
-            memcpy(test, espacio_de_memoria + direccion_fisica, tamanio_registro);
-            log_info(logger, "MOV OUT escribio en memoria %s", test);
-            free(test);
+
             // Paso 3: informo a CPU que la escritura ocurrió exitosamente
             paquete_respuesta->codigo_operacion = 0;
             paquete_respuesta->buffer = serializar_contexto(contexto);
@@ -235,11 +226,6 @@ void *comunicacion_con_filesystem(void *arg)
             memcpy(espacio_de_memoria + direccion_fisica, datos_a_guardar, strlen(datos_a_guardar));
             log_info(logger, "PID: %i - Acción: ESCRIBIR - Dirección física: %s - Tamaño: %li- Origen: FS", contexto->pid, dir_fis, strlen(datos_a_guardar));
 
-            char *test = malloc(strlen(datos_a_guardar));
-            memcpy(test, espacio_de_memoria + direccion_fisica, strlen(datos_a_guardar));
-
-            log_info(logger, "Memoria guardo %s", test);
-
             enviar_mensaje("OK!", conexion_filesystem);
             break;
 
@@ -248,12 +234,11 @@ void *comunicacion_con_filesystem(void *arg)
             direccion_fisica = atoi(dir_fis);
             char *cant_b = recibir_mensaje(conexion_filesystem);
             int cantidad_bytes = atoi(cant_b);
-            log_info(logger, "PID: %i - Acción: LECTURA - Dirección física: %s - Tamaño: %i- Origen: FS", contexto->pid, dir_fis, cantidad_bytes);
+            log_info(logger, "PID: %i - Acción: LEER - Dirección física: %s - Tamaño: %i- Origen: FS", contexto->pid, dir_fis, cantidad_bytes);
 
             char *datos = malloc((cantidad_bytes + 1) * sizeof(char));
             memcpy(datos, espacio_de_memoria + direccion_fisica, cantidad_bytes * sizeof(char));
             datos[cantidad_bytes] = '\0'; 
-            log_info(logger, "Lei %s porque me lo pidio filesystem", datos);
 
             enviar_mensaje(datos, conexion_filesystem);
             free(datos);
@@ -292,7 +277,6 @@ void finalizar_proceso(t_contexto_de_ejecucion *contexto_de_ejecucion)
     for (int i = tabla_size - 1; i > 0; i--)
     {
         Segmento *segmento = list_get(contexto_de_ejecucion->tabla_segmentos, i);
-        log_info(logger, "El segmento es: %i", segmento->id);
         eliminar_segmento(contexto_de_ejecucion, segmento->id);
     }
 }

@@ -221,14 +221,11 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 				// Envio parametros
 				enviar_mensaje(id, cliente_memoria);
 				enviar_mensaje(tamanio, cliente_memoria);
-				log_info(logger, "Envie parametros");
 
 				// Espero el OK de memoria
 				// TODO: cambiar a un paquete
 				paquete_respuesta = recibir_paquete(cliente_memoria);
 
-				log_info(logger, "Recibi la respuesta de memoria");
-				log_info(logger, "El PID %i ahora tiene %i segmentos", proceso_en_ejecucion->pid, list_size(proceso_en_ejecucion->contexto_de_ejecucion->tabla_segmentos));
 				switch (paquete_respuesta->codigo_operacion)
 				{
 				case SEGMENTO_CREADO:
@@ -245,7 +242,12 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 					break;
 				case COMPACTACION_NECESARIA:
 					// checkear operaciones entre filesystem y memoria
-					log_info(logger, "Compactación: Esperando Fin de Operaciones de FS");
+					int valor_semaforo;
+					sem_getvalue(&semaforo_para_compactacion, &valor_semaforo);
+					if (valor_semaforo - 1 < 0)
+					{
+						log_info(logger, "Compactación: Esperando Fin de Operaciones de FS");
+					}
 					sem_wait(&semaforo_para_compactacion);
 					log_info(logger, "Compactación: Se solicitó compactación ");
 					enviar_mensaje("compactar", cliente_memoria);
@@ -533,7 +535,6 @@ void *solicitar_lectura(void *arg)
 	enviar_mensaje(direccion_fisica, cliente_filesystem);
 	enviar_mensaje(nombre_archivo, cliente_filesystem);
 	char *respuesta = recibir_mensaje(cliente_filesystem);
-	log_info(logger, "Filesystem respondió a mi petición de lectura %s", respuesta);
 	if (strcmp(respuesta, "OK") != 0)
 	{
 		log_info(logger, "Fallo al leer el Archivo %s", nombre_archivo);

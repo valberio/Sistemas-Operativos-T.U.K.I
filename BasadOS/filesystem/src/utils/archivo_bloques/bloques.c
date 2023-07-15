@@ -54,8 +54,6 @@ void leer_bloque_completo(int nro_bloque, int tamano_bloque)
 
     datos[tamano_bloque] = '\0';
 
-    log_info(logger, "En el bloque %i hay %s", nro_bloque, datos);
-
     free(datos);
     fclose(archivo_bloques);
 }
@@ -71,7 +69,6 @@ char* leer_bloque_desde_hasta(uint32_t nro_bloque, uint32_t desde, uint32_t hast
     fseek(archivo_bloques, desde, SEEK_SET);
     fread(datos, sizeof(char), bytes_a_leer, archivo_bloques);
     datos[bytes_a_leer] = '\0';
-    log_info(logger, "Lei %s", datos);
 
     return datos;
 }
@@ -114,11 +111,3 @@ char* completar_con_ceros(int index, int cant_bloques)
     return numero_bloque;
 }
 
-void escribir_en_archivo_de_bloques(char* ruta)
-{
-    FILE* archivo_de_bloque = fopen(ruta, "r+");
-
-    char* datos = "DALEEEEE FUNCIONAAAA";
-    fwrite(datos, sizeof(datos), 1, archivo_de_bloque);
-    fclose(archivo_de_bloque);
-}

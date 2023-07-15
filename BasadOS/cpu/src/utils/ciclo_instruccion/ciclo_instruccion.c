@@ -21,7 +21,6 @@ char **decode(char *instruccion, int retardo_instruccion, int tam_max_segmento, 
 
 	if (strcmp(array[0], "SET") == 0)
 	{
-		log_info(logger, "Entre en la ejecucion de DECODE- SET con %i segundos de retraso de instruccion\n", retardo_instruccion);
 		sleep(retardo_instruccion);
 	}
 	if (strcmp(array[0], "MOV_IN") == 0)
@@ -30,7 +29,6 @@ char **decode(char *instruccion, int retardo_instruccion, int tam_max_segmento, 
 		bytes_a_escribir = tamanio_del_registro(array[1]);
 		dir_fisica_int = traduccion_dir_logica_fisica(dir_logica_int, contexto->tabla_segmentos, tam_max_segmento, bytes_a_escribir);
 		char *dir_fisica_string = int_a_string(dir_fisica_int);
-		log_info(logger, "Entré en DECODE - MOV IN -> Traduccion de direccion lógica %i a física %s", dir_logica_int, dir_fisica_string);
 		strcpy(array[2], dir_fisica_string);
 	}
 	if (strcmp(array[0], "MOV_OUT") == 0)
@@ -40,7 +38,6 @@ char **decode(char *instruccion, int retardo_instruccion, int tam_max_segmento, 
 		bytes_a_escribir = tamanio_del_registro(array[2]);
 		dir_fisica_int = traduccion_dir_logica_fisica(dir_logica_int, contexto->tabla_segmentos, tam_max_segmento, bytes_a_escribir);
 		char *dir_fisica_string = int_a_string(dir_fisica_int);
-		log_info(logger, "Entré en DECODE - MOV OUT -> Traduccion de direccion lógica %i a física %s", dir_logica_int, dir_fisica_string);
 		strcpy(array[1], dir_fisica_string);
 	}
 	if (strcmp(array[0], "F_READ") == 0)
@@ -49,7 +46,6 @@ char **decode(char *instruccion, int retardo_instruccion, int tam_max_segmento, 
 		bytes_a_escribir = atoi(array[3]);
 		dir_fisica_int = traduccion_dir_logica_fisica(dir_logica_int, contexto->tabla_segmentos, tam_max_segmento, bytes_a_escribir);
 		char *dir_fisica_string = int_a_string(dir_fisica_int);
-		log_info(logger, "Entré en DECODE - F_READ -> Traduccion de direccion lógica %i a física %s", dir_logica_int, dir_fisica_string);
 		strcpy(array[2], dir_fisica_string);
 	}
 	if (strcmp(array[0], "F_WRITE") == 0)
@@ -58,7 +54,6 @@ char **decode(char *instruccion, int retardo_instruccion, int tam_max_segmento, 
 		bytes_a_escribir = atoi(array[3]);
 		dir_fisica_int = traduccion_dir_logica_fisica(dir_logica_int, contexto->tabla_segmentos, tam_max_segmento, bytes_a_escribir);
 		char *dir_fisica_string = int_a_string(dir_fisica_int);
-		log_info(logger, "Entré en DECODE - F_WRITE -> Traduccion de direccion lógica %i a física %s", dir_logica_int, dir_fisica_string);
 		strcpy(array[2], dir_fisica_string);
 	}
 

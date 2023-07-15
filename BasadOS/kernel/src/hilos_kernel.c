@@ -37,7 +37,6 @@ void crear_proceso(char *codigo_recibido, int socket_consola, double estimado_in
 
 	
 
-	log_info(logger, "Cant instr en creacion del pcb %i", pcb->contexto_de_ejecucion->cant_instrucciones);
 	sem_wait(&mutex_cola_new);
 	queue_push(cola_new, pcb);
 	sem_post(&mutex_cola_new);

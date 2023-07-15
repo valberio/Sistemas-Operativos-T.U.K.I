@@ -60,13 +60,11 @@ int division_redondeada_hacia_arriba(int dividendo, int divisor)
 
 void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
 {
-    log_info(logger, "Tamanio inicial %i", fcb_archivo->size);
     uint32_t bytes_por_asignar = nuevo_tamanio - fcb_archivo->size;
 
     // Agrego un caso mas: tengo un bloque incompleto en el que puedo asignar bytes
     int cantidad_bytes_teoricos_archivo = division_redondeada_hacia_arriba(fcb_archivo->size, tamanio_bloque) * tamanio_bloque;
     int bytes_libres_en_bloque = cantidad_bytes_teoricos_archivo - fcb_archivo->size;
-    log_info(logger, "Hay %i bytes libres en el bloque", bytes_libres_en_bloque);
     if ((bytes_libres_en_bloque) > 0)
     {
         fcb_archivo->size += bytes_libres_en_bloque;
@@ -75,16 +73,13 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
 
     if (bytes_por_asignar == 0)
     {
-        log_info(logger, "Hay %i bytes por asignar y el tamaño final del fcb es %i", bytes_por_asignar, fcb_archivo->size);
         return;
     }
 
     int bloques_por_agregar = division_redondeada_hacia_arriba(bytes_por_asignar, tamanio_bloque);
 
-    log_info(logger, "Bytes por asignar %i Bloques por agregar %i", bytes_por_asignar, bloques_por_agregar);
-
     if (fcb_archivo->direct_pointer == -1)
-    { // NO TENGA NADA
+    { // NO TENGA NADA Y ASIGNA PUNTERO DIRECTO
         bloques_por_agregar--;
         fcb_archivo->size += MIN(bytes_por_asignar, tamanio_bloque);
 
@@ -93,21 +88,16 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
         char *nuevo_bloque_directo = obtener_puntero_bloque_libre(cantidad_bloques);
         fcb_archivo->direct_pointer = atoi(nuevo_bloque_directo);
         setear_bit(fcb_archivo->direct_pointer);
-        log_info(logger, "El bloque directo es %i", fcb_archivo->direct_pointer);
-
-        log_info(logger, "Tamaño del fcb %i bytes por asignar %i bloques por asignar %i", fcb_archivo->size, bytes_por_asignar, bloques_por_agregar);
     }
     if (fcb_archivo->direct_pointer >= 0 && fcb_archivo->indirect_pointer == -1 && bytes_por_asignar > 0)
-    { // TENGA UN SOLO BLOQUE
+    { // TENGA UN SOLO BLOQUE DIRECTO Y NECESITE MAS
 
         char *nuevo_bloque_indirecto = obtener_puntero_bloque_libre(cantidad_bloques);
 
         fcb_archivo->indirect_pointer = atoi(nuevo_bloque_indirecto);
         setear_bit(fcb_archivo->indirect_pointer);
-        log_info(logger, "El bloque indirecto es %s", nuevo_bloque_indirecto);
 
         log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 1 - Bloque File System %i", fcb_archivo->name, fcb_archivo->indirect_pointer);
-        log_info(logger, "a mimir");
         sleep(retardo);
         while (bloques_por_agregar > 0)
         {
@@ -117,18 +107,14 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
             fcb_archivo->size += MIN(bytes_por_asignar, tamanio_bloque);
             bytes_por_asignar = MAX(bytes_por_asignar - tamanio_bloque, 0);
             bloques_por_agregar--;
-            log_info(logger, "Tamaño del fcb %i bytes por asignar %i bloques por asignar %i", fcb_archivo->size, bytes_por_asignar, bloques_por_agregar);
         }
     }
     else if (bytes_por_asignar > 0)
-    {
-        log_info(logger, "ENTRE EN EL QUE NO ERA");
-        log_info(logger, "a mimir");
+    {//TIENE PUNTERO INDIRECTO YA EXISTENTE Y TIENE QUE AGREGAR MAS BLOQUES AHI
+        log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 1 - Bloque File System %i", fcb_archivo->name, fcb_archivo->indirect_pointer);
         sleep(retardo);
         while (bloques_por_agregar > 0)
         {
-            log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 1 - Bloque File System %i", fcb_archivo->name, fcb_archivo->indirect_pointer);
-
             char *nuevo_bloque_datos = obtener_puntero_bloque_libre(cantidad_bloques);
 
             setear_bit(atoi(nuevo_bloque_datos));
@@ -138,7 +124,6 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
             bytes_por_asignar = MAX(bytes_por_asignar - tamanio_bloque, 0);
             bloques_por_agregar--;
 
-            log_info(logger, "Tamaño del fcb %i bytes por asignar %i bloques por asignar %i", fcb_archivo->size, bytes_por_asignar, bloques_por_agregar);
         }
     }
 }
@@ -150,7 +135,6 @@ void remover_ultimo_bloque(t_fcb *fcb_archivo)
 
     if (cant_bloques_asignados == 1)
     {
-        log_info(logger, "Liberé el bloque directo %i", fcb_archivo->direct_pointer);
         limpiar_bit(fcb_archivo->direct_pointer);
 
         fcb_archivo->direct_pointer = -1;
@@ -160,7 +144,6 @@ void remover_ultimo_bloque(t_fcb *fcb_archivo)
         uint32_t bloque_indirecto = fcb_archivo->indirect_pointer;
         FILE *archivo_de_bloques = fopen(ruta_archivo_bloques, "r+");
         log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 1 - Bloque File System %i", fcb_archivo->name, fcb_archivo->indirect_pointer);
-        log_info(logger, "a dormir");
         sleep(retardo);
         fseek(archivo_de_bloques, (bloque_indirecto * tamanio_bloque) + ((cant_bloques_asignados - 1) * digitos_punteros), SEEK_SET);
         // log_info(logger, "Digitos punteros %i", digitos_punteros);
@@ -170,7 +153,7 @@ void remover_ultimo_bloque(t_fcb *fcb_archivo)
         ultimo_puntero[digitos_punteros] = '\0';
 
         uint32_t ultimo_puntero_int = atoi(ultimo_puntero);
-        log_info(logger, "En el bloque de punteros indirectos %i, voy a borrar el puntero a %s", bloque_indirecto, ultimo_puntero);
+
         limpiar_bit(ultimo_puntero_int);
         free(ultimo_puntero);
 
@@ -188,7 +171,6 @@ void remover_ultimo_bloque(t_fcb *fcb_archivo)
 void achicar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
 {
     int bytes_por_sacar = fcb_archivo->size - nuevo_tamanio;
-    log_info(logger, "Tengo que sacarle %i bytes al archivo %s", bytes_por_sacar, fcb_archivo->name);
 
     int cantidad_bloques_asignados = division_redondeada_hacia_arriba(fcb_archivo->size, tamanio_bloque);
     int cant_bytes_teorica = cantidad_bloques_asignados * tamanio_bloque;
@@ -201,9 +183,6 @@ void achicar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
         fcb_archivo->size -= bytes_bloque_incompleto;
         bytes_por_sacar -= bytes_bloque_incompleto;
 
-        log_info(logger, "Los bytes del bloque incompleto son %i", bytes_bloque_incompleto);
-        log_info(logger, "El tamaño del archivo es %i", fcb_archivo->size);
-
         // Me fijo si tengo que sacar un bloque -> si el tamaño del archivo quedo como un multiplo del tamano del
         // bloque, tengo que sacarle el ultimo bloque
         if ((fcb_archivo->size % tamanio_bloque) == 0)
@@ -215,15 +194,11 @@ void achicar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
     {
         fcb_archivo->size -= tamanio_bloque;
         bytes_por_sacar -= tamanio_bloque;
-        log_info(logger, "Los bytes por sacar ahora son %i", bytes_por_sacar);
-        log_info(logger, "El nuevo tamanio del archivo ahora es %i", fcb_archivo->size);
-
         remover_ultimo_bloque(fcb_archivo);
     }
     if (bytes_por_sacar < tamanio_bloque && bytes_por_sacar > 0)
     {
         fcb_archivo->size -= bytes_por_sacar;
-        log_info(logger, "El tamaño del archivo es %i", fcb_archivo->size);
     }
 }
 
@@ -271,8 +246,8 @@ char *leer_archivo(char *nombre, int puntero, int cantidad_de_bytes)
         int bytes_restantes_bloque_directo = tamanio_bloque - desplazamiento_dentro_del_bloque;
         bytes_a_leer_aca = MIN(bytes_restantes_bloque_directo, cantidad_de_bytes);
         log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 0 - Bloque File System %i", fcb_archivo->name, fcb_archivo->direct_pointer);
-
         sleep(retardo);
+
         fseek(archivo_de_bloques, (bloque_puntero * tamanio_bloque) + desplazamiento_dentro_del_bloque, SEEK_SET);
         fread(datos + bytes_leidos, sizeof(char), bytes_a_leer_aca, archivo_de_bloques);
 
@@ -285,6 +260,7 @@ char *leer_archivo(char *nombre, int puntero, int cantidad_de_bytes)
     if (bytes_por_leer > 0)
     {
         log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 1 - Bloque File System %i", fcb_archivo->name, fcb_archivo->indirect_pointer);
+        sleep(retardo);
     }
     int bloque_indirecto_contador = 2; // Solo para el log, no tiene funcionalidad.
     while (bytes_por_leer > 0)         // Leo bloques del indirecto
@@ -300,8 +276,7 @@ char *leer_archivo(char *nombre, int puntero, int cantidad_de_bytes)
         int index_bloque_int = atoi(index_bloque);
 
         log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: %i - Bloque File System %i", fcb_archivo->name, bloque_indirecto_contador, index_bloque_int);
-
-        // char *datos_a_copiar = malloc((bytes_a_leer_aca + 1) * sizeof(char));
+        sleep(retardo);
 
         fseek(archivo_de_bloques, (index_bloque_int * tamanio_bloque), SEEK_SET);
         fread(datos + bytes_leidos, sizeof(char), bytes_a_leer_aca, archivo_de_bloques);
@@ -347,15 +322,12 @@ void escribir_archivo(char *nombre, char *datos_a_guardar, int puntero, int cant
         int bytes_restantes_bloque_directo = tamanio_bloque - desplazamiento_dentro_del_bloque;
         bytes_a_copiar_aca = MIN(bytes_restantes_bloque_directo, cantidad_de_bytes);
         log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 0 - Bloque File System %i", fcb_archivo->name, fcb_archivo->direct_pointer);
-        log_info(logger, "a mimir");
         sleep(retardo);
         fseek(archivo_de_bloques, (bloque_puntero * tamanio_bloque) + desplazamiento_dentro_del_bloque + bytes_copiados, SEEK_SET);
         fwrite(datos_a_guardar + bytes_copiados, sizeof(char), bytes_a_copiar_aca, archivo_de_bloques);
         bytes_copiados += bytes_a_copiar_aca;
         bytes_por_copiar -= bytes_a_copiar_aca;
-        log_info(logger, "Bytes copiados %i", bytes_copiados);
     }
-    log_info(logger, "los bytes son: %i", bytes_por_copiar);
     int contador_puntero_indirecto = bloque_puntero - 1;
     int digitos_punteros = obtener_digitos_cant_bloque();
 
@@ -371,7 +343,6 @@ void escribir_archivo(char *nombre, char *datos_a_guardar, int puntero, int cant
         if (!dormi_por_el_indirecto)
         {
             log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 1 - Bloque File System %i", fcb_archivo->name, fcb_archivo->indirect_pointer);
-            log_info(logger, "a mimir");
             sleep(retardo);
             dormi_por_el_indirecto = true;
         }
@@ -383,25 +354,12 @@ void escribir_archivo(char *nombre, char *datos_a_guardar, int puntero, int cant
         int index_bloque_int = atoi(index_bloque);
 
         log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: %i - Bloque File System %i", fcb_archivo->name, contador_puntero_indirecto + 2, index_bloque_int);
-        log_info(logger, "Accedo al puntero %s", index_bloque);
-        log_info(logger, "Bytes a copiar aca %i", bytes_a_copiar_aca);
-
-        log_info(logger, "a mimir");
         sleep(retardo);
+        
         fseek(archivo_de_bloques, (index_bloque_int * tamanio_bloque), SEEK_SET);
-        log_info(logger, "DATOS A GUARDAR : %s - BYTES A COPIAR: %i", datos_a_guardar + bytes_copiados, bytes_a_copiar_aca); // ??
         fwrite(datos_a_guardar + bytes_copiados, sizeof(char), bytes_a_copiar_aca, archivo_de_bloques); // ???
 
         bytes_copiados += bytes_a_copiar_aca;
-        log_info(logger, "Bytes copiados %i", bytes_copiados);
-
-        char *test = malloc(sizeof(char) * (bytes_a_copiar_aca + 1));
-        fseek(archivo_de_bloques, (index_bloque_int * tamanio_bloque), SEEK_SET);
-        fread(test, sizeof(char), bytes_a_copiar_aca, archivo_de_bloques);
-        test[bytes_a_copiar_aca] = '\0';
-        log_info(logger, "Escribi en el bloque %s", test);
-        free(test);
-
         bytes_por_copiar -= bytes_a_copiar_aca;
         contador_puntero_indirecto++;
         free(index_bloque);

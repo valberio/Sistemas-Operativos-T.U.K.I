@@ -113,20 +113,16 @@ void recibir_ordenes_kernel(int conexion_filesystem_kernel, int cliente_filesyst
 			puntero_int = atoi(puntero);
 			log_info(logger, "Leer Archivo: %s - Puntero: %s - Memoria: %s - Tamaño: %s", nombre_archivo, puntero, direccion_fisica, cantidad_bytes);
 			char *datos_de_archivo = leer_archivo(nombre_archivo, puntero_int, cantidad_bytes_int);
-			log_info(logger, "Lei %s", datos_de_archivo);
 			// Le pido a memoria que guarde lo que leí
 	
 			solicitud_a_memoria->buffer = serializar_contexto(contexto);
 			solicitud_a_memoria->codigo_operacion = PETICION_ESCRITURA;
-			log_info(logger, "Pido a memoria que guarde %s", datos_de_archivo);
-
 			enviar_paquete(solicitud_a_memoria, cliente_filesystem_a_memoria);
 			enviar_mensaje(direccion_fisica, cliente_filesystem_a_memoria);
 			enviar_mensaje(datos_de_archivo, cliente_filesystem_a_memoria);
 
 			// Espero la confirmación de memoria
-			char *respuesta_memoria = recibir_mensaje(cliente_filesystem_a_memoria);
-			log_info(logger, "Memoria me respondió: %s", respuesta_memoria);
+			char* datos = recibir_mensaje(cliente_filesystem_a_memoria);
 			enviar_mensaje("OK", conexion_filesystem_kernel);
 			break;
 		case PETICION_ESCRITURA:
@@ -146,8 +142,6 @@ void recibir_ordenes_kernel(int conexion_filesystem_kernel, int cliente_filesyst
 			enviar_mensaje(cantidad_bytes, cliente_filesystem_a_memoria);
 
 			char *datos = recibir_mensaje(cliente_filesystem_a_memoria);
-			log_info(logger, "Memoria me envio %s", datos);
-
 			escribir_archivo(nombre_archivo, datos, puntero_int, cantidad_bytes_int);
 			enviar_mensaje("OK", conexion_filesystem_kernel);
 			break;
@@ -193,7 +187,7 @@ void recorrer_directorio_fcb()
 	else
 	{
 		// Error al abrir el directorio
-		printf("No se pudo abrir el directorio: %s\n", directorio_fcb);
+		log_info(logger, "No se pudo abrir el directorio: %s\n", directorio_fcb);
 	}
 }
 
@@ -231,8 +225,6 @@ void crear_estructura_fcb(char *ruta) // habria que llamarlo crear fcb
 		if (bytes_a_guardar > 0)
 		{
 			uint32_t bloques_necesarios = division_redondeada_hacia_arriba(bytes_a_guardar, tamanio_bloque);
-			// log_info(logger, "Los bloques necesarios son %i", bloques_necesarios);
-			log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 1 - Bloque File System %i", fcb->name, fcb->indirect_pointer);
 			for (int i = 0; i < bloques_necesarios; i++)
 			{
 				char *index = obtener_puntero_bloque_libre(cantidad_bloques);
@@ -248,7 +240,7 @@ void crear_estructura_fcb(char *ruta) // habria que llamarlo crear fcb
 		FILE *archivo_bloques = fopen("fs/bloques.dat", "r+");
 		if (archivo_bloques == NULL)
 		{
-			printf("No se pudo abrir el archivo\n");
+			log_info(logger, "No se pudo abrir el archivo\n");
 		}
 		uint32_t bytes_a_guardar = fcb->size - tamanio_bloque;
 		int digitos_bloque = obtener_digitos_cant_bloque();
@@ -256,14 +248,12 @@ void crear_estructura_fcb(char *ruta) // habria que llamarlo crear fcb
 		if (bytes_a_guardar > 0)
 		{
 			uint32_t bloques_necesarios = division_redondeada_hacia_arriba(bytes_a_guardar, tamanio_bloque);
-			// log_info(logger, "Los bloques necesarios son %i", bloques_necesarios);
 			log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 1 - Bloque File System %i", fcb->name, fcb->indirect_pointer);
-			//sleep(retardo);
+			sleep(retardo);
 			for (int i = 0; i < bloques_necesarios; i++)
 			{
 				char *index = obtener_puntero_bloque_libre(cantidad_bloques);
 				int bloque_index = atoi(index);
-				//setear_bit(bloque_index);
 				bitarray_set_bit(bitarray, bloque_index);
 				fseek(archivo_bloques, ((fcb->indirect_pointer * tamanio_bloque) + (i * digitos_bloque)) * sizeof(char), SEEK_SET);
 				fwrite(index, sizeof(char), digitos_bloque, archivo_bloques);
@@ -333,13 +323,11 @@ void crear_archivo_fcb(char *nombre_archivo)
 void crear_archivo_de_bloques(char* ruta_archivo_bloques)
 {
 	if (access(ruta_archivo_bloques, F_OK) != -1) {
-		log_info(logger, "NO CREO EL ARCHIVO DE BLOQUES POR QUE YA EXISTE");
         return;
     } else {
-		log_info(logger, "CREO EL ARCHIVO DE BLOQUES");
         FILE* archivo_bloques = fopen(ruta_archivo_bloques, "w");
 		if (archivo_bloques == NULL) {
-        printf("No se pudo crear el archivo.\n");
+        log_info(logger, "No se pudo crear el archivo.\n");
 		return;
     	}
 		fclose(archivo_bloques);

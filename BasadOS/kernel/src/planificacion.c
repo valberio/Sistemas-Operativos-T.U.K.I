@@ -31,7 +31,7 @@ t_pcb *salida_FIFO()
 void calcular_estimado_de_rafaga(t_pcb *pcb)
 {
 	double alfa = config_get_double_value(config, "HRRN_ALFA");
-	pcb->tiempo_de_la_ultima_rafaga = pcb->fin_de_uso_de_cpu - pcb->inicio_de_uso_de_cpu;
+	pcb->tiempo_de_la_ultima_rafaga = difftime(pcb->fin_de_uso_de_cpu,pcb->inicio_de_uso_de_cpu);
 	pcb->estimado_rafaga = alfa * pcb->tiempo_de_la_ultima_rafaga + (1 - alfa) * pcb->estimado_rafaga;
 }
 
@@ -76,8 +76,8 @@ t_pcb *salida_HRRN()
 bool el_mayor_hrr_entre(t_pcb *un_proceso, t_pcb *otro_proceso, time_t tiempo_actual)
 {
 	double tiempo_esperando_en_ready_un_proceso, tiempo_esperando_en_ready_otro_proceso;
-	tiempo_esperando_en_ready_un_proceso = (tiempo_actual - un_proceso->tiempo_de_llegada_a_ready);
-	tiempo_esperando_en_ready_otro_proceso = (tiempo_actual - otro_proceso->tiempo_de_llegada_a_ready);
+	tiempo_esperando_en_ready_un_proceso = difftime(tiempo_actual, un_proceso->tiempo_de_llegada_a_ready);
+	tiempo_esperando_en_ready_otro_proceso = difftime(tiempo_actual,otro_proceso->tiempo_de_llegada_a_ready);
 
 	return (tiempo_esperando_en_ready_un_proceso + un_proceso->estimado_rafaga) / un_proceso->estimado_rafaga
 	 > (tiempo_esperando_en_ready_otro_proceso + otro_proceso->estimado_rafaga) / otro_proceso->estimado_rafaga;

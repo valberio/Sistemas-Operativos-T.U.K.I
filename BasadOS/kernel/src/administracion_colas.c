@@ -71,13 +71,14 @@ void administrar_procesos_de_new(int cliente_cpu)
 
 void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cliente_filesystem)
 {
+	char *planificador = config_get_string_value(config, "ALGORITMO_PLANIFICACION");
 	while (cliente_cpu)
 	{
 		// ESPERA A QUE HAYA POR LO MENOS 1 PROCESO EN READY
 		sem_wait(&semaforo_procesos_en_ready);
 		// log de cola de ready
 		t_pcb *proceso_en_ejecucion;
-		char *planificador = config_get_string_value(config, "ALGORITMO_PLANIFICACION");
+		
 		if (strcmp(planificador, "HRRN") == 0)
 		{
 			proceso_en_ejecucion = salida_HRRN();
@@ -89,8 +90,8 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 		}
 
 		log_info(logger, "PID: %i - Estado anterior: READY - Estado actual: RUNNING", proceso_en_ejecucion->pid);
-		proceso_en_ejecucion->inicio_de_uso_de_cpu = clock(); // ACA SE INICIALIZA EL TIEMPO EN EJECUCION
-
+		//proceso_en_ejecucion->inicio_de_uso_de_cpu = clock(); // ACA SE INICIALIZA EL TIEMPO EN EJECUCION
+		time(&proceso_en_ejecucion->inicio_de_uso_de_cpu);
 		// PLANIFICACION
 		// log_info(logger, "EL ESTIMADO DE RAFAGA %f\n", proceso_en_ejecucion->estimado_rafaga);
 		enviar_contexto_de_ejecucion(proceso_en_ejecucion->contexto_de_ejecucion, cliente_cpu);
@@ -474,7 +475,7 @@ void administrar_procesos_de_ready(int cliente_cpu, int cliente_memoria, int cli
 		}
 		if (proceso_en_ejecucion != NULL)
 		{
-			proceso_en_ejecucion->fin_de_uso_de_cpu = clock();
+			time(&proceso_en_ejecucion->fin_de_uso_de_cpu);
 			calcular_estimado_de_rafaga(proceso_en_ejecucion);
 		}
 	}

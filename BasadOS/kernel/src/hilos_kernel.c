@@ -36,12 +36,11 @@ void crear_proceso(char *codigo_recibido, int socket_consola, double estimado_in
 	pcb->contexto_de_ejecucion  = contexto_actualizado;
 
 	
-
+	log_info(logger, "Se crea el proceso %i en NEW", pcb->pid);
 	sem_wait(&mutex_cola_new);
 	queue_push(cola_new, pcb);
 	sem_post(&mutex_cola_new);
 	sem_post(&semaforo_de_procesos_para_ejecutar);
-	log_info(logger, "Se crea el proceso %i en NEW", pcb->pid);
 }
 
 void *recibir_de_consolas_wrapper(void *arg)
@@ -58,11 +57,11 @@ void recibir_de_consolas(int server_consola,int conexion_kernel_memoria)
 {
 	int i = 0;
 
-	while (true)
+	while (conexion_kernel_memoria)
 	{
 		int conexion_consola = esperar_cliente(server_consola);
 		char *codigo_recibido = recibir_mensaje(conexion_consola);
-		double estimado_de_rafaga = config_get_double_value(config, "ESTIMACION_INICIAL");
+		double estimado_de_rafaga = config_get_double_value(config, "ESTIMACION_INICIAL") / 1000;
 		pthread_t hilo_creador_de_proceso;
 		Parametros_de_hilo parametros_hilo_crear_proceso;
 		parametros_hilo_crear_proceso.mensaje = codigo_recibido;

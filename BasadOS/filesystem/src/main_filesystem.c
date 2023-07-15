@@ -214,8 +214,6 @@ void crear_estructura_fcb(char *ruta) // habria que llamarlo crear fcb
 		return;
 	}
 	// Actualizo los bloques que usa el fcb en el bitmap
-	//setear_bit(fcb->direct_pointer);
-	//setear_bit(fcb->indirect_pointer);
 	bitarray_set_bit(bitarray, fcb->indirect_pointer);
 
 	if (access(ruta, F_OK) != -1) // Si el archivo existe, lo abro como bitarray

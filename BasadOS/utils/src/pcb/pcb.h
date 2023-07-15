@@ -35,8 +35,8 @@ typedef struct{
     t_contexto_de_ejecucion* contexto_de_ejecucion;
     
     time_t tiempo_de_llegada_a_ready;
-    clock_t inicio_de_uso_de_cpu;
-    clock_t fin_de_uso_de_cpu;
+    time_t inicio_de_uso_de_cpu;
+    time_t fin_de_uso_de_cpu;
     double estimado_rafaga;
     double tiempo_de_la_ultima_rafaga;
 

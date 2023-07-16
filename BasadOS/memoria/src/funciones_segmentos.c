@@ -29,7 +29,6 @@ void reservar_espacio_de_memoria(int tamano_memoria, int tamano_segmento_0)
 int obtener_espacio_libre_total()
 {
     int espacio_libre;
-    t_list *lista_de_huecos_libres = list_create();
     bool obtener_espacios_libres_de_la_memoria(void *elemento)
     {
         Segmento *segmento = elemento;
@@ -40,9 +39,9 @@ int obtener_espacio_libre_total()
         Segmento *un_hueco_libre = un_segmento;
         Segmento *otro_hueco_libre = otro_segmento;
         espacio_libre = un_hueco_libre->tamano + otro_hueco_libre->tamano;
-        return &espacio_libre;
+        return &(espacio_libre);
     }
-    lista_de_huecos_libres = list_filter(lista_de_memoria, obtener_espacios_libres_de_la_memoria);
+    t_list *lista_de_huecos_libres = list_filter(lista_de_memoria, obtener_espacios_libres_de_la_memoria);
     if (list_is_empty(lista_de_huecos_libres))
     {
         return 0;
@@ -102,33 +101,17 @@ Segmento *crear_segmento(int id, int tamano, int pid)
 
 void eliminar_segmento(t_contexto_de_ejecucion *contexto_de_ejecucion, int id)
 {
-    bool obtener_segmento(void *elemento)
-    {
-        Segmento *segmento = elemento;
-        return segmento->id == id;
-    }
-    Segmento *segmento_a_eliminar = list_find(contexto_de_ejecucion->tabla_segmentos, obtener_segmento);
+    Segmento *segmento_a_eliminar = encontrar_segmento_por_id(contexto_de_ejecucion, id);
     if (segmento_a_eliminar == NULL)
     {
         return;
     }
-    log_info(logger, "PID: %i - Eliminar Segmento: %i - Base: %i- TAMAÑO: %i", contexto_de_ejecucion->pid, segmento_a_eliminar->id, segmento_a_eliminar->desplazamiento, segmento_a_eliminar->tamano);
 
-    int desplazamiento_segmento_a_eliminar = segmento_a_eliminar->desplazamiento;
+    log_info(logger, "PID: %i - Eliminar Segmento: %i - Base: %i- TAMAÑO: %i",
+             contexto_de_ejecucion->pid, segmento_a_eliminar->id,
+             segmento_a_eliminar->desplazamiento, segmento_a_eliminar->tamano);
 
-    bool buscar_segmento_en_lista_de_memoria(void *elemento)
-    {
-
-        Segmento *segmento = elemento;
-        return segmento->desplazamiento == desplazamiento_segmento_a_eliminar;
-    }
-
-    Segmento *segmento_en_lista_de_memoria = list_find(lista_de_memoria, buscar_segmento_en_lista_de_memoria);
-    if (segmento_en_lista_de_memoria == NULL)
-    {
-        return;
-    }
-    segmento_en_lista_de_memoria->id = huecos_libres;
+    actualizar_id_segmento_en_memoria(segmento_a_eliminar);
 
     unificacion_de_huecos_libres();
 }
@@ -158,25 +141,28 @@ Segmento *first_fit(int id, int tamano)
         Segmento *hueco_libre = un_segmento;
         return hueco_libre->tamano >= tamano && hueco_libre->id < 0;
     }
+
     t_list *lista_filtrada = list_filter(lista_de_memoria, hay_hueco_libre);
+    list_destroy(lista_filtrada);
     Segmento *hueco_libre = list_get(lista_filtrada, 0);
     return hueco_libre;
 }
 
 Segmento *worst_fit(int id, int tamano)
 {
+    bool hay_hueco_libre(void *un_segmento)
+    {
+        Segmento *hueco_libre = un_segmento;
+        return hueco_libre->tamano >= tamano && hueco_libre->id < 0;
+    }
     void *maximo_tamano(void *un_segmento, void *otro_segmento)
     {
         Segmento *hueco_libre = un_segmento;
         Segmento *otro_hueco_libre = otro_segmento;
         return hueco_libre->tamano > otro_hueco_libre->tamano ? un_segmento : otro_segmento;
     }
-    bool huecos_con_tamano_necesario(void *un_segmento)
-    {
-        Segmento *hueco_libre = un_segmento;
-        return hueco_libre->tamano >= tamano && hueco_libre->id < 0;
-    }
-    t_list *lista_filtrada = list_filter(lista_de_memoria, huecos_con_tamano_necesario);
+
+    t_list *lista_filtrada = list_filter(lista_de_memoria, hay_hueco_libre);
 
     Segmento *hueco_libre = (list_size(lista_filtrada) > 1) ? list_get_maximum(lista_filtrada, maximo_tamano) : list_get(lista_filtrada, 0);
     list_destroy(lista_filtrada);
@@ -185,18 +171,18 @@ Segmento *worst_fit(int id, int tamano)
 
 Segmento *best_fit(int id, int tamano)
 {
+    bool hay_hueco_libre(void *un_segmento)
+    {
+        Segmento *hueco_libre = un_segmento;
+        return hueco_libre->tamano >= tamano && hueco_libre->id < 0;
+    }
     void *minimo_tamano(void *un_segmento, void *otro_segmento)
     {
         Segmento *hueco_libre = un_segmento;
         Segmento *otro_hueco_libre = otro_segmento;
         return hueco_libre->tamano < otro_hueco_libre->tamano ? un_segmento : otro_segmento;
     }
-    bool huecos_con_tamano_necesario(void *un_segmento)
-    {
-        Segmento *hueco_libre = un_segmento;
-        return hueco_libre->tamano >= tamano && hueco_libre->id < 0;
-    }
-    t_list *lista_filtrada = list_filter(lista_de_memoria, huecos_con_tamano_necesario);
+    t_list *lista_filtrada = list_filter(lista_de_memoria, hay_hueco_libre);
 
     Segmento *hueco_libre = (list_size(lista_filtrada) > 1) ? list_get_minimum(lista_filtrada, minimo_tamano) : list_get(lista_filtrada, 0);
 
@@ -248,4 +234,30 @@ int buscar_segmento_compactable()
         }
     }
     return -1;
+}
+Segmento *encontrar_segmento_por_id(t_contexto_de_ejecucion *contexto_de_ejecucion, int id)
+{
+    bool obtener_segmento(void *elemento)
+    {
+        Segmento *segmento = (Segmento *)elemento;
+        return segmento->id == id;
+    }
+
+    return list_find(contexto_de_ejecucion->tabla_segmentos, obtener_segmento);
+}
+void actualizar_id_segmento_en_memoria(Segmento *segmento_a_eliminar)
+{
+    int desplazamiento_segmento_a_eliminar = segmento_a_eliminar->desplazamiento;
+
+    bool buscar_segmento_en_lista_de_memoria(void *elemento)
+    {
+        Segmento *segmento = elemento;
+        return segmento->desplazamiento == desplazamiento_segmento_a_eliminar;
+    }
+
+    Segmento *segmento_en_lista_de_memoria = list_find(lista_de_memoria, buscar_segmento_en_lista_de_memoria);
+    if (segmento_en_lista_de_memoria != NULL)
+    {
+        segmento_en_lista_de_memoria->id = huecos_libres;
+    }
 }

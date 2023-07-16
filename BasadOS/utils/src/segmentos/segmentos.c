@@ -35,30 +35,6 @@ int traduccion_dir_logica_fisica(int dir_logica, t_list *tabla_segmentos, int ta
     return 0;
 }
 
-char *int_a_string(int numero)
-{
-    int longitud = 1;
-    int temp = numero;
 
-    // Obtener la longitud del número
-    while (temp /= 10)
-    {
-        longitud++;
-    }
 
-    char *cadena = malloc((longitud + 1) * sizeof(char));
-    if (cadena == NULL)
-    {
-        return NULL;
-    }
 
-    for (int i = longitud - 1; i >= 0; i--)
-    {
-        cadena[i] = '0' + (numero % 10);
-        numero /= 10;
-    }
-
-    cadena[longitud] = '\0';
-
-    return cadena;
-}

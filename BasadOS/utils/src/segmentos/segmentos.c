@@ -35,6 +35,9 @@ int traduccion_dir_logica_fisica(int dir_logica, t_list *tabla_segmentos, int ta
     return 0;
 }
 
-
-
-
+char* int_a_string(int numero) {
+    int longitud = snprintf(NULL, 0, "%d", numero); 
+    char* str = malloc((longitud + 1) * sizeof(char)); 
+    sprintf(str, "%d", numero); 
+    return str;
+}

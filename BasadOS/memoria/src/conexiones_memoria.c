@@ -15,7 +15,6 @@ void *comunicacion_con_kernel(void *arg)
     {
         log_info(logger, "Se conectó el kernel!");
     }
-    t_paquete *paquete_respuesta = crear_paquete();
     t_paquete *paquete;
 
     while (conexion_kernel)
@@ -26,6 +25,7 @@ void *comunicacion_con_kernel(void *arg)
             break;
         }
         t_contexto_de_ejecucion *contexto = deserializar_contexto_de_ejecucion(paquete->buffer);
+        t_paquete *paquete_respuesta = crear_paquete();
 
         switch (paquete->codigo_operacion)
         {
@@ -80,7 +80,6 @@ void *comunicacion_con_kernel(void *arg)
 
                 enviar_paquete(paquete_respuesta, conexion_kernel);
             }
-            eliminar_paquete(paquete_respuesta);
 
             break;
         case ELIMINAR_SEGMENTO:
@@ -95,7 +94,6 @@ void *comunicacion_con_kernel(void *arg)
             paquete_respuesta->codigo_operacion = 0;
             paquete_respuesta->buffer = serializar_contexto(contexto);
             enviar_paquete(paquete_respuesta, conexion_kernel);
-            eliminar_paquete(paquete_respuesta);
             break;
 
         default:

@@ -201,7 +201,6 @@ t_list *compactar()
     }
     char *datos_a_copiar;
     int posicion_segmento_compactable;
-    list_sort(lista_de_memoria, ordenar_por_desplazamiento);
 
     while ((posicion_segmento_compactable = buscar_segmento_compactable()) > 0)
     {
@@ -215,8 +214,9 @@ t_list *compactar()
         segmento_compactable->desplazamiento = hueco_libre->desplazamiento;
         hueco_libre->desplazamiento += segmento_compactable->tamano;
         list_add(segmentos_actualizados, segmento_compactable);
+        list_sort(lista_de_memoria, ordenar_por_desplazamiento);
+        unificacion_de_huecos_libres();
     }
-    unificacion_de_huecos_libres();
 
     return segmentos_actualizados;
 }

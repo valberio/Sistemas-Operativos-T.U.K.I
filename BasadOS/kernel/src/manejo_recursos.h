@@ -25,6 +25,7 @@ bool buscar_pid(void* , int );
 int wait_recurso(char* , t_pcb* );
 size_t contarCadenas(char** array); 
 int signal_recurso(char* , t_pcb* );
+t_list *procesos_bloqueados_por_recursos();
 
 
 typedef struct{

@@ -115,6 +115,8 @@ void enviar_paquete(t_paquete *paquete, int socket_cliente)
 void eliminar_paquete(t_paquete *paquete)
 {
 	free(paquete->buffer->stream);
+	paquete->buffer->stream = NULL;
+
 	free(paquete->buffer);
 	free(paquete);
 }

@@ -47,6 +47,8 @@ int obtener_espacio_libre_total()
         return 0;
     }
     int espacio_libre_total = *(int *)list_fold1(lista_de_huecos_libres, calcular_espacio_libre);
+    list_destroy(lista_de_huecos_libres);
+
     return espacio_libre_total;
 }
 
@@ -101,6 +103,8 @@ Segmento *crear_segmento(int id, int tamano, int pid)
 
 void eliminar_segmento(t_contexto_de_ejecucion *contexto_de_ejecucion, int id)
 {
+    int posicion = obtener_segmento_por_id(id, contexto_de_ejecucion->tabla_segmentos);
+
     Segmento *segmento_a_eliminar = encontrar_segmento_por_id(contexto_de_ejecucion, id);
     if (segmento_a_eliminar == NULL)
     {
@@ -112,7 +116,7 @@ void eliminar_segmento(t_contexto_de_ejecucion *contexto_de_ejecucion, int id)
              segmento_a_eliminar->desplazamiento, segmento_a_eliminar->tamano);
 
     actualizar_id_segmento_en_memoria(segmento_a_eliminar);
-
+    list_remove_and_destroy_element(contexto_de_ejecucion->tabla_segmentos, posicion, free);
     unificacion_de_huecos_libres();
 }
 

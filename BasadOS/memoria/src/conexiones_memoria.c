@@ -22,7 +22,7 @@ void *comunicacion_con_kernel(void *arg)
         paquete = recibir_paquete(conexion_kernel);
         if (paquete == NULL)
         {
-            break;
+            return NULL;
         }
         t_contexto_de_ejecucion *contexto = deserializar_contexto_de_ejecucion(paquete->buffer);
         t_paquete *paquete_respuesta = crear_paquete();
@@ -65,7 +65,8 @@ void *comunicacion_con_kernel(void *arg)
             enviar_paquete(paquete_respuesta, conexion_kernel);
             if (segmento_nuevo->tamano == -1)
             {
-                recibir_mensaje(conexion_kernel);
+                t_paquete *paquete_compactacion = crear_paquete();
+                free(recibir_mensaje(conexion_kernel));
                 log_info(logger, "Solicitud de Compactación");
                 t_list *segmentos_modificados = compactar();
                 sleep(retardo_compactacion);
@@ -75,21 +76,24 @@ void *comunicacion_con_kernel(void *arg)
                     log_info(logger, "PID: %i - Segmento: %i - Base: %i- Tamaño : %i", segmento_a_loggear->pid, segmento_a_loggear->id, segmento_a_loggear->desplazamiento, segmento_a_loggear->tamano);
                 }
 
-                paquete_respuesta->codigo_operacion = 0;
-                paquete_respuesta->buffer = serializar_lista_segmentos(segmentos_modificados);
+                paquete_compactacion->codigo_operacion = 0;
+                paquete_compactacion->buffer = serializar_lista_segmentos(segmentos_modificados);
 
-                enviar_paquete(paquete_respuesta, conexion_kernel);
+                enviar_paquete(paquete_compactacion, conexion_kernel);
+                eliminar_paquete(paquete_compactacion);
+                list_destroy(segmentos_modificados);
             }
-
+            if (segmento_nuevo->tamano < 0)
+            {
+                free(segmento_nuevo);
+            }
             break;
         case ELIMINAR_SEGMENTO:
             char *id_a_eliminar = recibir_mensaje(conexion_kernel);
             int id_a_eliminar_int = atoi(id_a_eliminar);
             free(id_a_eliminar);
-            int posicion = obtener_segmento_por_id(id_a_eliminar_int, contexto->tabla_segmentos);
 
             eliminar_segmento(contexto, id_a_eliminar_int);
-            list_remove(contexto->tabla_segmentos, posicion);
 
             paquete_respuesta->codigo_operacion = 0;
             paquete_respuesta->buffer = serializar_contexto(contexto);
@@ -102,8 +106,8 @@ void *comunicacion_con_kernel(void *arg)
 
         eliminar_paquete(paquete);
         eliminar_paquete(paquete_respuesta);
+        liberar_contexto_de_ejecucion(contexto);
     }
-    
 
     return NULL;
 }
@@ -124,7 +128,6 @@ void *comunicacion_con_cpu(void *arg)
     {
         log_info(logger, "Se conectó el CPU!");
     }
-    t_paquete *paquete_respuesta = crear_paquete();
     char *registro;
     char *char_dir_fis;
     int direccion_fisica;
@@ -136,6 +139,8 @@ void *comunicacion_con_cpu(void *arg)
         {
             break;
         }
+        t_paquete *paquete_respuesta = crear_paquete();
+
         t_contexto_de_ejecucion *contexto = deserializar_contexto_de_ejecucion(peticion->buffer);
 
         switch (peticion->codigo_operacion)
@@ -187,10 +192,10 @@ void *comunicacion_con_cpu(void *arg)
         default:
             break;
         }
-
+        liberar_contexto_de_ejecucion(contexto);
         eliminar_paquete(peticion);
+        eliminar_paquete(paquete_respuesta);
     }
-    eliminar_paquete(paquete_respuesta);
 
     return NULL;
 }
@@ -219,7 +224,6 @@ void *comunicacion_con_filesystem(void *arg)
             break;
         }
         t_contexto_de_ejecucion *contexto = deserializar_contexto_de_ejecucion(peticion->buffer);
-        // t_paquete *paquete_respuesta = crear_paquete();
 
         char *direccion_fisica_str;
         int direccion_fisica_valor;

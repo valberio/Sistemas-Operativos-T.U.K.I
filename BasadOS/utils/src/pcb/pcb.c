@@ -91,8 +91,9 @@ void liberar_contexto_de_ejecucion(t_contexto_de_ejecucion *contexto_de_ejecucio
 {
     list_destroy_and_destroy_elements(contexto_de_ejecucion->instrucciones, free);
     free(contexto_de_ejecucion->largo_instruccion);
-    list_destroy_and_destroy_elements(contexto_de_ejecucion->tabla_segmentos, free);
+    list_destroy(contexto_de_ejecucion->tabla_segmentos);
     free(contexto_de_ejecucion->registros);
+    free(contexto_de_ejecucion);
 
 }
 

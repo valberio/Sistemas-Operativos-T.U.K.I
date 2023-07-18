@@ -101,8 +101,9 @@ void *comunicacion_con_kernel(void *arg)
         }
 
         eliminar_paquete(paquete);
+        eliminar_paquete(paquete_respuesta);
     }
-    eliminar_paquete(paquete_respuesta);
+    
 
     return NULL;
 }

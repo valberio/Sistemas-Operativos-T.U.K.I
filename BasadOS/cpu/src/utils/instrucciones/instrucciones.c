@@ -164,13 +164,14 @@ int mov_in(t_log *logger, char **instrucciones, t_contexto_de_ejecucion *context
     paquete->codigo_operacion = PETICION_LECTURA;    // Tengo que poder serializar la direccion de la que quiero leer
     paquete->buffer = serializar_contexto(contexto); // Mando el contexto de ejecucion, necesito acceder a los registros
     enviar_paquete(paquete, conexion_memoria_cpu);
+    eliminar_paquete(paquete);
     enviar_mensaje(instrucciones[1], conexion_memoria_cpu); // Mando el registro
     enviar_mensaje(instrucciones[2], conexion_memoria_cpu); // Mando la direccion
 
     // Espero la respuesta con el valor que se encontraba en la direccion
-    recibir_paquete(conexion_memoria_cpu);
+    eliminar_paquete(recibir_paquete(conexion_memoria_cpu));
     // Guardo ese valor en el registro correspondiente
-
+    
     return 0;
 }
 
@@ -182,12 +183,13 @@ int mov_out(t_log *logger, char **instrucciones, t_contexto_de_ejecucion *contex
     paquete->codigo_operacion = PETICION_ESCRITURA; // Tengo que poder serializar la direccion de la que quiero leer
     paquete->buffer = serializar_contexto(contexto);
     enviar_paquete(paquete, conexion_memoria_cpu);
-
+    eliminar_paquete(paquete);
     enviar_mensaje(instrucciones[1], conexion_memoria_cpu); // Envio direccion fisica
     enviar_mensaje(instrucciones[2], conexion_memoria_cpu); // Envio registro
 
     // Memoria responde con un OK confirmado que escribió lo que debía
-    recibir_paquete(conexion_memoria_cpu);
+    eliminar_paquete(recibir_paquete(conexion_memoria_cpu)); 
+    
 
     char *valor_a_escribir = leer_registro(instrucciones[2], contexto->registros);
     int id_segmento = -1;

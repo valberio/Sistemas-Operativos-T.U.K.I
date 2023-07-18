@@ -1,14 +1,14 @@
 #include "main_cpu.h"
 
+int main(int argc, char *argv[])
+{
 
+	if (argc < 2)
+	{
+		return EXIT_FAILURE;
+	}
 
-int main(int argc, char* argv[]) {
-
-    if(argc < 2){
-        return EXIT_FAILURE;
-    }
-
-    t_config* config = iniciar_config(argv[1]);
+	t_config *config = iniciar_config(argv[1]);
 	t_log *logger = iniciar_logger("log_cpu.log", "LOG_CPU");
 	int retardo_instruccion = config_get_int_value(config, "RETARDO_INSTRUCCION") / 1000;
 	int tam_max_segmento = config_get_int_value(config, "TAM_MAX_SEGMENTO");
@@ -27,10 +27,9 @@ int main(int argc, char* argv[]) {
 		while (conexion_cpu_kernel)
 		{
 
-			t_contexto_de_ejecucion *contexto = malloc(sizeof(t_contexto_de_ejecucion));
-			t_paquete *paquete = malloc(sizeof(t_paquete));
+			t_paquete *paquete = crear_paquete();
 			paquete = recibir_contexto_de_ejecucion(conexion_cpu_kernel);
-			contexto = deserializar_contexto_de_ejecucion(paquete->buffer);
+			t_contexto_de_ejecucion *contexto = deserializar_contexto_de_ejecucion(paquete->buffer);
 
 			if (contexto == NULL)
 			{
@@ -54,7 +53,7 @@ int main(int argc, char* argv[]) {
 					if (strcmp(instruccion_array[0], "SEGFAULT") == 0)
 					{
 						cortar_ejecucion = true;
-						t_paquete* paquete = crear_paquete();
+						t_paquete *paquete = crear_paquete();
 						paquete->codigo_operacion = SEGMENTATION_FAULT;
 						paquete->buffer = serializar_contexto(contexto);
 						enviar_paquete(paquete, conexion_cpu_kernel);
@@ -72,10 +71,14 @@ int main(int argc, char* argv[]) {
 						cortar_ejecucion = true;
 
 						eliminar_paquete(paquete);
-						
+
 						break;
 					case 0:
 						break;
+					}
+					for (int i = 0; instruccion_array[i] != NULL; i++)
+					{
+						free(instruccion_array[i]);
 					}
 					free(instruccion_array);
 				}

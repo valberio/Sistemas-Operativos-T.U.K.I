@@ -1,14 +1,6 @@
 
 #include "main_filesystem.h"
 
-/*------------------------------------------------------------------*/
-/*						FINAL										*/
-/*------------------------------------------------------------------*/
-/*		-Funcion que devuelva el proximo bloque libre
-		-Funcion que lea los punteros guardados en un bloque
-
-																	*/
-/*------------------------------------------------------------------*/
 
 t_list *fcb_list;
 t_config *config;
@@ -93,6 +85,7 @@ void recibir_ordenes_kernel(int conexion_filesystem_kernel, int cliente_filesyst
 		char *puntero;
 		char *cantidad_bytes;
 		char *direccion_fisica;
+		char* datos;
 		int cantidad_bytes_int;
 		int puntero_int;
 		t_paquete *solicitud_a_memoria = crear_paquete();
@@ -121,6 +114,7 @@ void recibir_ordenes_kernel(int conexion_filesystem_kernel, int cliente_filesyst
 			puntero_int = atoi(puntero);
 			log_info(logger, "Leer Archivo: %s - Puntero: %s - Memoria: %s - Tamaño: %s", nombre_archivo, puntero, direccion_fisica, cantidad_bytes);
 			char *datos_de_archivo = leer_archivo(nombre_archivo, puntero_int, cantidad_bytes_int);
+			log_info(logger, "El FILESYSTEM leyo  %s", datos_de_archivo);
 			// Le pido a memoria que guarde lo que leí
 	
 			solicitud_a_memoria->buffer = serializar_contexto(contexto);
@@ -130,7 +124,7 @@ void recibir_ordenes_kernel(int conexion_filesystem_kernel, int cliente_filesyst
 			enviar_mensaje(datos_de_archivo, cliente_filesystem_a_memoria);
 
 			// Espero la confirmación de memoria
-			char* datos = recibir_mensaje(cliente_filesystem_a_memoria);
+			datos = recibir_mensaje(cliente_filesystem_a_memoria);
 			enviar_mensaje("OK", conexion_filesystem_kernel);
 			break;
 		case PETICION_ESCRITURA:
@@ -149,7 +143,8 @@ void recibir_ordenes_kernel(int conexion_filesystem_kernel, int cliente_filesyst
 			enviar_mensaje(direccion_fisica, cliente_filesystem_a_memoria);
 			enviar_mensaje(cantidad_bytes, cliente_filesystem_a_memoria);
 
-			recibir_mensaje(cliente_filesystem_a_memoria);
+			datos = recibir_mensaje(cliente_filesystem_a_memoria);
+			log_info(logger, "FS recibio de memoria %s para escribirlos", datos);
 			escribir_archivo(nombre_archivo, datos, puntero_int, cantidad_bytes_int);
 			enviar_mensaje("OK", conexion_filesystem_kernel);
 			break;

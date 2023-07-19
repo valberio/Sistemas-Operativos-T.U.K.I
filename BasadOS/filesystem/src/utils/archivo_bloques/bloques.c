@@ -12,12 +12,12 @@ void vaciar_archivo_bloques(double cant_bloques, double tamano_bloque)
     
     for (int i = 0; i < cant_bloques; i++)
     {
-        char* datos_bloque = malloc(tamano_bloque * sizeof(char));
+        char* datos_bloque = malloc(tamano_bloque * sizeof(int));
         for (int j = 0; j < tamano_bloque; j++)
         {
-            datos_bloque[j] = '0';
+            datos_bloque[j] = 0;
         }
-        fwrite(datos_bloque, sizeof(char) * tamano_bloque, 1, archivo_bloques);
+        fwrite(datos_bloque, sizeof(int), tamano_bloque, archivo_bloques);
         free(datos_bloque);
     }
     fclose(archivo_bloques);

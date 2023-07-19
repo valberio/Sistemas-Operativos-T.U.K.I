@@ -73,41 +73,13 @@ char* leer_bloque_desde_hasta(uint32_t nro_bloque, uint32_t desde, uint32_t hast
     return datos;
 }
 
-char* obtener_puntero_bloque_libre(int cant_bloques)
+int obtener_puntero_bloque_libre(int cant_bloques)
 {
-
     int index = 0;
     while (bitarray_test_bit(bitarray, index))
     {
         index++;
     }
-    char* puntero = completar_con_ceros(index, cant_bloques);
-
-    return puntero;
-}
-
-char* completar_con_ceros(int index, int cant_bloques)
-{
-    char cadena_cant_bloques[20];
-    sprintf(cadena_cant_bloques, "%d", cant_bloques);
-    char cadena_index[20];
-    sprintf(cadena_index, "%d", index);
-    //index es el nro de BLOQUe
-    int cantidad_de_digitos_bloques = strlen(cadena_cant_bloques);
-    int cantidad_de_digitos_index = strlen(cadena_index);
     
-    char* numero_bloque = malloc(cantidad_de_digitos_bloques + 1); 
-    for(int i = 0; i < (cantidad_de_digitos_bloques - cantidad_de_digitos_index); i++){
-        numero_bloque[i] = '0';
-    }
-    int j = 0;
-    for(int i = (cantidad_de_digitos_bloques - cantidad_de_digitos_index); i < cantidad_de_digitos_bloques; i++)
-    {
-        numero_bloque[i] = cadena_index[j];
-        j++;
-    }
-    
-    numero_bloque[cantidad_de_digitos_bloques] = '\0';
-    return numero_bloque;
+    return index;
 }
-

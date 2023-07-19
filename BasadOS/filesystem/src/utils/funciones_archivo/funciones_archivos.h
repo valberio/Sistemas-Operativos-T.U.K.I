@@ -23,7 +23,7 @@ extern char *ruta_bitmap;
 extern char *ruta_archivo_bloques;
 extern double retardo;
 
-void escribir_puntero_indirecto(t_fcb *, char *);
+void escribir_puntero_indirecto(t_fcb *, int );
 void truncar_archivo(char *, int);
 void agrandar_archivo(t_fcb *, int);
 int division_redondeada_hacia_arriba(int dividendo, int divisor);

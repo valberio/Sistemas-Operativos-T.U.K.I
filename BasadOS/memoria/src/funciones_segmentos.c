@@ -147,8 +147,8 @@ Segmento *first_fit(int id, int tamano)
     }
 
     t_list *lista_filtrada = list_filter(lista_de_memoria, hay_hueco_libre);
-    list_destroy(lista_filtrada);
     Segmento *hueco_libre = list_get(lista_filtrada, 0);
+    list_destroy(lista_filtrada);
     return hueco_libre;
 }
 

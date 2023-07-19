@@ -27,12 +27,20 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
+	char* datos = malloc(sizeof(char) * tamanio_bloque * cantidad_bloques);
+
+
+
 	logger = iniciar_logger("log_filesystem.log", "LOG_FILESYSTEM");
 	config = iniciar_config(argv[1]);
 	fcb_list = list_create();
 	// Conecto filesystem como cliente a memoria
 	char *puerto_a_memoria = config_get_string_value(config, "PUERTO_MEMORIA");
 	char *ip = config_get_string_value(config, "IP_MEMORIA");
+
+
+
+
 	int cliente_filesystem_a_memoria = crear_conexion_al_server(logger, ip, puerto_a_memoria);
 
 	// Superbloque
@@ -225,9 +233,7 @@ void crear_estructura_fcb(char *ruta) // habria que llamarlo crear fcb
 			uint32_t bloques_necesarios = division_redondeada_hacia_arriba(bytes_a_guardar, tamanio_bloque);
 			for (int i = 0; i < bloques_necesarios; i++)
 			{
-				char *index = obtener_puntero_bloque_libre(cantidad_bloques);
-				int bloque_index = atoi(index);
-				//setear_bit(bloque_index);
+				int bloque_index = obtener_puntero_bloque_libre();
 				bitarray_set_bit(bitarray, bloque_index);
 			}
 		}
@@ -241,7 +247,6 @@ void crear_estructura_fcb(char *ruta) // habria que llamarlo crear fcb
 			log_info(logger, "No se pudo abrir el archivo\n");
 		}
 		uint32_t bytes_a_guardar = fcb->size - tamanio_bloque;
-		int digitos_bloque = obtener_digitos_cant_bloque();
 
 		if (bytes_a_guardar > 0)
 		{
@@ -250,27 +255,14 @@ void crear_estructura_fcb(char *ruta) // habria que llamarlo crear fcb
 			sleep(retardo);
 			for (int i = 0; i < bloques_necesarios; i++)
 			{
-				char *index = obtener_puntero_bloque_libre(cantidad_bloques);
-				int bloque_index = atoi(index);
+				int bloque_index = obtener_puntero_bloque_libre();
 				bitarray_set_bit(bitarray, bloque_index);
-				fseek(archivo_bloques, ((fcb->indirect_pointer * tamanio_bloque) + (i * digitos_bloque)) * sizeof(char), SEEK_SET);
-				fwrite(index, sizeof(char), digitos_bloque, archivo_bloques);
+				fseek(archivo_bloques, ((fcb->indirect_pointer * tamanio_bloque) + i * sizeof(int)), SEEK_SET);
+				fwrite(&bloque_index, sizeof(int), 1, archivo_bloques);
 			}
 		}
 	fclose(archivo_bloques);
 	}
-}
-
-int obtener_digitos_cant_bloque()
-{
-	int digitos = 0;
-	uint32_t temp = cantidad_bloques;
-
-	while (temp /= 10)
-	{
-		digitos++;
-	}
-	return digitos + 1;
 }
 
 void abrir_o_crear_archivo(char *nombre_archivo, int conexion_filesystem_kernel)

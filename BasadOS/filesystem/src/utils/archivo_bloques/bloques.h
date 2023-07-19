@@ -37,6 +37,5 @@ void vaciar_archivo_bloques(double cant_bloques, double tamano_bloque);
 void leer_archivo_de_bloques(double cant_bloques, double tamano_bloque);
 void leer_bloque_completo(int nro_bloque, int tamano_bloque);
 char* leer_bloque_desde_hasta(uint32_t nro_bloque, uint32_t desde, uint32_t hasta, int tamano_bloque);
-char* completar_con_ceros(int index, int cant_bloques);
-char* obtener_puntero_bloque_libre(int cant_bloques);
+int obtener_puntero_bloque_libre();
 #endif /* BLOQUES_H_ */

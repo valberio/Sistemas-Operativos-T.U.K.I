@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-	char* datos = malloc(sizeof(char) * tamanio_bloque * cantidad_bloques);
+	//char* datos = malloc(sizeof(char) * tamanio_bloque * cantidad_bloques);
 
 
 

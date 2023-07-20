@@ -21,10 +21,6 @@ void truncar_archivo(char *nombre_archivo, int nuevo_tamanio)
     {
         agrandar_archivo(fcb_archivo, nuevo_tamanio);
     }
-    if(fcb_archivo->size == nuevo_tamanio)
-    {
-        log_info(logger, "No hace falta truncar %s porque ya tiene el tamaño necesario", fcb_archivo->name);
-    }
 
     t_config *config = iniciar_config(fcb_archivo->ruta);
     char *size_str = convertir_a_char(fcb_archivo->size);
@@ -78,7 +74,6 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
 
     if (bytes_por_asignar == 0)
     {
-        log_info(logger, "No hace falta truncar el archivo %s porque su tamano %i es igual al nuevo tamano %i", fcb_archivo->name, fcb_archivo->size, nuevo_tamanio);
         return;
     }
 
@@ -88,12 +83,13 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
 
     if (fcb_archivo->direct_pointer == -1)
     { // NO TENGA NADA Y ASIGNA PUNTERO DIRECTO
+        log_info(logger, "ENTRE");
         bloques_por_agregar--;
         fcb_archivo->size += MIN(bytes_por_asignar, tamanio_bloque);
 
         bytes_por_asignar = MAX(bytes_por_asignar - tamanio_bloque, 0);
 
-        uint32_t nuevo_bloque_directo = obtener_puntero_bloque_libre(cantidad_bloques);
+        uint32_t nuevo_bloque_directo = obtener_puntero_bloque_libre();
         fcb_archivo->direct_pointer = nuevo_bloque_directo;
 
         log_info(logger, "Le agregue el puntero directo %i al archivo %s", nuevo_bloque_directo, fcb_archivo->name);
@@ -103,7 +99,7 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
     if (fcb_archivo->direct_pointer >= 0 && fcb_archivo->indirect_pointer == -1 && bytes_por_asignar > 0)
     { // TENGA UN SOLO BLOQUE DIRECTO Y NECESITE MAS
 
-        uint32_t nuevo_bloque_indirecto = obtener_puntero_bloque_libre(cantidad_bloques);
+        uint32_t nuevo_bloque_indirecto = obtener_puntero_bloque_libre();
 
         fcb_archivo->indirect_pointer = nuevo_bloque_indirecto;
         log_info(logger, "Agregue al archivo %s el bloque %i, como bloque de indireccion", fcb_archivo->name, nuevo_bloque_indirecto);
@@ -113,7 +109,7 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
         sleep(retardo);
         while (bloques_por_agregar > 0) //Asigno bloques al bloque indirecto
         {
-            uint32_t nuevo_bloque_datos = obtener_puntero_bloque_libre(cantidad_bloques);
+            uint32_t nuevo_bloque_datos = obtener_puntero_bloque_libre();
             setear_bit(nuevo_bloque_datos);
 
             fcb_archivo->size += MIN(bytes_por_asignar, tamanio_bloque);
@@ -122,8 +118,6 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
             
             bytes_por_asignar = MAX(bytes_por_asignar - tamanio_bloque, 0);
             bloques_por_agregar--;
-            log_info(logger, "Agregue al archivo %s el bloque %i", fcb_archivo->name, nuevo_bloque_datos);
-            
         }
     }
     else if (bytes_por_asignar > 0)
@@ -132,7 +126,7 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
         sleep(retardo);
         while (bloques_por_agregar > 0)
         {
-            uint32_t nuevo_bloque_datos = obtener_puntero_bloque_libre(cantidad_bloques);
+            uint32_t nuevo_bloque_datos = obtener_puntero_bloque_libre();
 
             setear_bit(nuevo_bloque_datos);
 
@@ -220,18 +214,13 @@ void achicar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
 
 void escribir_puntero_indirecto(t_fcb *fcb, uint32_t puntero_a_escribir) //Actual problema: no se escriben bien las direcciones
 {
-    int cant_bloques_archivo = division_redondeada_hacia_arriba(fcb->size, tamanio_bloque);
-    log_info(logger, "El archivo %s tiene %i bloques actualmente", fcb->name, cant_bloques_archivo);
-    uint32_t puntero_indirecto = fcb->indirect_pointer;
+    int cant_bloques_archivo = division_redondeada_hacia_arriba((fcb->size - tamanio_bloque), tamanio_bloque);
+    //log_info(logger, "El archivo %s tiene %i bloques actualmente", fcb->name, cant_bloques_archivo);
+    //uint32_t puntero_indirecto = fcb->indirect_pointer;
     FILE *archivo_de_bloques = fopen(ruta_archivo_bloques, "r+");
-    log_info(logger, "Al archivo le voy a guardar el bloque %i", puntero_a_escribir);
-    fseek(archivo_de_bloques, (puntero_indirecto * tamanio_bloque) + (cant_bloques_archivo * sizeof(uint32_t)), SEEK_SET);
+    //log_info(logger, "Al archivo le voy a guardar el bloque %i", puntero_a_escribir);
+    fseek(archivo_de_bloques, fcb->indirect_pointer * tamanio_bloque * sizeof(char) + (cant_bloques_archivo - 1) * sizeof(uint32_t), SEEK_SET);
     fwrite(&puntero_a_escribir, sizeof(uint32_t), 1, archivo_de_bloques);
-
-    uint32_t test;
-    fseek(archivo_de_bloques, (puntero_indirecto * tamanio_bloque ) + (cant_bloques_archivo * sizeof(uint32_t)), SEEK_SET);
-    fread(&test, sizeof(uint32_t), 1, archivo_de_bloques);
-    log_info(logger, "Guarde en el puntero indirecto el bloque: %i", test);
     fclose(archivo_de_bloques);
 }
 
@@ -330,16 +319,16 @@ void escribir_archivo(char* nombre, char *datos_a_guardar, int puntero, int cant
     FILE *archivo_de_bloques = fopen(ruta_archivo_bloques, "r+");
     
     int bytes_por_escribir = cantidad_de_bytes;
-    int bytes_escritos
+    int bytes_escritos;
     
-    if(puntero < tamanio_bloque)
+    if(puntero < (fcb_archivo->direct_pointer + 1) * tamanio_bloque)
     {
         //Escribo en el bloque directo
 
         int bytes_a_guardar = MIN(tamanio_bloque, cantidad_de_bytes);
 
         log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 0 - Bloque File System %i", fcb_archivo->name, fcb_archivo->direct_pointer);
-        fseek(archivo_de_bloques, puntero * sizeof(char), SEEK_SET);
+        fseek(archivo_de_bloques, fcb_archivo->direct_pointer * tamanio_bloque * sizeof(char) + puntero * sizeof(char), SEEK_SET);
         fwrite(datos_a_guardar, sizeof(char), bytes_a_guardar, archivo_de_bloques);
 
         bytes_por_escribir -= bytes_a_guardar;
@@ -354,13 +343,13 @@ void escribir_archivo(char* nombre, char *datos_a_guardar, int puntero, int cant
     while(bytes_por_escribir > 0)
     {
         
-        int bloque_del_puntero = floor(puntero, tamanio_bloque);
+        int bloque_del_puntero = floor(puntero / tamanio_bloque);
 
         int bytes_a_escribir_aca = MIN(tamanio_bloque, bytes_por_escribir);
         uint32_t direccion_bloque;
 
         //BUSCO EL BLOQUE DEL PUNTERO INDIRECTO EN EL QUE HAY QUE ESCRIBIR
-        fseek(archivo_de_bloques, fcb_archivo->indirect_pointer * sizeof(char) + bloque_del_puntero * sizeof(uint32_t), SEEK_SET);
+        fseek(archivo_de_bloques, fcb_archivo->indirect_pointer * tamanio_bloque * sizeof(char) + bloque_del_puntero * sizeof(uint32_t), SEEK_SET);
         fwrite(&direccion_bloque, sizeof(uint32_t), 1, archivo_de_bloques);
 
         log_info(logger, "Voy a acceder al bloque %i, que saque del bloque de punteros indirectos", direccion_bloque);

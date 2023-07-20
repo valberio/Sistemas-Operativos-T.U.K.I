@@ -1,4 +1,4 @@
 F_OPEN DanteGato
-F_TRUNCATE DanteGato 145
+F_TRUNCATE DanteGato 256
 F_CLOSE DanteGato
 EXIT

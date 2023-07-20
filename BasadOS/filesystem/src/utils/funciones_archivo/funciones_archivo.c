@@ -83,7 +83,6 @@ void agrandar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
 
     if (fcb_archivo->direct_pointer == -1)
     { // NO TENGA NADA Y ASIGNA PUNTERO DIRECTO
-        log_info(logger, "ENTRE");
         bloques_por_agregar--;
         fcb_archivo->size += MIN(bytes_por_asignar, tamanio_bloque);
 
@@ -215,10 +214,7 @@ void achicar_archivo(t_fcb *fcb_archivo, int nuevo_tamanio)
 void escribir_puntero_indirecto(t_fcb *fcb, uint32_t puntero_a_escribir) //Actual problema: no se escriben bien las direcciones
 {
     int cant_bloques_archivo = division_redondeada_hacia_arriba((fcb->size - tamanio_bloque), tamanio_bloque);
-    //log_info(logger, "El archivo %s tiene %i bloques actualmente", fcb->name, cant_bloques_archivo);
-    //uint32_t puntero_indirecto = fcb->indirect_pointer;
     FILE *archivo_de_bloques = fopen(ruta_archivo_bloques, "r+");
-    //log_info(logger, "Al archivo le voy a guardar el bloque %i", puntero_a_escribir);
     fseek(archivo_de_bloques, fcb->indirect_pointer * tamanio_bloque * sizeof(char) + (cant_bloques_archivo - 1) * sizeof(uint32_t), SEEK_SET);
     fwrite(&puntero_a_escribir, sizeof(uint32_t), 1, archivo_de_bloques);
     fclose(archivo_de_bloques);
@@ -257,7 +253,7 @@ char *leer_archivo(char *nombre, int puntero, int cantidad_de_bytes)
         log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 0 - Bloque File System %i", fcb_archivo->name, fcb_archivo->direct_pointer);
         sleep(retardo);
 
-        fseek(archivo_de_bloques, (bloque_puntero * tamanio_bloque) + desplazamiento_dentro_del_bloque, SEEK_SET);
+        fseek(archivo_de_bloques, (fcb_archivo->direct_pointer * tamanio_bloque + desplazamiento_dentro_del_bloque) * sizeof(char), SEEK_SET);
         fread(datos + bytes_leidos, sizeof(char), bytes_a_leer_aca, archivo_de_bloques);
 
         bytes_por_leer -= bytes_a_leer_aca;
@@ -276,17 +272,17 @@ char *leer_archivo(char *nombre, int puntero, int cantidad_de_bytes)
     {
         bytes_a_leer_aca = MIN(tamanio_bloque, cantidad_de_bytes);
 
-        int index_bloque;
+        uint32_t index_bloque;
 
         // Entro al bloque indirecto, y leo el indice que corresponde
-        fseek(archivo_de_bloques, fcb_archivo->indirect_pointer * tamanio_bloque + contador_puntero_indirecto * sizeof(int), SEEK_SET);
-        fread(&index_bloque, sizeof(int), 1, archivo_de_bloques);
+        fseek(archivo_de_bloques, (fcb_archivo->indirect_pointer * tamanio_bloque + contador_puntero_indirecto) * sizeof(char), SEEK_SET);
+        fread(&index_bloque, sizeof(uint32_t), 1, archivo_de_bloques);
 
 
         log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: %i - Bloque File System %i", fcb_archivo->name, bloque_indirecto_contador, index_bloque);
         sleep(retardo);
 
-        fseek(archivo_de_bloques, (index_bloque * tamanio_bloque), SEEK_SET);
+        fseek(archivo_de_bloques, (index_bloque * tamanio_bloque) * sizeof(char), SEEK_SET);
         fread(datos + bytes_leidos, sizeof(char), bytes_a_leer_aca, archivo_de_bloques);
 
         bytes_por_leer -= bytes_a_leer_aca;
@@ -319,9 +315,9 @@ void escribir_archivo(char* nombre, char *datos_a_guardar, int puntero, int cant
     FILE *archivo_de_bloques = fopen(ruta_archivo_bloques, "r+");
     
     int bytes_por_escribir = cantidad_de_bytes;
-    int bytes_escritos;
+    int bytes_escritos = 0;
     
-    if(puntero < (fcb_archivo->direct_pointer + 1) * tamanio_bloque)
+    if(puntero < (fcb_archivo->direct_pointer + 1) * tamanio_bloque)//el puntero debe ser menor a los bytes del puntero directo
     {
         //Escribo en el bloque directo
 
@@ -332,36 +328,38 @@ void escribir_archivo(char* nombre, char *datos_a_guardar, int puntero, int cant
         fwrite(datos_a_guardar, sizeof(char), bytes_a_guardar, archivo_de_bloques);
 
         bytes_por_escribir -= bytes_a_guardar;
-
+        bytes_escritos += bytes_a_guardar;
         puntero += bytes_a_guardar;
     }
+
     if(bytes_por_escribir > 0)
     {   
         log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 1 - Bloque File System %i", fcb_archivo->name, fcb_archivo->indirect_pointer);
-        sleep(retardo);}
+        sleep(retardo);
+    }
     
     while(bytes_por_escribir > 0)
     {
-        
         int bloque_del_puntero = floor(puntero / tamanio_bloque);
 
         int bytes_a_escribir_aca = MIN(tamanio_bloque, bytes_por_escribir);
         uint32_t direccion_bloque;
 
         //BUSCO EL BLOQUE DEL PUNTERO INDIRECTO EN EL QUE HAY QUE ESCRIBIR
-        fseek(archivo_de_bloques, fcb_archivo->indirect_pointer * tamanio_bloque * sizeof(char) + bloque_del_puntero * sizeof(uint32_t), SEEK_SET);
-        fwrite(&direccion_bloque, sizeof(uint32_t), 1, archivo_de_bloques);
+        fseek(archivo_de_bloques, fcb_archivo->indirect_pointer * tamanio_bloque * sizeof(char) + (bloque_del_puntero - 1)* sizeof(uint32_t), SEEK_SET);
+        fread(&direccion_bloque, sizeof(uint32_t), 1, archivo_de_bloques);
+        
+        log_info(logger, "Acceso Bloque - Archivo: %s - Bloque Archivo: 1 - Bloque File System %i", fcb_archivo->name, direccion_bloque);
 
-        log_info(logger, "Voy a acceder al bloque %i, que saque del bloque de punteros indirectos", direccion_bloque);
         int byte_del_puntero_dentro_de_su_bloque = puntero - direccion_bloque * tamanio_bloque; 
 
-        //Entro al bloque que me indica el indirecto, y escribo ahi
-        fseek(archivo_de_bloques, (direccion_bloque * tamanio_bloque + byte_del_puntero_dentro_de_su_bloque )* sizeof(char), SEEK_SET);
+        //Entro al bloque que me indica el indirecto, y escribo ahi                      //este tamanio bloque______________ se suma por el puntero indirecto que no cuenta en el puntero del archivo
+        fseek(archivo_de_bloques, (direccion_bloque * tamanio_bloque + byte_del_puntero_dentro_de_su_bloque + tamanio_bloque) * sizeof(char), SEEK_SET);
         fwrite(datos_a_guardar + bytes_escritos, sizeof(char), bytes_a_escribir_aca, archivo_de_bloques);
 
         bytes_escritos += bytes_a_escribir_aca;
         bytes_por_escribir -= bytes_a_escribir_aca;
-
+        puntero += bytes_a_escribir_aca;
     }
 }
 

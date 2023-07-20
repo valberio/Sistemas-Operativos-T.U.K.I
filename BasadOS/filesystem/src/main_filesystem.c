@@ -51,7 +51,6 @@ int main(int argc, char* argv[])
 
 	ruta_archivo_bloques = config_get_string_value(config, "PATH_BLOQUES");
 	crear_archivo_de_bloques(ruta_archivo_bloques);
-	vaciar_archivo_bloques( cantidad_bloques , tamanio_bloque);
 	// Recorro el directorio de FCBs y creo estructuras
 	recorrer_directorio_fcb(ruta_bitmap);
 
@@ -114,7 +113,7 @@ void recibir_ordenes_kernel(int conexion_filesystem_kernel, int cliente_filesyst
 			puntero_int = atoi(puntero);
 			log_info(logger, "Leer Archivo: %s - Puntero: %s - Memoria: %s - Tamaño: %s", nombre_archivo, puntero, direccion_fisica, cantidad_bytes);
 			char *datos_de_archivo = leer_archivo(nombre_archivo, puntero_int, cantidad_bytes_int);
-			log_info(logger, "El FILESYSTEM leyo  %s", datos_de_archivo);
+			log_info(logger, "El FILESYSTEM leyo %s", datos_de_archivo);
 			// Le pido a memoria que guarde lo que leí
 	
 			solicitud_a_memoria->buffer = serializar_contexto(contexto);
@@ -307,14 +306,17 @@ void crear_archivo_fcb(char *nombre_archivo)
 
 void crear_archivo_de_bloques(char* ruta_archivo_bloques)
 {
-	if (access(ruta_archivo_bloques, F_OK) != -1) {
-        return;
-    } else {
-        FILE* archivo_bloques = fopen(ruta_archivo_bloques, "w");
+	FILE* archivo_bloques;
+	archivo_bloques = fopen(ruta_archivo_bloques, "r");
+	if(archivo_bloques == NULL)
+	{
+		FILE* archivo_bloques = fopen(ruta_archivo_bloques, "w");
 		if (archivo_bloques == NULL) {
         log_info(logger, "No se pudo crear el archivo.\n");
 		return;
     	}
 		fclose(archivo_bloques);
-    }
+	} else {
+	fclose(archivo_bloques);
+	}
 }

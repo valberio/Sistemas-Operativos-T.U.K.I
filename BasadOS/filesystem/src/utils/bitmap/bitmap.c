@@ -7,7 +7,8 @@ t_bitarray *crear_bitmap(char *ruta, double block_count)
 {
     
     t_bitarray* bitarray;
-    if (access(ruta, F_OK) != -1) // Si el archivo existe, lo abro como bitarray
+    FILE* archivo_bitmap = fopen(ruta, "r");
+    if (archivo_bitmap != NULL) // Si el archivo existe, lo abro como bitarray
     {
         char *bitmap = malloc((block_count / 8));
         bitarray = bitarray_create_with_mode(bitmap, sizeof(bitmap), LSB_FIRST);
@@ -18,7 +19,7 @@ t_bitarray *crear_bitmap(char *ruta, double block_count)
     }
     else  //Si no existe, lo creo e inicializo en 0
     {
-        FILE *archivo_bitmap = fopen(ruta, "w");
+        archivo_bitmap = fopen(ruta, "w");
         if (archivo_bitmap == NULL)
         {
             log_info(logger, "Error creando el archivo bitmap");

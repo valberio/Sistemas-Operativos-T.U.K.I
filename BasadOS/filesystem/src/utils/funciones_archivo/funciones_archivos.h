@@ -23,7 +23,7 @@ extern char *ruta_bitmap;
 extern char *ruta_archivo_bloques;
 extern double retardo;
 
-void escribir_puntero_indirecto(t_fcb *, int );
+void escribir_puntero_indirecto(t_fcb * fcb_archivo, uint32_t puntero);
 void truncar_archivo(char *, int);
 void agrandar_archivo(t_fcb *, int);
 int division_redondeada_hacia_arriba(int dividendo, int divisor);
@@ -31,6 +31,6 @@ void remover_ultimo_bloque(t_fcb *);
 void achicar_archivo(t_fcb *, int);
 char *leer_archivo(char *, int puntero, int cantidad_de_bytes);
 void escribir_archivo(char *nombre, char *datos_a_guardar, int puntero, int cantidad_de_bytes);
-char* convertir_a_char(uint32_t numero);
+char *convertir_a_char(uint32_t numero);
 
 #endif /* FUNCIONES_ARCHIVOS_H_ */

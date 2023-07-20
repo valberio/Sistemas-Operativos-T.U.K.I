@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
 
 	ruta_archivo_bloques = config_get_string_value(config, "PATH_BLOQUES");
 	crear_archivo_de_bloques(ruta_archivo_bloques);
-
+	vaciar_archivo_bloques( cantidad_bloques , tamanio_bloque);
 	// Recorro el directorio de FCBs y creo estructuras
 	recorrer_directorio_fcb(ruta_bitmap);
 
@@ -228,7 +228,7 @@ void crear_estructura_fcb(char *ruta) // habria que llamarlo crear fcb
 			uint32_t bloques_necesarios = division_redondeada_hacia_arriba(bytes_a_guardar, tamanio_bloque);
 			for (int i = 0; i < bloques_necesarios; i++)
 			{
-				int bloque_index = obtener_puntero_bloque_libre();
+				int bloque_index = obtener_puntero_bloque_libre(cantidad_bloques);
 				bitarray_set_bit(bitarray, bloque_index);
 			}
 		}
@@ -250,7 +250,7 @@ void crear_estructura_fcb(char *ruta) // habria que llamarlo crear fcb
 			sleep(retardo);
 			for (int i = 0; i < bloques_necesarios; i++)
 			{
-				int bloque_index = obtener_puntero_bloque_libre();
+				int bloque_index = obtener_puntero_bloque_libre(cantidad_bloques);
 				bitarray_set_bit(bitarray, bloque_index);
 				fseek(archivo_bloques, ((fcb->indirect_pointer * tamanio_bloque) + i * sizeof(int)), SEEK_SET);
 				fwrite(&bloque_index, sizeof(int), 1, archivo_bloques);

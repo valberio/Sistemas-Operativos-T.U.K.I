@@ -73,9 +73,9 @@ char* leer_bloque_desde_hasta(uint32_t nro_bloque, uint32_t desde, uint32_t hast
     return datos;
 }
 
-int obtener_puntero_bloque_libre(int cant_bloques)
+uint32_t obtener_puntero_bloque_libre(int cant_bloques)
 {
-    int index = 0;
+    uint32_t index = 0;
     while (bitarray_test_bit(bitarray, index))
     {
         index++;

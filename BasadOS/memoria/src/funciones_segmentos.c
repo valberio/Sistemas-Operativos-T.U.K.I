@@ -206,6 +206,8 @@ t_list *compactar()
     char *datos_a_copiar;
     int posicion_segmento_compactable;
 
+    log_info(logger, "El estado de la memoria es: %s", (char *)espacio_de_memoria);
+
     while ((posicion_segmento_compactable = buscar_segmento_compactable()) > 0)
     {
         Segmento *segmento_compactable = list_get(lista_de_memoria, posicion_segmento_compactable);
@@ -221,6 +223,8 @@ t_list *compactar()
         list_sort(lista_de_memoria, ordenar_por_desplazamiento);
         unificacion_de_huecos_libres();
     }
+
+    log_info(logger, "El estado de la memoria es: %s", (char *)espacio_de_memoria);
 
     return segmentos_actualizados;
 }

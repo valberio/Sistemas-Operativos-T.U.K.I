@@ -161,6 +161,7 @@ void *comunicacion_con_cpu(void *arg)
 
             memcpy(datos_leidos, espacio_de_memoria + direccion_fisica, tamanio_del_registro(registro));
             guardar_en_registros(registro, datos_leidos, contexto->registros);
+            log_info(logger, "Memoria leyo %s", datos_leidos);
             free(datos_leidos);
             free(registro);
             free(char_dir_fis);
@@ -254,6 +255,7 @@ void *comunicacion_con_filesystem(void *arg)
             datos[cantidad_bytes_valor] = '\0';
 
             enviar_mensaje(datos, conexion_filesystem);
+            log_info(logger, "MEMORIA leyo %s",datos);
             free(datos);
             free(direccion_fisica_str);
             free(cantidad_bytes_str);
